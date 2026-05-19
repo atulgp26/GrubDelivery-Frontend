@@ -1,0 +1,487 @@
+import { forwardRef, type Ref } from "react";
+import type { ButtonProps, ButtonVariant, ButtonSize } from "@/types";
+import type { CSSProperties } from "react";
+
+import { cn } from "@/lib/utils/cn";
+
+const BASE_CLASSES = cn(
+  "btn",
+  "inline-flex items-center justify-center",
+  "rounded-lg",
+  "font-medium",
+  "transition-colors duration-150",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+  "disabled:cursor-not-allowed disabled:opacity-60 disabled:pointer-events-none",
+);
+
+const disabledNeutral = [
+  "disabled:bg-[var(--color-neutral-secondary-bg)]",
+  "disabled:border-[var(--color-stroke-neutral)]",
+  "disabled:text-[var(--color-box-border)]",
+];
+
+const VARIANT_CLASSES: Record<ButtonVariant, string> = {
+  primary: cn("btn-shared"),
+  secondary: cn(
+    "border",
+    "border-[var(--info-panel-view-bg)]",
+    "bg-white",
+    "text-[var(--info-panel-view-bg)]",
+    "text-lg",
+    "font-normal",
+    "transition-all",
+    "duration-200",
+    "hover:underline",
+    "hover:border-[var(--color-filter-text)]",
+    "hover:bg-[var(--sidebar-active-bg)]",
+    "active:text-[var(--color-filter-text)]",
+    "active:border-[var(--info-panel-view-bg)]",
+    "active:bg-[var(--color-admin-profile-border)]",
+    "active:shadow-[0_0_0_var(--Spread-100,_4px)_var(--Special-Effects-Ring---Colour,_rgba(254,87,32,0.40))]",
+    "focus:text-[var(--color-filter-text)]",
+    "focus:border-[var(--info-panel-view-bg)]",
+    "focus:bg-[var(--color-admin-profile-border)]",
+    "focus:shadow-[0_0_0_var(--Spread-100,_4px)_var(--Special-Effects-Ring---Colour,_rgba(254,87,32,0.40))]",
+    "focus:outline-none",
+    "active:bg-[var(--sidebar-active-bg)]",
+    "focus:underline",
+    ...disabledNeutral,
+  ),
+  text: cn(
+    "bg-transparent",
+    "border-none",
+    "group",
+    "text-[var(--color-stroke-brand)]",
+    "text-sm",
+    "font-normal",
+    "hover:underline",
+    "hover:bg-[var(--color-neutral-secondary-bg)]",
+    "hover:text-[var(--color-stroke-brand)]",
+    "hover:rounded-sm",
+    "active:bg-[var(--color-stroke-neutral)]",
+    "active:text-[var(--dark-sage)]",
+    "active:underline",
+    "active:rounded-sm",
+    "active:shadow-none",
+    "focus-visible:bg-[var(--color-stroke-neutral)]",
+    "focus-visible:text-[var(--dark-sage)]",
+    "focus-visible:underline",
+    "focus-visible:rounded-sm",
+    "focus-visible:shadow-none",
+    "focus-visible:outline-none",
+  ),
+  
+  textSecondary: cn(
+    "bg-transparent",
+    "border-none",
+    "group",
+    "text-[var(--info-panel-view-bg)]",
+    "text-sm",
+    "font-normal",
+    "hover:underline",
+    "hover:bg-[var(--sidebar-active-bg)]",
+    "hover:text-[var(--info-panel-view-bg)]",
+    "hover:rounded-sm",
+    "active:bg-[var(--sidebar-active-bg)]",
+    "active:text-[var(--color-filter-text)]",
+    "active:underline",
+    "active:rounded-sm",
+    "active:shadow-none",
+    "focus-visible:bg-[var(--sidebar-active-bg)]",
+    "focus-visible:text-[var(--color-filter-text)]",
+    "focus-visible:underline",
+    "focus-visible:rounded-sm",
+    "focus-visible:outline-none",
+    "focus-visible:shadow-none",
+  ),
+  ghost: cn(
+    "bg-transparent",
+    "border-none",
+    "shadow-none",
+    "rounded-none",
+    "p-0",
+    "focus-visible:outline-none",
+    "focus-visible:ring-0",
+    "focus-visible:ring-offset-0",
+  ),
+  skip: cn(
+    "bg-transparent",
+    "border-none",
+    "group",
+    "text-[var(--color-stroke-brand)]",
+    "text-xl",
+    "hover:underline",
+    "hover:bg-[var(--color-neutral-secondary-bg)]",
+    "hover:text-[var(--notif-border)]",
+    "active:bg-[var(--color-stroke-neutral)]",
+  ),
+  cancel: cn(
+    "bg-transparent",
+    "border-none",
+    "group",
+    "text-[var(--color-stroke-brand)]",
+    "text-xl",
+    "hover:underline",
+    "hover:bg-[var(--color-neutral-secondary-bg)]",
+    "hover:text-[var(--notif-border)]",
+    "active:bg-[var(--color-stroke-neutral)]",
+    "active:shadow-[0_0_0_2px_var(--color-tablecheckbox-shadow)]",
+    "focus:bg-[var(--color-stroke-neutral)]",
+    "focus:shadow-[0_0_0_2px_var(--color-tablecheckbox-shadow)]",
+  ),
+  sage: cn(
+    "bg-[var(--color-neutral-secondary)]",
+    "text-white",
+    "hover:bg-[var(--color-neutral-secondary)]",
+    "focus:bg-[var(--color-neutral-secondary)]",
+  ),
+  lock: cn(
+    "bg-[var(--color-alert-warm-bg)]",
+    "border",
+    "border-[var(--color-alert-warm)]",
+    "text-[var(--color-alert-warm)]",
+    "!rounded-full",
+    "hover:bg-[var(--color-alert-warm-bg)]",
+    "hover:border-[var(--color-alert-warm-dark)]",
+    "active:shadow-[0_0_0_2px_var(--color-filter-sbg-whitehadow)]",
+    "focus:shadow-[0_0_0_4px_var(--color-success-bg)]",
+  ),
+  unlock: cn(
+    "bg-white",
+    "border",
+    "border-[var(--color-alert-warm)]",
+    "text-[var(--color-alert-warm)]",
+    "!rounded-full",
+    "hover:bg-[var(--color-alert-warm-bg)]",
+    "hover:border-[var(--color-alert-warm-dark)]",
+    "active:shadow-[0_0_0_2px_var(--color-shadow-select)]",
+    "focus:bg-[var(--color-alert-warm-bg)]",
+    "focus:shadow-[0_0_0_4px_var(--color-success-bg)]",
+  ),
+  warmYellow: cn(
+   
+    "bg-[var(--color-helpwrite-btn)]",
+    "text-white",
+    "text-sm",
+    "font-medium",
+    "transition-all",
+    "duration-150",
+    "hover:bg-[var(--color-filter-text)]",
+    "hover:border-[var(--color-filter-text)]",
+    "hover:underline",
+    "focus:bg-[var(--color-filter-text)]",
+    "focus:border-[var(--color-filter-text)]",
+    "focus:shadow-[0_0_0_var(--Spread-100,_4px)_var(--Special-Effects-Ring---Colour,_rgba(254,87,32,0.40))]",
+    "focus:underline",
+    "active:bg-[var(--color-primary-btn-active)]",
+    "active:border-[var(--info-panel-view-bg)]",
+    "active:shadow-[0_0_0_var(--Spread-100,_4px)_var(--Special-Effects-Ring---Colour,_rgba(254,87,32,0.40))]",
+    "active:underline",
+  ),
+  
+  grayOutline: cn(
+    "bg-white",
+    "border",
+    "border-[var(--color-stroke-brand)]",
+    "text-[var(--color-stroke-brand)]",
+    "text-sm",
+    "font-normal",
+    "transition-all",
+    "duration-200",
+    "hover:border-[var(--notif-border)]",
+    "hover:bg-[var(--color-neutral-secondary-bg)]",
+    "hover:text-[var(--color-stroke-brand)]",
+    "active:border-[var(--color-stroke-brand)]",
+    "active:bg-[var(--color-stroke-neutral)]",
+    "active:text-[var(--notif-border)]",
+    "active:shadow-[0_0_0_var(--Spread-50,_2px)_var(--Special-Effects-Ring---Colour,_rgba(121,134,126,0.40))]",
+    "focus:border-[var(--notif-border)]",
+    "focus:bg-[var(--color-neutral-secondary-bg)]",
+    "focus:text-[var(--notif-border)]",
+    "focus:shadow-[0_0_0_var(--Spread-50,_2px)_var(--Special-Effects-Ring---Colour,_rgba(121,134,126,0.40))]",
+    "hover:underline",
+    "active:underline",
+    "focus:underline",
+  ),
+  messaging: cn(
+    "bg-white",
+    "border",
+    "border-[var(--color-stroke-brand)]",
+    "text-[var(--color-stroke-brand)]",
+    "font-medium",
+    "hover:bg-[var(--color-neutral-secondary-bg)]",
+    "hover:border-[var(--notif-border)]",
+  ),
+  alert: cn(
+    "bg-white",
+    "border-2",
+    "border-transparent",
+    "text-[var(--color-neutral-primary)]",
+    "transition-colors",
+    "hover:bg-[var(--color-alert-warm-bg)]",
+    "hover:border-[var(--color-alert-warm)]",
+    "hover:shadow-[0_0_0_4px_var(--color-success-bg)]",
+    "active:bg-[var(--color-alert-warm-bg)]",
+    "active:border-[var(--color-alert-warm-dark)]",
+    "active:shadow-[0_0_0_2px_var(--color-shadow-select)]",
+    "focus:bg-[var(--color-alert-warm-bg)]",
+    "focus:border-[var(--color-alert-warm-dark)]",
+    "focus:shadow-[0_0_0_4px_var(--color-success-bg)]",
+  ),
+  profile: cn(
+    "bg-white",
+    "group",
+    "flex",
+    "w-full",
+    "justify-start",
+    "text-left",
+    "!rounded-none",
+    "text-[var(--color-neutral-secondary)]",
+    "transition-colors",
+    "hover:bg-[var(--sidebar-active-bg)]",
+    "hover:text-[var(--color-neutral-primary)]",
+    "active:bg-[var(--color-admin-profile-border)]",
+    "active:text-[var(--color-neutral-primary)]",
+  ),
+  outline: cn(
+    "bg-white",
+    "border",
+    "border-[var(--info-panel-view-bg)]",
+    "text-[var(--info-panel-view-bg)]",
+    "px-4",
+    "py-2",
+    "text-xl",
+    "min-w-[110px]",
+    "h-[56px]",
+    "hover:underline",
+    "hover:bg-[var(--sidebar-active-bg)]",
+    "hover:border-[var(--color-filter-text)]",
+    "hover:text-[var(--color-filter-text)]",
+    "active:bg-[var(--color-admin-profile-border)]",
+    "active:border-[var(--info-panel-view-bg)]",
+    "active:shadow-[0_0_0_2px_var(--color-shadow-select)]",
+    "focus:bg-[var(--color-neutral-secondary-bg)]",
+    "focus:shadow-[0_0_0_4px_var(--color-success-bg)]",
+    ...disabledNeutral,
+  ),
+  disabledGray: cn(
+    "border",
+    "bg-[var(--color-brand-primary-btn)]",
+    "border-[var(--color-brand-default)]",
+    "text-white",
+    "disabled:border",
+    "disabled:bg-[var(--color-stroke-neutral)]",
+    "disabled:border-[var(--color-stroke-neutral)]",
+    "disabled:text-[var(--color-box-border)]",
+  ),
+  actionText: cn(
+    "bg-transparent",
+    "border-none",
+    "text-[var(--color-stroke-brand)]",
+  ),
+  modal: cn(
+    "btn-shared",
+    "focus:border-[var(--color-filter-text)]",
+    "focus:underline",
+    "focus:bg-[var(--color-filter-text)]",
+    "focus:shadow-[0px_0px_0px_2px_var(--color-shadow-select)]",
+    "focus:text-white",
+  ),
+  disabledPrimary: cn(
+    "bg-[var(--color-brand-primary-btn)]",
+    "text-white",
+    "hover:underline",
+    "hover:bg-[var(--color-filter-text)]",
+    "hover:border-[var(--color-filter-text)]",
+    "active:bg-[var(--color-primary-btn-active)]",
+    "active:border-[var(--info-panel-view-bg)]",
+    "active:shadow-[0_0_0_4px_var(--color-shadow-select)]",
+    "disabled:border",
+    "disabled:bg-[var(--color-stroke-neutral)]",
+    "disabled:border-[var(--color-stroke-neutral)]",
+    "disabled:text-[var(--color-box-border)]",
+  ),
+  delete: cn(
+    "py-4 px-6",  
+    "bg-[var(--color-stroke-brand)]",
+    "text-white",
+    "hover:underline",
+    "hover:bg-[var(--notif-border)]",
+    "hover:border-[var(--notif-border)]",
+    "active:bg-[var(--color-neutral-secondary)]",
+    "active:border-[var(--color-stroke-brand)]",
+    "active:shadow-[0_0_0_4px_var(--color-tablecheckbox-shadow)]",
+    "focus:bg-[var(--notif-border)]",
+    "focus:border-[var(--notif-border)]",
+  ),
+  infoPanel: cn(
+    "bg-transparent",
+    "border-none",
+    "text-[var(--info-panel-view-bg)]",
+    "text-base",
+    "font-normal",
+    "hover:bg-[var(--sidebar-active-bg)]",
+    "hover:rounded-lg",
+    "hover:underline",
+    "active:bg-[var(--color-admin-profile-border)]",
+    "active:text-[var(--color-filter-text)]",
+    "active:shadow-[0_0_0_var(--Spread-50,_2px)_var(--Special-Effects-Ring---Colour,_rgba(254,87,32,0.40))]",
+    "active:underline",
+    "active:border-none",
+    "focus-visible:bg-[var(--color-admin-profile-border)]",
+    "focus-visible:text-[var(--color-filter-text)]",
+    "focus-visible:shadow-[0_0_0_var(--Spread-50,_2px)_var(--Special-Effects-Ring---Colour,_rgba(254,87,32,0.40))]",
+    "focus-visible:outline-none",
+    "focus-visible:underline",
+  ),
+  infoPanelText: cn(
+    "bg-transparent",
+    "border-none",
+    "text-[var(--info-panel-view-bg)]",
+    "text-base",
+    "font-normal",
+    "transition-all",
+    "duration-150",
+    "hover:bg-[var(--sidebar-active-bg)]",
+    "hover:text-[var(--info-panel-view-bg)]",
+    "hover:underline",
+    "active:bg-[var(--color-admin-profile-border)]",
+    "active:text-[var(--color-filter-text)]",
+    "active:underline",
+    "active:shadow-[0_0_0_var(--Spread-50,_2px)_var(--Special-Effects-Ring---Colour,_rgba(254,87,32,0.40))]",
+    "focus-visible:bg-[var(--color-admin-profile-border)]",
+    "focus-visible:text-[var(--color-filter-text)]",
+    "focus-visible:underline",
+    "focus-visible:shadow-[0_0_0_var(--Spread-50,_2px)_var(--Special-Effects-Ring---Colour,_rgba(254,87,32,0.40))]",
+    "focus-visible:outline-none",
+  ),
+  activateGreen: cn(
+    "bg-white",
+    "group",
+    "!border",
+    "!border-[var(--notif-success)]",
+    "cursor-pointer",
+    "text-[var(--notif-success)]",
+    "hover:underline",
+    "hover:bg-[var(--color-success-hover)]",
+    "hover:border",
+    "hover:text-[var(--color-success-dark)]",
+    "hover:border-[var(--color-success-dark)]",
+    "active:bg-[var(--toast-success-bg)]",
+    "active:border",
+    "active:border-[var(--notif-success)]",
+    "active:shadow-[0_0_0_4px_var(--color-success-shadow)]",
+  ),
+  icon: cn(
+    "bg-transparent",
+    "text-[var(--info-panel-view-bg)]",
+    "hover:bg-[var(--sidebar-active-bg)]",
+    "hover:text-[var(--color-filter-text)]",
+    "active:bg-[var(--color-admin-profile-border)]",
+    "active:text-[var(--color-filter-text)]",
+  ),
+  grublock: cn(
+    "!rounded-full",
+    "border",
+    "border-[var(--notif-warning)]",
+    "bg-[var(--color-helpwrite-bg)]",
+    "text-[var(--notif-warning)]",
+    "text-base",
+    "font-medium",
+    "px-3",
+    "py-1.5",
+    "gap-1.5",
+    "w-fit",
+    "mx-auto",
+    "hover:shadow-[0_0_0_var(--Spread-100,_4px)_var(--Special-Effects-Ring---Colour,_rgba(244,173,73,0.40))]",
+    "active:border-[var(--color-grublock-warning)]",
+    "active:bg-[var(--color-helpwrite-btn)]",
+    "active:text-white",
+    "active:shadow-[0_0_0_var(--Spread-100,_4px)_var(--Special-Effects-Ring---Colour,_rgba(244,173,73,0.40))]",
+    "focus:border-[var(--color-grublock-warning)]",
+    "focus:bg-[var(--color-helpwrite-btn)]",
+    "focus:text-white",
+    "focus:shadow-[0_0_0_var(--Spread-100,_4px)_var(--Special-Effects-Ring---Colour,_rgba(244,173,73,0.40))]",
+    "focus:outline-none",
+  ),
+} as const;
+
+const SIZE_CLASSES: Record<ButtonSize, string> = {
+  sm: "btn-size-sm",
+  md: "btn-size-md",
+  mdLg: "btn-size-md-lg",
+  lg: "btn-size-lg",
+  lgText: "btn-size-lg-text",
+} as const;
+
+const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
+  (props, ref) => {
+    const {
+      children,
+      variant = "primary",
+      size = "md",
+      className = "",
+      bgColor,
+      borderColor,
+      style,
+      as = "button",
+      ...rest
+    } = props as ButtonProps & { as?: "button" | "a" };
+
+    const buttonRest = rest as React.ButtonHTMLAttributes<HTMLButtonElement>;
+    const anchorRest = rest as React.AnchorHTMLAttributes<HTMLAnchorElement>;
+
+    const isDisabled =
+      as === "button"
+        ? Boolean(buttonRest.disabled)
+        : Boolean(anchorRest["aria-disabled"]);
+
+    const classes = cn(
+      BASE_CLASSES,
+      VARIANT_CLASSES[variant],
+      SIZE_CLASSES[size],
+      className,
+      isDisabled && "pointer-events-none",
+    );
+
+    const mergedStyle: CSSProperties = { ...(style ?? {}) };
+    if (bgColor) mergedStyle.backgroundColor = bgColor;
+    if (borderColor) mergedStyle.borderColor = borderColor;
+
+    if (as === "a") {
+      const { href, rel, target, ...anchorSpecific } = anchorRest;
+      return (
+        <a
+          ref={ref as Ref<HTMLAnchorElement>}
+          className={classes}
+          style={mergedStyle}
+          href={href}
+          rel={rel}
+          target={target}
+          aria-disabled={isDisabled}
+          suppressHydrationWarning
+          {...anchorSpecific}
+        >
+          {children}
+        </a>
+      );
+    }
+
+    return (
+      <button
+        ref={ref as Ref<HTMLButtonElement>}
+        className={classes}
+        style={mergedStyle}
+        disabled={isDisabled}
+        suppressHydrationWarning
+        {...buttonRest}
+      >
+        {children}
+      </button>
+    );
+  },
+);
+
+Button.displayName = "Button";
+
+export default Button;

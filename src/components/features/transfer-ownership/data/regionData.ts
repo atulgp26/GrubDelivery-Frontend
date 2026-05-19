@@ -1,0 +1,88 @@
+import { COUNTRIES as PHONE_COUNTRIES } from "@/components/ui/phone-dropdown";
+
+export const COUNTRIES = PHONE_COUNTRIES
+  .map((country) => ({ value: country.code, label: country.name }))
+  .sort((a, b) => a.label.localeCompare(b.label));
+
+export const DEFAULT_STATE_OPTIONS = [
+  { value: "NA", label: "Not applicable" },
+  { value: "OTHER", label: "Other / Not listed" },
+];
+
+export const STATES_BY_COUNTRY: Record<string, { value: string; label: string }[]> = {
+  IN: [
+    { value: "AN", label: "Andaman and Nicobar Islands" },
+    { value: "AP", label: "Andhra Pradesh" },
+    { value: "AR", label: "Arunachal Pradesh" },
+    { value: "AS", label: "Assam" },
+    { value: "BR", label: "Bihar" },
+    { value: "CH", label: "Chandigarh" },
+    { value: "CT", label: "Chhattisgarh" },
+    { value: "DN", label: "Dadra and Nagar Haveli and Daman and Diu" },
+    { value: "DL", label: "Delhi" },
+    { value: "GA", label: "Goa" },
+    { value: "HP", label: "Himachal Pradesh" },
+    { value: "HR", label: "Haryana" },
+    { value: "JH", label: "Jharkhand" },
+    { value: "JK", label: "Jammu and Kashmir" },
+    { value: "LA", label: "Ladakh" },
+    { value: "MH", label: "Maharashtra" },
+    { value: "KA", label: "Karnataka" },
+    { value: "MP", label: "Madhya Pradesh" },
+    { value: "MN", label: "Manipur" },
+    { value: "ML", label: "Meghalaya" },
+    { value: "MZ", label: "Mizoram" },
+    { value: "NL", label: "Nagaland" },
+    { value: "OR", label: "Odisha" },
+    { value: "PB", label: "Punjab" },
+    { value: "PY", label: "Puducherry" },
+    { value: "TN", label: "Tamil Nadu" },
+    { value: "GJ", label: "Gujarat" },
+    { value: "RJ", label: "Rajasthan" },
+    { value: "WB", label: "West Bengal" },
+    { value: "UP", label: "Uttar Pradesh" },
+    { value: "TS", label: "Telangana" },
+    { value: "KL", label: "Kerala" },
+    { value: "SK", label: "Sikkim" },
+    { value: "TR", label: "Tripura" },
+    { value: "UT", label: "Uttarakhand" },
+  ],
+  US: [
+    { value: "CA", label: "California" },
+    { value: "TX", label: "Texas" },
+    { value: "NY", label: "New York" },
+    { value: "FL", label: "Florida" },
+    { value: "IL", label: "Illinois" },
+    { value: "WA", label: "Washington" },
+    { value: "CO", label: "Colorado" },
+    { value: "AZ", label: "Arizona" },
+    { value: "GA", label: "Georgia" },
+    { value: "NC", label: "North Carolina" },
+  ],
+  GB: [
+    { value: "ENG", label: "England" },
+    { value: "SCT", label: "Scotland" },
+    { value: "WLS", label: "Wales" },
+    { value: "NIR", label: "Northern Ireland" },
+  ],
+  AU: [
+    { value: "NSW", label: "New South Wales" },
+    { value: "VIC", label: "Victoria" },
+    { value: "QLD", label: "Queensland" },
+    { value: "WA", label: "Western Australia" },
+    { value: "SA", label: "South Australia" },
+    { value: "TAS", label: "Tasmania" },
+    { value: "ACT", label: "Australian Capital Territory" },
+    { value: "NT", label: "Northern Territory" },
+  ],
+  CA: [
+    { value: "ON", label: "Ontario" },
+    { value: "BC", label: "British Columbia" },
+    { value: "QC", label: "Quebec" },
+    { value: "AB", label: "Alberta" },
+    { value: "MB", label: "Manitoba" },
+    { value: "NS", label: "Nova Scotia" },
+    { value: "SK", label: "Saskatchewan" },
+    { value: "NB", label: "New Brunswick" },
+  ],
+};

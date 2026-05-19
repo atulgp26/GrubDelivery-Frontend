@@ -1,0 +1,35 @@
+/* ====================
+   BORDER RADIUS TOKENS
+   ==================== */
+
+:root {
+	/* ========================
+	   BORDER RADIUS
+	   ======================== */
+
+	/* Base border radius for buttons and interactive elements */
+	/* Radius/base */
+	--gp-radius-base: 8px;
+
+	/* Small border radius */
+	/* Radius/small */
+	--gp-radius-sm: 4px;
+
+	/* Medium border radius */
+	/* Radius/medium */
+	--gp-radius-md: 6px;
+
+	/* Large border radius */
+	--gp-radius-lg: 12px;
+
+	/* Extra large border radius */
+	--gp-radius-xl: 16px;
+
+	/* Round border radius */
+	--gp-radius-round: 9999px;
+
+	/* Full/circle border radius */
+	/* Radius/full */
+	/* Value: (for perfect circles) */
+	--gp-radius-full: 10000px;
+}

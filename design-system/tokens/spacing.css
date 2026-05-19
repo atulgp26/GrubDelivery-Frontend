@@ -1,0 +1,229 @@
+/* ==============
+   SPACING TOKENS
+   ============== */
+
+:root {
+	/* ==============
+	   BUTTON SPACING
+	   ============== */
+
+	/* Button padding - Small size */
+	/* interactive/small/vertical-padding */
+	--gp-button-padding-y-sm: 8px;
+
+	/* interactive/small/horizontal-padding */
+	--gp-button-padding-x-sm: 12px;
+
+	/* Button padding - Large size */
+	/* interactive/large/vertical-padding */
+	--gp-button-padding-y-lg: 12px;
+
+	/* interactive/large/horizontal-padding */
+	--gp-button-padding-x-lg: 16px;
+
+	/* Button padding - Medium size */
+	/* interactive/medium/vertical-padding */
+	--gp-button-padding-y-md: 8px;
+
+    
+	/* interactive/medium/horizontal-padding */
+	--gp-button-padding-x-md: 16px;
+    
+	/* Button padding - X-Large size */
+	/* interactive/x-large/vertical-padding */
+	--gp-button-padding-y-xl: 12px;
+    
+	/* interactive/x-large/horizontal-padding */
+	--gp-button-padding-x-xl: 24px;
+    
+	/* interactive/x-large/margin */
+	--gp-button-gap-xl: 12px;
+    
+	/* Button gap/margin */
+	/* interactive/small/margin */
+	--gp-button-gap-sm: 8px;
+    
+	/* interactive/medium/margin */
+	--gp-button-gap-md: 12px;
+
+	/* interactive/large/margin */
+	--gp-button-gap-lg: 12px;
+
+	/* ========================
+	   GENERAL SPACING SCALE
+	   ======================== */
+
+	/* spacing: space/s */
+	--gp-space-s: 8px;
+
+	/* spacing: space/m */
+	--gp-space-m: 12px;
+
+	/* spacing: space/l */
+	--gp-space-l: 16px;
+
+	/* spacing: space/xl */
+	--gp-space-xl: 24px;
+
+	/* padding: padding/s */
+	--gp-padding-s: 8px;
+
+	/* padding: padding/m */
+	--gp-padding-m: 12px;
+
+	/* padding: padding/l */
+	--gp-padding-l: 16px;
+
+	/* padding: padding/xl */
+	--gp-padding-xl: 24px;
+
+	/* ===================
+	   PAGE LAYOUT PADDING
+	   =================== */
+
+	/* Page horizontal padding - Regular */
+	--gp-page-padding-x-regular: 24px;
+
+	/* Page vertical padding - Regular */
+	--gp-page-padding-y-regular: 24px;
+
+	/* Page horizontal padding - Wide */
+	--gp-page-padding-x-wide: 48px;
+
+	/* Page vertical padding - Wide */
+	--gp-page-padding-y-wide: 48px;
+	
+	/* ========================
+	   COMPONENT SIZES
+	   ======================== */
+
+	/* Button heights */
+	/* Small button height: 32px */
+	--gp-button-height-sm: 32px;
+
+	/* Medium button height: 40px */
+	--gp-button-height-md: 40px;
+
+	/* Large button height: 48px */
+	--gp-button-height-lg: 48px;
+
+	/* X-Large button height: 56px (used in popups, forms) */
+	--gp-button-height-xl: 56px;
+
+	/* Text field heights */
+	/* Large text field height: 56px */
+	--gp-text-field-height-lg: 56px;
+	--gp-text-field-height-md: 48px;
+
+	/* Text field padding */
+	/* Large text field vertical padding: 12px */
+	--gp-text-field-padding-y-lg: 12px;
+
+	/* Large text field horizontal padding: 16px */
+	--gp-text-field-padding-x-lg: 16px;
+
+	/* Large text field gap (for icon spacing): 12px */
+	--gp-text-field-gap-lg: 12px;
+
+	/* Icon sizes */
+	/* Standard icon size: 24px */
+	--gp-icon-size: 24px;
+
+	/* Large icon/illustration size: 320px */
+	--gp-icon-size-lg: 320px;
+
+	/* Component dimensions */
+	/* Notification card width: 387px */
+	--gp-card-width-notification: 387px;
+
+	/* Top navigation height: 64px */
+	--gp-topnav-height: 64px;
+
+	/* Section title height: 40px */
+	--gp-section-title-height: 40px;
+
+	/* Logo mark size: 56px */
+	--gp-logo-size: 56px;
+
+	/* Close button size: 36px */
+	--gp-close-button-size: 36px;
+
+	/* Popup width: 604px */
+	--gp-popup-width: 604px;
+
+	/* padding: padding/xl */
+	--gp-padding-xl: 24px;
+
+	/* ========================
+	   PAGE SPACING
+	   ======================== */
+
+	/* Page spacing - regular (between sections) */
+	/* page/spacing---regular */
+	--gp-page-spacing-regular: 24px;
+
+	/* Page horizontal padding - regular */
+	/* page/horizontal-padding---regular */
+	--gp-page-padding-x-regular: 24px;
+
+	/* Page vertical padding - regular */
+	/* page/vertical-padding---regular */
+	--gp-page-padding-y-regular: 24px;
+
+	/* Page horizontal padding - wide */
+	/* page/horizontal-padding---wide */
+	--gp-page-padding-x-wide: 48px;
+
+	/* Page vertical padding - wide */
+	/* page/vertical-padding---wide */
+	--gp-page-padding-y-wide: 48px;
+
+	/* ========================
+	   TEXT SPACING
+	   ======================== */
+
+	/* Text spacing - regular (between text elements) */
+	/* text/regular */
+	--gp-text-spacing-regular: 8px;
+
+	/* Text spacing - narrow (tight spacing) */
+	/* text/narrow */
+	--gp-text-spacing-narrow: 4px;
+
+	/* ========================
+	   FORM ELEMENT SPACING
+	   ======================== */
+
+	/* Space between form fields */
+	/* space/regular */
+	--gp-form-field-spacing: 16px;
+
+	/* Checkbox/Radio button size */
+	--gp-checkbox-size: 20px;
+
+	/* Checkbox/Radio button border radius */
+	--gp-checkbox-radius: 4px;
+
+	/* ========================
+	   AVATAR SIZES
+	   ======================== */
+
+	/* Avatar Small size */
+	/* avatar/s */
+	--gp-avatar-s: 32px;
+
+	/* ========================
+	   SIDEBAR DIMENSIONS
+	   ======================== */
+
+	/* Sidebar width */
+	--gp-sidebar-width: 240px;
+
+	/* ========================
+	   BORDER/STROKE WIDTHS
+	   ======================== */
+
+	/* Default border width */
+	/* stroke/default */
+	--gp-stroke-width-default: 1px;
+}

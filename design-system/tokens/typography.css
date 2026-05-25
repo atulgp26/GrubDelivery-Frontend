@@ -1,0 +1,159 @@
+/* =================
+   TYPOGRAPHY TOKENS
+   ================= */
+
+:root {
+	/* =============
+	   FONT FAMILIES
+	   ============= */
+
+	/* Interactive elements (buttons, links) */
+	/* Font Family/Interactive */
+	/* Value: Inter Medium */
+	--gp-font-interactive: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+		Roboto, sans-serif;
+
+	/* Text/body content */
+	/* Font Family/Text */
+	/* Value: Inter Regular */
+	--gp-font-text: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+		Roboto, sans-serif;
+
+	/* Headings */
+	/* Font Family/Heading */
+	/* Value: Inter Semibold */
+	--gp-font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+		Roboto, sans-serif;
+
+	/* ========================
+	   FONT WEIGHTS
+	   ======================== */
+
+	/* Interactive weight */
+	/* Font Weight/Interactive */
+	/* Value: 500 (Medium) */
+	--gp-font-weight-interactive: 500;
+
+	/* Text weight */
+	/* Font Weight/Text */
+	/* Value: 400 (Regular) */
+	--gp-font-weight-text: 400;
+
+	/* Heading weight */
+	/* Font Weight/Heading */
+	/* Value: 600 (Semibold) */
+	--gp-font-weight-heading: 600;
+
+	/* ========================
+	   BUTTON TYPOGRAPHY
+	   ======================== */
+
+	/* Button Small - Font Size */
+	/* Font Size/Small/M (Interactive/S/S) */
+	--gp-button-font-size-sm: 14px;
+
+	/* Button Small - Line Height */
+	/* Line Height/Narrow/Small/M */
+	--gp-button-line-height-sm: 16px;
+
+	/* Button Large - Font Size */
+	/* Font Size/Small/XL (Interactive/L/L) */
+	--gp-button-font-size-lg: 18px;
+
+	/* Button Large - Line Height */
+	/* Line Height/Narrow/Small/XL */
+	--gp-button-line-height-lg: 22px;
+
+	/* Button Medium - Font Size */
+	/* Font Size/Small/L (Interactive/M/M) */
+	--gp-button-font-size-md: 16px;
+
+	/* Button Medium - Line Height */
+	/* Line Height/Narrow/Small/L */
+	--gp-button-line-height-md: 20px;
+
+	/* Button X-Large - Font Size */
+	/* Font Size/Big/2XS (Interactive/XL/XL) */
+	--gp-button-font-size-xl: 20px;
+
+	/* Button X-Large - Line Height */
+	/* Line Height/Narrow/Big/XS */
+	--gp-button-line-height-xl: 32px;
+
+	/* ========================
+	   TEXT TYPOGRAPHY
+	   ======================== */
+
+	/* Text Small - Font Size */
+	/* Font Size/Small/M */
+	--gp-text-size-sm: 14px;
+
+	/* Text Small - Line Height */
+	/* Line Height/Regular/Small/M */
+	--gp-text-line-height-sm: 22px;
+
+	/* Text Medium - Font Size */
+	/* Font Size/Small/L */
+	--gp-text-size-md: 16px;
+
+	/* Text Medium - Line Height */
+	--gp-text-line-height-md: 24px;
+
+	/* Text Large - Font Size */
+	/* Font Size/Small/XL */
+	--gp-text-size-lg: 18px;
+
+	/* Text Large - Line Height */
+	--gp-text-line-height-lg: 28px;
+
+	/* ========================
+	   HEADING TYPOGRAPHY
+	   ======================== */
+
+	/* Heading Small - Font Size */
+	/* Font Size/Small/L */
+	--gp-heading-size-sm: 16px;
+
+	/* Heading Small - Line Height */
+	/* Line Height/Regular/Small/L */
+	--gp-heading-line-height-sm: 24px;
+
+	/* Heading Medium - Font Size */
+	/* Font Size/Small/XL */
+	--gp-heading-size-md: 18px;
+
+	/* Heading Medium - Line Height */
+	/* Line Height/Regular/Small/XL */
+	--gp-heading-line-height-md: 28px;
+
+	/* Heading Large - Font Size */
+	/* Font Size/Big/XS (Heading/L) */
+	--gp-heading-size-lg: 24px;
+
+	/* Heading Large - Line Height */
+	/* Line Height/Narrow/Big/XS */
+	--gp-heading-line-height-lg: 32px;
+
+	/* Heading X-Large - Font Size */
+	/* Font Size/Big/S (Heading/XL - "Welcome to GrubPac!") */
+	--gp-heading-size-xl: 28px;
+
+	/* Heading X-Large - Line Height */
+	/* Line Height/Narrow/Big/S */
+	--gp-heading-line-height-xl: 36px;
+
+	/* Heading 2X-Large - Font Size */
+	/* Font Size/Big/M (Heading/2XL) */
+	--gp-heading-size-2xl: 32px;
+
+	/* Heading 2X-Large - Line Height */
+	/* Line Height/Narrow/Big/M */
+	--gp-heading-line-height-2xl: 38px;
+
+	/* ========================
+	   LETTER SPACING
+	   ======================== */
+
+	/* Default letter spacing */
+	--gp-letter-spacing-default: 0;
+}

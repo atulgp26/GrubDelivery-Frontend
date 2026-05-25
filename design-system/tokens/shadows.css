@@ -1,0 +1,68 @@
+/* =============
+   SHADOW TOKENS
+   ============= */
+
+:root {
+	/* ========================
+	   DROP SHADOWS
+	   ======================== */
+
+	/* Popup/Modal shadow */
+	/* DS (Drop Shadow) */
+	--gp-shadow-popup: 0px 0px 4px rgba(0, 0, 0, 0.1),
+		4px 4px 8px rgba(0, 0, 0, 0.12);
+
+	/* Small shadow for buttons */
+	/* shadow-xs */
+	--gp-shadow-xs: 0px 1px 2px rgba(0, 0, 0, 0.05);
+
+	/* Tooltip shadow */
+	--gp-shadow-tooltip: 0px 0px 4px 0px rgba(0, 0, 0, 0.16);
+
+	/* Selection ring shadow used on selected lock icon */
+	--gp-shadow-selection-ring: 0px 0px 0px 4px rgba(244, 173, 73, 0.4);
+
+	/* Small shadow */
+	/* shadow-sm */
+	--gp-shadow-sm: 0px 1px 3px rgba(0, 0, 0, 0.1),
+		0px 1px 2px rgba(0, 0, 0, 0.06);
+
+	/* Medium shadow */
+	/* shadow-md */
+	--gp-shadow-md: 0px 4px 6px rgba(0, 0, 0, 0.07),
+		0px 2px 4px rgba(0, 0, 0, 0.05);
+
+	/* Large shadow */
+	/* shadow-lg */
+	--gp-shadow-lg: 0px 10px 15px rgba(0, 0, 0, 0.1),
+		0px 4px 6px rgba(0, 0, 0, 0.05);
+
+	/* Extra large shadow */
+	/* shadow-xl */
+	--gp-shadow-xl: 0px 20px 25px rgba(0, 0, 0, 0.1),
+		0px 10px 10px rgba(0, 0, 0, 0.04);
+
+	/* ========================
+	   INNER SHADOWS
+	   ======================== */
+
+	/* Inner shadow for photos */
+	/* Inner shadow photos */
+	--gp-shadow-inner-photo: inset 0px 0px 4px 0px rgba(0, 0, 0, 0.24);
+
+	/* Photo effects - individual tokens */
+	/* effects/photo (inner) */
+	--gp-photo-effect-x: 0px;
+	--gp-photo-effect-y: 0px;
+	--gp-photo-effect-blur: 4px;
+	--gp-photo-effect-spread: 0px;
+	--gp-photo-effect-color: rgba(0, 0, 0, 0.24);
+
+	/* ========================
+	   BLUR EFFECTS
+	   ======================== */
+
+	/* Background blur for popups/modals */
+	/* blur/100 (Popup background) */
+	--gp-blur-popup: 2px;
+}

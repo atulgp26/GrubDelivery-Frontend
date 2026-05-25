@@ -1,0 +1,11 @@
+const ACCOUNT_BASE = "/food/account";
+
+export const ACCOUNT_URLS = {
+	ME: `${ACCOUNT_BASE}/me`,
+	MY_GRUBPACS: `${ACCOUNT_BASE}/mygrubpacs`,
+	TRANSFER_OWNERSHIP: `${ACCOUNT_BASE}/transfer-ownership`,
+	TRANSFER_OWNERSHIP_VERIFY: `${ACCOUNT_BASE}/transfer-ownership/verify`,
+	UPDATE: ACCOUNT_BASE,
+	CONFIRM: `${ACCOUNT_BASE}/confirm`,
+	RESEND_OTP: `${ACCOUNT_BASE}/update/resend-otp`,
+} as const;

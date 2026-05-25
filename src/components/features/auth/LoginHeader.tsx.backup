@@ -1,0 +1,34 @@
+import Image from "next/image";
+import Link from "next/link";
+
+import Button from "@/components/ui/Button";
+
+export interface LoginHeaderProps {
+  ctaHref?: string;
+  ctaLabel?: string;
+}
+
+export default function LoginHeader({
+  ctaHref = "#",
+  ctaLabel = "VISIT WEBSITE",
+}: LoginHeaderProps) {
+  return (
+    <header className="w-full h-16 flex items-center justify-between px-8 py-4 bg-white border-b border-[var(--color-neutral-secondary-bg)]">
+      <div>
+        <Link href="/">
+        <Image src="/Login-mark.svg" width={56} height={56} alt="login-mark" />
+        </Link>
+      </div>
+      <Button
+        as="a"
+        href={ctaHref}
+        rel="noopener noreferrer"
+        variant="grayOutline"
+        size="sm"
+        className="text-sm px-4 py-1.5 rounded-lg font-medium transition"
+      >
+        {ctaLabel}
+      </Button>
+    </header>
+  );
+} 

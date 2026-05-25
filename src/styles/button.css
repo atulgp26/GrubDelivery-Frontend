@@ -1,0 +1,84 @@
+.btn {
+  font-weight: 500;
+  border-radius: 0.5rem;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.btn-size-sm {
+  font-size: 0.875rem;
+  padding: 0.375rem 0.75rem;
+}
+
+.btn-size-md {
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+.btn-size-md-lg {
+  font-size: 18px !important;
+  padding: 0.5rem 1rem;
+}
+
+.btn-size-md-cancel {
+  font-size: 16px !important;
+  padding: 0.5rem 1rem;
+}
+
+.btn-size-md-sm {
+  font-size: 14px !important;
+}
+
+.btn-size-lg-text {
+  font-size: 20px;
+}
+
+.btn-size-lg {
+  font-size: 1.25rem;
+  padding: 0.75rem 1.5rem;
+}
+
+.btn-shared {
+  border-radius: 0.5rem;
+  border: 1px solid var(--info-panel-view-bg);
+  background: var(--color-brand-primary-btn);
+  color: #fff;
+  transition: all 0.15s ease;
+  font-size: 20px;
+}
+
+.btn-shared:hover {
+  background: var(--color-filter-text);
+  border-color: var(--color-filter-text);
+  text-decoration: underline;
+}
+
+.btn-shared:focus-visible,
+.btn-shared:focus {
+  background: var(--color-filter-text);
+  border-color: var(--color-filter-text);
+  box-shadow: 0 0 0 4px rgba(254, 87, 32, 0.4);
+  outline: none;
+  text-decoration: underline;
+}
+
+.btn-shared:active {
+  background: var(--color-primary-btn-active);
+  border-color: var(--info-panel-view-bg);
+  box-shadow: 0 0 0 4px rgba(254, 87, 32, 0.4);
+  text-decoration: underline;
+}
+
+.btn-shared:disabled,
+.btn-shared[aria-disabled="true"] {
+  background: var(--color-stroke-neutral);
+  border-color: var(--color-stroke-neutral);
+  color: var(--color-box-border);
+  cursor: not-allowed;
+  box-shadow: none;
+  text-decoration: none;
+}
+

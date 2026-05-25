@@ -1,0 +1,179 @@
+/* ============
+   COLOR TOKENS
+   ============ */
+
+:root {
+	/* ========================
+	   BRAND/PRIMARY COLORS
+	   ======================== */
+
+	/* Primary brand button background */
+	/* background/interactive/brand---primary-button/default */
+	--gp-color-brand-primary: #fe5720;
+	--gp-color-brand-primary-rgb: 254 87 32;
+
+	/* Primary brand button border */
+	/* stroke/interactive/brand/default */
+	--gp-color-brand-border: #fe480b;
+	--gp-color-brand-border-rgb: 254 72 11;
+
+	/* Secondary/outlined button background */
+	/* background/interactive/brand---secondary-button/default */
+	--gp-color-secondary-bg: #ffffff;
+	--gp-color-secondary-bg-rgb: 255 255 255;
+
+	/* ========================
+	   TEXT COLORS
+	   ======================== */
+
+	/* Text primary (darkest) */
+	/* content/neutral---primary */
+	--gp-color-text-neutral-primary: #03130a;
+
+	/* Text on primary buttons */
+	/* content/on-primary */
+	--gp-color-text-on-primary: #ffffff;
+
+	/* Text on secondary/outlined buttons */
+	/* content/brand/default */
+	--gp-color-text-brand: #fe480b;
+
+	/* Brand active text (for alerts, notifications) */
+	/* content/brand/active */
+	--gp-color-text-brand-active: #cb3301;
+
+	/* Brand text (alias) */
+	/* content/brand/default */
+	--gp-color-text-brand-primary: #fe480b;
+
+	/* Success and error text */
+	/* content/coloured---primary (green) */
+	--gp-color-text-success-primary: #479f29;
+	/* content/error---primary */
+	--gp-color-text-error-primary: #dc2807;
+
+	/* Neutral text colors */
+	/* content/neutral---secondary */
+	--gp-color-text-neutral-secondary: #37493f;
+
+	/* content/neutral---tertiary */
+	--gp-color-text-neutral-tertiary: #6b7971;
+
+	/* content/neutral---light */
+	--gp-color-text-neutral-light: #a4aca7;
+
+	/* Disabled text color */
+	/* content/brand/disabled */
+	--gp-color-text-disabled: #c1c7c4;
+
+	/* ========================
+	   BORDER/STROKE COLORS
+	   ======================== */
+
+	/* Neutral borders */
+	/* stroke/neutral---primary */
+	--gp-color-stroke-neutral-primary: #c1c7c4;
+	--gp-color-border-neutral-primary: #c1c7c4; /* Alias */
+
+	/* stroke/neutral---secondary, stroke/interactive/neutral/default-and-filled */
+	--gp-color-stroke-neutral-secondary: #e0e3e1;
+	--gp-color-border-neutral: #e0e3e1; /* Alias */
+	--gp-color-border-neutral-secondary: #e0e3e1; /* Alias for text fields */
+
+	/* Brand borders */
+	/* stroke/interactive/brand/default */
+	--gp-color-stroke-brand-primary: #fe480b;
+	--gp-color-border-brand-primary: #fe480b; /* Alias */
+
+	/* Success borders */
+	/* stroke/coloured---primary (green) */
+	--gp-color-stroke-success-primary: #5ca940;
+
+	/* Error borders */
+	/* stroke/error */
+	--gp-color-stroke-error-primary: #dc2807;
+	/* stroke/coloured---primary (red border for colored tokens) */
+	--gp-color-stroke-error-border: #e44421;
+
+	/* ========================
+	   BACKGROUND COLORS
+	   ======================== */
+
+	/* Colored secondary background (for icons, illustrations) */
+	/* background/coloured---secondary */
+	--gp-color-bg-colored-secondary: #ffd9cc;
+
+	/* Neutral background secondary */
+	/* background/neutral---secondary */
+	--gp-color-bg-neutral-secondary: #eff1f0;
+
+	/* Neutral background tertiary */
+	/* background/neutral---tertiary */
+	--gp-color-bg-neutral-tertiary: #f7f8f8;
+
+	/* Row hover background used in data tables */
+	--gp-color-bg-row-hover: #f7f8f7;
+
+	/* Brand secondary/tertiary backgrounds */
+	/* background/interactive/brand---secondary-button/default */
+	--gp-color-bg-brand-secondary: #ffece5;
+	/* background/interactive/brand---secondary-button/hover */
+	--gp-color-bg-brand-tertiary: #ffd9cc;
+
+	/* Success/error secondary backgrounds */
+	/* background/coloured---secondary (success) */
+	--gp-color-bg-success-secondary: #dcecd4;
+	/* background/coloured---secondary hover (success) */
+	--gp-color-bg-success-tertiary: #cfe1c1;
+	/* background/error---secondary */
+	--gp-color-bg-error-secondary: #ffece5;
+
+	/* Disabled primary button background */
+	/* background/interactive/brand---primary-button/disabled */
+	--gp-color-bg-button-primary-disabled: #e0e3e1;
+
+	/* White background */
+	--gp-color-bg-white: #ffffff;
+
+	/* Popup overlay background */
+	/* special/effects/popup-background */
+	--gp-color-popup-overlay: rgba(121, 134, 126, 0.04);
+
+	/* ========================
+	   STATUS COLORS
+	   ======================== */
+
+	/* Success color */
+	/* semantic/success */
+	/* Value: (success-500) */
+	--gp-color-success: #479f29;
+
+	/* Warning color */
+	/* semantic/warning */
+	/* Value: (warning-500) */
+	--gp-color-warning: #f0a433;
+
+	/* Error color */
+	/* semantic/error */
+	/* Value: (error-500) */
+	--gp-color-error: #dc2807;
+
+	/* ========================
+	   TEMPERATURE COLORS
+	   ======================== */
+
+	/* Low temperature (cold / blue) */
+	--gp-color-temp-low-bg: #dde9f7;
+	--gp-color-temp-low-border: #5b9dd9;
+	--gp-color-temp-low-text: #1e5a9c;
+
+	/* Mid temperature (ambient / neutral gray) */
+	--gp-color-temp-mid-bg: var(--gp-color-bg-neutral-secondary);       /* #eff1f0 */
+	--gp-color-temp-mid-border: var(--gp-color-stroke-neutral-primary);  /* #c1c7c4 */
+	--gp-color-temp-mid-text: var(--gp-color-text-neutral-tertiary);     /* #6b7971 */
+
+	/* High temperature (hot / red) */
+	--gp-color-temp-high-bg: var(--gp-color-bg-colored-secondary);       /* #ffd9cc */
+	--gp-color-temp-high-border: var(--gp-color-stroke-error-border);    /* #e44421 */
+	--gp-color-temp-high-text: var(--gp-color-text-error-primary);       /* #dc2807 */
+}

@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 import Link from "next/link";
 import { useProfileData } from "@/hooks/useProfileData";
-import WelcomeBox from "@/components/features/dashboard/WelcomeBox";
 
 export default function DashboardPage() {
   const { userData, loading } = useProfileData();
@@ -29,7 +28,7 @@ export default function DashboardPage() {
           </Link>
         </Button>
       </InfoPanel>
-      <WelcomeBox />
+      {/* <WelcomeBox /> */}
     </>
   );
 }

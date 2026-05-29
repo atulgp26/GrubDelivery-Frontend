@@ -1,0 +1,44 @@
+name: Auto Deploy Frontend
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -t ed25519 -H 13.127.79.155 >> ~/.ssh/known_hosts
+
+      - name: Deploy via Docker
+        run: |
+          ssh ubuntu@13.127.79.155 << 'DEPLOY_EOF'
+            set -e
+            cd ~/grubFood-frontend
+
+            git pull origin master
+
+            docker compose -f docker-compose.prod.yml build
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+
+            docker image prune -f
+          DEPLOY_EOF
+
+      - name: Health check
+        run: |
+          sleep 20
+          curl -sf http://13.127.79.155 || echo "Health check failed, check container logs"
+
+      - name: Notify
+        if: always()
+        run: |
+          echo "Deployment ${{ job.status }}"

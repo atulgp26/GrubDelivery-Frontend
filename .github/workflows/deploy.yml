@@ -15,9 +15,7 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          cat > ~/.ssh/id_rsa << 'KEYEOF'
-${{ secrets.SSH_PRIVATE_KEY }}
-KEYEOF
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -t rsa -H 13.127.79.155 >> ~/.ssh/known_hosts 2>/dev/null
 

@@ -15,13 +15,15 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -t ed25519 -H 13.127.79.155 >> ~/.ssh/known_hosts
+          cat > ~/.ssh/id_rsa << 'KEYEOF'
+${{ secrets.SSH_PRIVATE_KEY }}
+KEYEOF
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -t rsa -H 13.127.79.155 >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: Deploy via Docker
         run: |
-          ssh ubuntu@13.127.79.155 << 'DEPLOY_EOF'
+          ssh -i ~/.ssh/id_rsa ubuntu@13.127.79.155 << 'DEPLOY_EOF'
             set -e
             cd ~/grubFood-frontend
 

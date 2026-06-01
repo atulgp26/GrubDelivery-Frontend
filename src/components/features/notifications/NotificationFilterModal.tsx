@@ -162,7 +162,7 @@ export default function NotificationFilterModal({
             </Button>
             <Button
               variant="primary"
-              className=" cursor-pointer flex items-center text-[var(--color-brand-default)] px-6 py-2 rounded-lg font-medium text-base"
+              className=" cursor-pointer text-white flex items-center  px-6 py-2 rounded-lg font-medium text-base"
               onClick={onFilter}
               type="button"
             >

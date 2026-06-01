@@ -62,7 +62,7 @@ export function useEmployeeSearch({
   useEffect(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
-    if (!query.trim()) {
+if (query.trim().length < 3) {
       setResults([]);
       setIsSearching(false);
       setSearchError(null);

@@ -504,7 +504,7 @@ export default function AddEmployeeModal({
       setSubmitAttempted(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, employee, resolveInitialRestaurantId]);
+  }, [open, employee, resolveInitialRestaurantId, allRestaurants]);
 
   const normalizedContact = normalizeIndianContact(formData.contact);
   const normalizedJoiningDate = normalizeJoiningDate(formData.joiningDate);
@@ -532,7 +532,6 @@ export default function AddEmployeeModal({
     isLastNameLengthValid &&
     isFirstNameCharacterValid &&
     isLastNameCharacterValid &&
-    isContactValid &&
     isEmailValid &&
     formData.employeeId.trim() !== "" &&
     isJoiningDateValid &&
@@ -545,7 +544,7 @@ export default function AddEmployeeModal({
   if (!isLastNameLengthValid) validationErrors.push(`Last name (max ${LAST_NAME_MAX_LENGTH} characters)`);
   if (!isFirstNameCharacterValid) validationErrors.push("First name (letters only)");
   if (!isLastNameCharacterValid) validationErrors.push("Last name (letters only)");
-  if (!isContactValid) validationErrors.push("Valid contact number");
+
   if (!isEmailValid) validationErrors.push("Valid email address");
   if (formData.employeeId.trim() === "") validationErrors.push("Employee ID");
   if (!isJoiningDateValid) validationErrors.push("Joining date");
@@ -577,7 +576,7 @@ export default function AddEmployeeModal({
       ...formData,
       firstName: trimmedFirstName,
       lastName: trimmedLastName,
-      contact: normalizedContact!,
+contact: normalizedContact ?? "",
       email: trimmedEmail,
       joiningDate: normalizedJoiningDate,
     });

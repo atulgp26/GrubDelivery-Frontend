@@ -49,7 +49,7 @@ export default function EmployeeToolbar({
 }: EmployeeToolbarProps) {
   const [isFocused, setIsFocused] = useState(false);
 
-  const showDropdown = isFocused && searchTerm.trim().length > 0;
+const showDropdown = isFocused && searchTerm.trim().length >= 3;
   const shouldShowRoleFilter = showRoleFilter ?? isGrouped;
 
   return (

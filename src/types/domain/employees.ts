@@ -25,6 +25,17 @@ export interface Employee {
     displayId: string;
     status?: string;
   };
+
+  sharedBoxes?: Array<{
+  id: string;
+  name: string;
+  displayId: string;
+  vehicleNumber?: string;
+  powerStatus?: string;
+  connectionStatus?: string;
+  healthStatus?: string;
+  createdAt?: string;
+}>;
   added: string;
   restaurantName?: string;
   restaurantId?: string;
@@ -456,13 +467,25 @@ const boxCount =
         : connectedBoxesCount !== null
           ? connectedBoxesCount > 0
           : boxCount > 0,
-    handlerBox: e.handler_box
+  handlerBox: e.handler_box
       ? {
           id: e.handler_box.id,
           name: e.handler_box.name,
           displayId: e.handler_box.box_display_id,
           status: e.handler_box.status,
         }
+      : undefined,
+    sharedBoxes: Array.isArray((e as any).shared_boxes)
+      ? (e as any).shared_boxes.map((b: any) => ({
+          id: b.id,
+          name: b.name,
+          displayId: b.box_display_id,
+          vehicleNumber: b.vehicle_number ?? undefined,
+          powerStatus: b.power_status ?? undefined,
+          connectionStatus: b.connection_status ?? undefined,
+          healthStatus: b.health_status ?? undefined,
+          createdAt: b.created_at ?? undefined,
+        }))
       : undefined,
   };
 }

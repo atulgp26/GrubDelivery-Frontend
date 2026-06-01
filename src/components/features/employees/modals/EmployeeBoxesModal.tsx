@@ -39,8 +39,9 @@ interface EmployeeBoxesModalProps {
   onConfirmRemoval?: (boxIds: string[]) => Promise<void> | void;
   onViewExcludedBoxes?: () => void;
   loading?: boolean;
+  restaurantId?: string;
+  staticBoxes?: EmployeeBox[]; 
 }
-
 interface ModalState {
   view: ModalView;
   searchTerm: string;
@@ -98,6 +99,8 @@ export default function EmployeeBoxesModal({
   employeeId,
   employeeName,
   onEditList,
+  restaurantId,
+  staticBoxes,   // ← ADD
   onConfirmRemoval,
   onViewExcludedBoxes,
   loading: externalLoading = false,
@@ -144,9 +147,10 @@ export default function EmployeeBoxesModal({
     refetch,
   } = useEmployeeBoxes({
     employeeId,
+    restaurantId,
     fetchExcluded: isExcludedView,
     showOfflineBoxes: state.showOfflineBoxes,
-    enabled: open && Boolean(employeeId),
+enabled: !staticBoxes && open && Boolean(employeeId || restaurantId),
     page: state.currentPage,
     limit: PAGE_SIZE,
     searchTerm: state.searchTerm,
@@ -179,8 +183,8 @@ export default function EmployeeBoxesModal({
     };
   }, [open, state.showFilterModal, updateFilterPanelPosition]);
 
-  const activeBoxes = isExcludedView ? excludedBoxes : boxes;
-  const totalEntries = totalCount;
+const activeBoxes = staticBoxes ?? (isExcludedView ? excludedBoxes : boxes);
+const totalEntries = staticBoxes ? staticBoxes.length : totalCount;
   const hasMoreThanThreeRows = totalEntries > 3;
   const totalPages = Math.ceil(totalEntries / PAGE_SIZE);
 

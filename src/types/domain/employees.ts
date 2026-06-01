@@ -104,6 +104,7 @@ export interface ApiEmployee {
   total_boxes?: number | string;
   connected_boxes_status?: boolean;
   connected_boxes_count?: number;
+  shared_boxes_count?: number;  
   handler_box?: ApiConnectedBox | null;
 }
 
@@ -382,17 +383,16 @@ export function apiEmployeeToEmployee(e: ApiEmployee): Employee {
     }
     return null;
   };
-
-  const connectedBoxesCount = parseCount(e.connected_boxes_count);
-
-  const boxCount =
-    connectedBoxesCount ??
-    parseCount(e.box_count) ??
-    parseCount(e.boxes_count) ??
-    parseCount(e.grubpac_count) ??
-    parseCount(e.total_boxes) ??
-    0;
-
+const connectedBoxesCount = parseCount(e.connected_boxes_count) ?? 0;
+const sharedBoxesCount = parseCount(e.shared_boxes_count) ?? 0;
+const boxCount =
+  (connectedBoxesCount + sharedBoxesCount) > 0
+    ? connectedBoxesCount + sharedBoxesCount
+    : parseCount(e.box_count) ??
+      parseCount(e.boxes_count) ??
+      parseCount(e.grubpac_count) ??
+      parseCount(e.total_boxes) ??
+      0;
   const boxId =
     (typeof e.box_display_id === "string" && e.box_display_id.trim()) ||
     (typeof e.box_id === "string" && e.box_id.trim()) ||

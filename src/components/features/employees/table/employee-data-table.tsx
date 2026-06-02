@@ -26,6 +26,7 @@ import {
 	MessageSquareLinesIcon,
 	TrashIcon,
 } from "@/components/ui/data-table-cells";
+import { FiFileText } from "react-icons/fi";
 import {
 	DropdownMenu,
 	DropdownMenuTrigger,
@@ -650,13 +651,20 @@ function renderActions(
 					sideOffset={8}
 					className="bg-white border border-[var(--gp-color-border-neutral-secondary)] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.1),4px_4px_8px_0px_rgba(0,0,0,0.12)] p-0 min-w-[200px]"
 				>
-					<DropdownMenuItem 
-						onSelect={() => callbacks.onEditEmployee?.(row)}
-						className="flex items-center gap-[var(--gp-space-m)] px-[var(--gp-space-l)] py-[var(--gp-space-m)] border-t border-[var(--gp-color-border-neutral-secondary)] first:border-t-0 hover:bg-[var(--gp-color-background-interactive-brand-secondary-button-default)] cursor-pointer text-[14px] leading-[22px] text-[var(--gp-color-text-neutral-secondary)] font-normal"
-					>
-						<DropdownIcon src="/Employee/dropdown/Dropdown/pen-line.svg" alt="Edit" />
-						<span>Edit employee details</span>
-					</DropdownMenuItem>
+				<DropdownMenuItem 
+  onSelect={() => callbacks.onEditEmployee?.(row)}
+  className="flex items-center gap-[var(--gp-space-m)] px-[var(--gp-space-l)] py-[var(--gp-space-m)] border-t border-[var(--gp-color-border-neutral-secondary)] first:border-t-0 hover:bg-[var(--gp-color-background-interactive-brand-secondary-button-default)] cursor-pointer text-[14px] leading-[22px] text-[var(--gp-color-text-neutral-secondary)] font-normal"
+>
+  <DropdownIcon src="/Employee/dropdown/Dropdown/pen-line.svg" alt="Edit" />
+  <span>Edit employee details</span>
+</DropdownMenuItem>
+<DropdownMenuItem 
+  onSelect={() => callbacks.onViewLogs?.(row)}
+  className="flex items-center gap-[var(--gp-space-m)] px-[var(--gp-space-l)] py-[var(--gp-space-m)] border-t border-[var(--gp-color-border-neutral-secondary)] hover:bg-[var(--gp-color-background-interactive-brand-secondary-button-default)] cursor-pointer text-[14px] leading-[22px] text-[var(--gp-color-text-neutral-secondary)] font-normal"
+>
+<FiFileText className="w-[18px] h-[18px] text-[var(--gp-color-text-neutral-secondary)]" />
+  <span>View logs</span>
+</DropdownMenuItem>
 					<DropdownMenuItem 
 						onSelect={() => callbacks.onSuspendEmployee?.(row)}
 						className="flex items-center gap-[var(--gp-space-m)] px-[var(--gp-space-l)] py-[var(--gp-space-m)] border-t border-[var(--gp-color-border-neutral-secondary)] hover:bg-[var(--gp-color-background-interactive-brand-secondary-button-default)] cursor-pointer text-[14px] leading-[22px] text-[var(--gp-color-text-neutral-secondary)] font-normal"

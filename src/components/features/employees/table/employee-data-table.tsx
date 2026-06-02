@@ -489,11 +489,11 @@ function renderCell(
 let tooltipContentClickable = false;
 
 if (isManagerGroupRow) {
-    tooltipContent = "Visit list";
+    tooltipContent = "View list";
     tooltipContentClickable = true;
 } else if (!isConnected) {
     if (normalizedCount > 0) {
-        tooltipContent = "Visit list";
+        tooltipContent = "View list";
         tooltipContentClickable = true;
     } else {
         tooltipContent = "Ask handler to connect";

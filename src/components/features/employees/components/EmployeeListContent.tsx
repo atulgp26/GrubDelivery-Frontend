@@ -1042,7 +1042,7 @@ onViewRestaurantBoxes={(employee) => {
     restaurantId={undefined}
     staticBoxes={
       (sharedBoxesEmployee.sharedBoxes ?? [])
-       .filter((b) => b.connectionStatus === "connected" && b.powerStatus === "on")
+      .filter((b) => b.powerStatus === "on")
       .map((b) => ({
         id: b.id,
         name: b.name,

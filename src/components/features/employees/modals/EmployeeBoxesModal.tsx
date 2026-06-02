@@ -367,20 +367,22 @@ const totalEntries = staticBoxes ? staticBoxes.length : totalCount;
                 <span className="text-[14px] leading-[22px] text-[#6B7971] font-normal">
                   {totalEntries} entries
                 </span>
-                <label className="flex items-center gap-2 cursor-pointer select-none whitespace-nowrap">
-                  <CustomCheckbox
-                    checked={state.showOfflineBoxes}
-                    onChange={(e: ChangeEvent<HTMLInputElement> | undefined) =>
-                      setState((prev) => ({ ...prev, showOfflineBoxes: e?.target.checked ?? false }))
-                    }
-                    colorVar="--color-brand-default"
-                    hoverState="peer-hover:bg-[var(--sidebar-active-bg)] peer-hover:border-[var(--color-brand-default)]"
-                    checkedHoverState="peer-hover:!bg-[var(--color-brand-default)] peer-hover:!border-[var(--color-brand-default)]"
-                  />
-                  <span className="text-lg text-[var(--color-neutral-secondary)]">
-                    Show offline boxes
-                  </span>
-                </label>
+              {!staticBoxes && (
+  <label className="flex items-center gap-2 cursor-pointer select-none whitespace-nowrap">
+    <CustomCheckbox
+      checked={state.showOfflineBoxes}
+      onChange={(e: ChangeEvent<HTMLInputElement> | undefined) =>
+        setState((prev) => ({ ...prev, showOfflineBoxes: e?.target.checked ?? false }))
+      }
+      colorVar="--color-brand-default"
+      hoverState="peer-hover:bg-[var(--sidebar-active-bg)] peer-hover:border-[var(--color-brand-default)]"
+      checkedHoverState="peer-hover:!bg-[var(--color-brand-default)] peer-hover:!border-[var(--color-brand-default)]"
+    />
+    <span className="text-lg text-[var(--color-neutral-secondary)]">
+      Show offline boxes
+    </span>
+  </label>
+)}
                 <div ref={filterButtonRef}>
                   <FilterButton
                     open={state.showFilterModal}

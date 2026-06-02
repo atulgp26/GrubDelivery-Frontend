@@ -395,7 +395,9 @@ export function apiEmployeeToEmployee(e: ApiEmployee): Employee {
     return null;
   };
 const connectedBoxesCount = parseCount(e.connected_boxes_count) ?? 0;
-const sharedBoxesCount = parseCount(e.shared_boxes_count) ?? 0;
+const sharedBoxesCount = Array.isArray((e as any).shared_boxes)
+  ? (e as any).shared_boxes.filter((b: any) => b.power_status === "on").length
+  : parseCount(e.shared_boxes_count) ?? 0;
 const boxCount =
   (connectedBoxesCount + sharedBoxesCount) > 0
     ? connectedBoxesCount + sharedBoxesCount

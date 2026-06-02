@@ -171,7 +171,7 @@ if (!enabled || (!employeeId && !restaurantId)) {
       try {
         const permissionStatus = fetchExcluded ? "blocked" : "shared";
         const apiFilterParams = mapFiltersToListParams(filters);
-        const fallbackPowerStatus = showOfflineBoxes ? undefined : "on";
+  const fallbackPowerStatus = showOfflineBoxes ? "off" : "on";
 const listRes = await grubpacService.getList({
   ...(restaurantId 
     ? { restaurant_id: restaurantId } 

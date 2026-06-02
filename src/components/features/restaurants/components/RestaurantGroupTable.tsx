@@ -204,7 +204,8 @@ export default function RestaurantGroupTable({
 
         const employeesResponse = await employeeService.getList({
           role: apiRoles as any,
-          status: availableDriversOnly ? "unassigned" : "active",
+          // status: availableDriversOnly ? "unassigned" : "active",
+          status: availableDriversOnly ? "unassigned" : undefined,
           restaurant_id: availableDriversOnly ? undefined : (restaurantId || undefined),
           limit: 50,
           page,

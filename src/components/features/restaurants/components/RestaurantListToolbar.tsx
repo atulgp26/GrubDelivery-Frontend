@@ -50,7 +50,7 @@ export default function RestaurantListToolbar({
           <div className="absolute left-0 right-0 mt-2 overflow-hidden rounded-lg border border-[var(--color-stroke-neutral)] bg-white shadow-lg z-50">
             {searchError ? (
               <div className="px-4 py-3 text-sm text-red-500">
-                Search failed. Please try again.
+                Search failed. Please try again.....
               </div>
             ) : searchSuggestions.length === 0 ? (
               <div className="px-4 py-3 text-sm text-[var(--color-neutral-secondary)]">

@@ -395,12 +395,21 @@ export function useGrubPacsListHandlers({
         (group.items ?? []).flatMap((item) => item.restaurantEmployeeIds ?? []),
       ).size;
 
+      const restaurantIds = Array.from(
+        new Set(
+          (group.items ?? [])
+            .flatMap((item) => (item.restaurantIds ?? []).map(String))
+            .filter((id) => id.length > 0),
+        ),
+      );
+
       const modalGroup: GrubPacItem = {
         ...(firstItem ?? { id: groupName, name: groupName }),
         name: groupName,
         added: firstItem?.restaurantCreatedOn || firstItem?.added || firstItem?.addedDate || "-",
         location: firstItem?.restaurantAddress || firstItem?.location || groupName,
         restaurantStatus: firstItem?.restaurantStatus,
+        restaurantIds,
         resourceBoxCount: group.items?.length ?? 0,
         resourceEmployeeCount: employeeCount,
       };

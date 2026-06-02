@@ -198,18 +198,18 @@ export default function RestaurantGroupTable({
     async (restaurantId: string, query = "", page = 1, withLoading = true, availableDriversOnly = false, roles?: string[]) => {
       if (withLoading) setResourcesLoading(true);
       try {
-        const apiRoles = (roles && roles.length > 0)
-          ? roles.map(r => r === "driver" ? "delivery" : r)
-          : ["manager", "delivery"];
+      const apiRoles = (roles && roles.length > 0)
+  ? roles.map(r => r === "driver" ? "delivery" : r)
+  : [];
 
-        const employeesResponse = await employeeService.getList({
-          role: apiRoles as any,
-          status: availableDriversOnly ? "unassigned" : "active",
-          restaurant_id: availableDriversOnly ? undefined : (restaurantId || undefined),
-          limit: 50,
-          page,
-          query: query.trim() || undefined,
-        });
+const employeesResponse = await employeeService.getList({
+  ...(apiRoles.length === 1 ? { role: apiRoles[0] as "manager" | "delivery" } : {}),
+  status: availableDriversOnly ? "unassigned" : "active",
+  restaurant_id: availableDriversOnly ? undefined : (restaurantId || undefined),
+  limit: 50,
+  page,
+  query: query.trim() || undefined,
+});
 
         if (employeesResponse.success && employeesResponse.data) {
           const employeeData = employeesResponse.data;

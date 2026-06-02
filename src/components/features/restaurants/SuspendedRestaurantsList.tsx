@@ -827,6 +827,12 @@ export default function SuspendedRestaurantsList({ className = "" }: SuspendedRe
       />
 
       {/* Restaurant Details Modal */}
+      {
+        // compute counts using either _count (API shape) or top-level fields
+        const _boxesCount = (selectedRestaurant as any)?._count?.boxes ?? selectedRestaurant?.boxes ?? 0;
+        const _employeesCount = (selectedRestaurant as any)?._count?.employees ?? selectedRestaurant?.drivers ?? (selectedRestaurant as any)?._count?.drivers ?? 0;
+      }
+
       <RestaurantDetailsModal
         open={showDetailsModal && !showReactivateModal && !showDeleteModal && !showEditModal}
         onClose={() => {
@@ -840,8 +846,8 @@ export default function SuspendedRestaurantsList({ className = "" }: SuspendedRe
           suspendedOn: (selectedRestaurant as any)?.suspendedOn,
           address: selectedRestaurant?.address,
           resources: [
-            { label: "GrubPacs", count: selectedRestaurant?.boxes || 0 },
-            { label: "employees", count: selectedRestaurant?.drivers || 0 },
+            { label: "GrubPacs", count: _boxesCount },
+            { label: "employees", count: _employeesCount },
           ],
         }}
         onActivate={handleActivateFromDetails}

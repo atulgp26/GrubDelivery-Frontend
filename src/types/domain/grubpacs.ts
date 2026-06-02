@@ -125,6 +125,7 @@ export interface ApiGrubPac {
   temp_zone2_max: number | null;
   restaurant_boxes?: ApiRestaurantBox[];
   restaurants?: ApiGrubPacRestaurant[];
+  employees?: ApiGrubPacEmployeeLite[];
   permissions_blocked_count?: number;
   lock: ApiGrubPacLock | null;
   created_at: string;
@@ -362,7 +363,18 @@ export function apiGrubPacToItem(g: ApiGrubPac): GrubPacItem {
       ...(g.restaurants ?? [])
         .map((restaurant) => restaurant.id)
         .filter((id): id is string => isNonEmptyString(id)),
+      ...(typeof (g as any).restaurant_id === "string" && isNonEmptyString((g as any).restaurant_id)
+        ? [(g as any).restaurant_id]
+        : []),
     ]),
+  );
+
+  const restaurantEmployeeIds = Array.from(
+    new Set(
+      (g.employees ?? [])
+        .map((employee) => employee.id)
+        .filter((id): id is string => isNonEmptyString(id)),
+    ),
   );
 
   return {
@@ -415,6 +427,7 @@ export function apiGrubPacToItem(g: ApiGrubPac): GrubPacItem {
     restaurantCreatedAt: primaryRestaurant?.created_at,
     restaurantCreatedOn,
     restaurantIds,
+    restaurantEmployeeIds,
     accessMode: g.access_mode ?? "public",
     blockedEmployeeIds: Array.isArray(g.blocked_employee_ids) ? g.blocked_employee_ids : [],
     permissionsBlockedCount: typeof g.permissions_blocked_count === "number" ? g.permissions_blocked_count : undefined,

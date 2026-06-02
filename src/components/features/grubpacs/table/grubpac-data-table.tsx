@@ -522,28 +522,39 @@ function renderCell(
 			);
 		}
 
-		case "battery": {
-			const { batteryPercent, powerStatus } = row;
-			
-			// If powered off, show ??
-			if (powerStatus === "off") {
-				return (
-					<div className="flex items-center justify-center py-[var(--gp-padding-l)]">
-						<span
-							className="inline-flex items-center justify-center px-[7px] rounded-full border font-[var(--gp-font-text)] font-normal"
-							style={{
-								backgroundColor: "#EFF1F0",
-								borderColor: "#C1C7C4",
-								color: "#69726D",
-								fontSize: '14px',
-								lineHeight: '22px',
-							}}
-						>
-							??
-						</span>
-					</div>
-				);
-			}
+case "battery": {
+  const { batteryPercent, powerStatus } = row;
+  
+  // If powered off, show ?? with tooltip
+  if (powerStatus === "off") {
+    return (
+      <div className="flex items-center justify-center py-[var(--gp-padding-l)]">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              className="inline-flex items-center justify-center px-[7px] rounded-full border font-[var(--gp-font-text)] font-normal cursor-default"
+              style={{
+                backgroundColor: "#EFF1F0",
+                borderColor: "#C1C7C4",
+                color: "#69726D",
+                fontSize: '14px',
+                lineHeight: '22px',
+              }}
+            >
+              ??
+            </span>
+          </TooltipTrigger>
+   <CustomTooltipContent side="bottom" sideOffset={4} align="center">
+  <TooltipText
+    title="Unable to reach the box"
+    subtitle="Check your connection"
+    titleClassName="!text-[#FE480B] font-semibold"
+  />
+</CustomTooltipContent>
+        </Tooltip>
+      </div>
+    );
+  }
 			
 			// Parse percentage and determine color
 			const percentValue = batteryPercent ? (typeof batteryPercent === 'string' ? parseInt(batteryPercent) : batteryPercent) : 0;

@@ -1,4 +1,4 @@
-const ACCOUNT_BASE = "/food/account";
+const ACCOUNT_BASE = "/delivery/account";
 
 export const ACCOUNT_URLS = {
 	ME: `${ACCOUNT_BASE}/me`,

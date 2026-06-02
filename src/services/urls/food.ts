@@ -1,9 +1,9 @@
 export const FOOD_URLS = {
-  RESTAURANT: "/food/restaurant",
-  RESTAURANT_SEARCH: "/food/restaurant/search",
-  SUSPEND: "/food/restaurant/suspend",
-  REACTIVATE: "/food/restaurant/reactivate",
-  ASSIGN: "/food/restaurant/assign",
-  REASSIGN_RESOURCE: "/food/restaurant/resource/reassign",
-  SUSPENDED_SUMMARY: "/food/restaurant/suspended/summary",
+  RESTAURANT: "/delivery/restaurant",
+  RESTAURANT_SEARCH: "/delivery/restaurant/search",
+  SUSPEND: "/delivery/restaurant/suspend",
+  REACTIVATE: "/delivery/restaurant/reactivate",
+  ASSIGN: "/delivery/restaurant/assign",
+  REASSIGN_RESOURCE: "/delivery/restaurant/resource/reassign",
+  SUSPENDED_SUMMARY: "/delivery/restaurant/suspended/summary",
 } as const;

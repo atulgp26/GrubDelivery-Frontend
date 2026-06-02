@@ -1,4 +1,4 @@
-const GRUBPAC_BASE = "/food/grubpac";
+const GRUBPAC_BASE = "/delivery/grubpac";
 
 export const GRUBPAC_URLS = {
   LIST: GRUBPAC_BASE,

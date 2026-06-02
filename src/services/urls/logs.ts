@@ -1,4 +1,4 @@
 export const LOGS_URLS = {
-  LIST: "/food/logs",
-  DROPDOWNS: "/food/logs/dropdowns",
+  LIST: "/delivery/logs",
+  DROPDOWNS: "/delivery/logs/dropdowns",
 } as const;

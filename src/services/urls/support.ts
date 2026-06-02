@@ -1,4 +1,4 @@
-const SUPPORT_BASE = "/food/support";
+const SUPPORT_BASE = "/delivery/support";
 
 export const SUPPORT_URLS = {
   CATEGORIES: `${SUPPORT_BASE}/category`,

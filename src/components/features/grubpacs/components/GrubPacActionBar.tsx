@@ -130,10 +130,10 @@ export default function GrubPacActionBar({
     onReassignRestaurant?.();
   };
 
-  // const handleRemoveVehicle = () => {
-  //   setIsMoreDropdownOpen(false);
-  //   onRemoveVehicle?.();
-  // };
+  const handleRemoveVehicle = () => {
+    setIsMoreDropdownOpen(false);
+    onRemoveVehicle?.();
+  };
 
   if (selectedCount === 0) return null;
 
@@ -208,7 +208,7 @@ export default function GrubPacActionBar({
           <MoreDropdown 
             onSuspendBoxes={handleSuspendBoxes}
             onReassignRestaurant={handleReassignRestaurant}
-            // onRemoveVehicle={handleRemoveVehicle}
+            onRemoveVehicle={handleRemoveVehicle}
           />
         </div>
       )}

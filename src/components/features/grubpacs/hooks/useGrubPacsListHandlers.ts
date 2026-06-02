@@ -268,6 +268,15 @@ export function useGrubPacsListHandlers({
       return;
     }
 
+    const settingType = modalState.applySettings.settingType;
+
+    // Handle future feature: remove vehicle
+    if (settingType === "REMOVE ANY ROOM ASSIGNED") {
+      closeModal("applySettings");
+      showSuccess("Remove vehicle feature will be implemented in the future");
+      return;
+    }
+
     const actionType = modalState.applySettings.actionType;
     const actionValue = modalState.applySettings.actionValue;
     const temperature = modalState.applySettings.temperature;

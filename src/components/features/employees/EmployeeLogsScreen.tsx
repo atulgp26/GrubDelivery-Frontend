@@ -9,6 +9,7 @@ import { createPortal } from "react-dom";
 import { useDebounce } from "@/lib/hooks";
 import { Calendar } from "@/components/ui/calendar";
 import SearchInput from "@/components/ui/SearchInput";
+import EmployeeBoxesModal from "@/components/features/employees/modals/EmployeeBoxesModal";
 import Pagination from "@/components/ui/Pagination";
 import {
 	DropdownMenu,
@@ -362,6 +363,7 @@ function SystemLogsPaginationSkeleton() {
 
 export default function EmployeeLogsScreen() {
 	const router = useRouter();
+	const [showBoxesModal, setShowBoxesModal] = useState(false);
 	const searchParams = useSearchParams();
 	const employeeIdFromQuery = searchParams.get("employeeId")?.trim() ?? "";
 	const employeeNameFromQuery =
@@ -1439,6 +1441,10 @@ export default function EmployeeLogsScreen() {
 													<span>{permittedBoxesLabel}</span>
 													<button
 														type="button"
+														 onClick={() => {
+    setIsInfoModalOpen(false);
+    setShowBoxesModal(true);
+  }}
 															className="inline-flex items-center gap-1 rounded-[4px] p-[2px] text-[16px] leading-5 font-medium uppercase text-[#6B7971]"
 													>
 															View list
@@ -1544,6 +1550,14 @@ export default function EmployeeLogsScreen() {
 					hasRestaurantAssignment={hasRestaurantAssignment}
 					loading={isActivatingEmployee}
 				/>
+
+				<EmployeeBoxesModal
+  open={showBoxesModal}
+  onClose={() => setShowBoxesModal(false)}
+  employeeId={employeeIdFromQuery}
+  employeeName={employeeNameFromQuery}
+  onEditList={() => {}}
+/>
 			</div>
 		</div>
 	);

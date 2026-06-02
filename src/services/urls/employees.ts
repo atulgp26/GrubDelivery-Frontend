@@ -1,4 +1,4 @@
-const EMPLOYEE_BASE = "/food/employee";
+const EMPLOYEE_BASE = "/delivery/employee";
 
 export const EMPLOYEE_URLS = {
   LIST: EMPLOYEE_BASE,

@@ -18,7 +18,7 @@ Scope:
 3. If unauthenticated, user is redirected to `/auth`.
 4. After login, user navigates using sidebar to GrubPacs module (`/grubpacs`).
 5. GrubPacs landing page shows information panel and CTA to list (`/grubpacs/list`).
-6. List screen loads active boxes from API (`GET /food/grubpac` with `status=active`).
+6. List screen loads active boxes from API (`GET /delivery/grubpac` with `status=active`).
 7. User can search/filter/group/select rows and perform actions (suspend, apply settings, delete paths, etc.).
 8. User can open details view (`/grubpacs/details?id=<boxId>`) for per-box settings/logs/track.
 9. User can switch to suspended list (`/grubpacs/suspended`) and suspended details (`/grubpacs/suspended/details?id=<boxId>`), then reactivate or delete.
@@ -82,7 +82,7 @@ All core GrubPacs list/search/mutation flows are API-driven through:
 ## 3.1 Endpoints and Request Shapes
 
 ### List boxes
-- API: `GET /food/grubpac`
+- API: `GET /delivery/grubpac`
 - Service: `grubpacService.getList(params)`
 - Query params (examples):
   - `status=active|suspended|deleted`
@@ -98,7 +98,7 @@ All core GrubPacs list/search/mutation flows are API-driven through:
   - UI shows toast error and fallback state.
 
 ### Search boxes
-- API: `GET /food/grubpac/search`
+- API: `GET /delivery/grubpac/search`
 - Service: `grubpacService.search({ query, limit, status })`
 - Response handling:
   - Debounced client search (`300ms`) merges search ids with table data.
@@ -106,7 +106,7 @@ All core GrubPacs list/search/mutation flows are API-driven through:
   - Stores search error in hook state; falls back to empty result.
 
 ### Update box details
-- API: `PUT /food/grubpac`
+- API: `PUT /delivery/grubpac`
 - Service: `grubpacService.update(payload)`
 - Body (sanitized):
   - `id`, `name`, optional `box_id`, `vehicle_number`, `restaurant_ids`, `blocked_employee_ids`, `access_mode`
@@ -115,7 +115,7 @@ All core GrubPacs list/search/mutation flows are API-driven through:
   - On failure: error toast.
 
 ### Suspend boxes
-- API: `PATCH /food/grubpac/suspend`
+- API: `PATCH /delivery/grubpac/suspend`
 - Service: `grubpacService.suspend(ids)`
 - Body: `{ ids: string[] }`
 - Response handling:
@@ -127,7 +127,7 @@ All core GrubPacs list/search/mutation flows are API-driven through:
   - Toast error from API message or fallback.
 
 ### Reactivate boxes
-- API: `PATCH /food/grubpac/reactivate`
+- API: `PATCH /delivery/grubpac/reactivate`
 - Service: `grubpacService.reactivate(ids)`
 - Body: `{ ids: string[] }`
 - Response handling:
@@ -137,7 +137,7 @@ All core GrubPacs list/search/mutation flows are API-driven through:
   - Toast error.
 
 ### Delete boxes
-- API: `DELETE /food/grubpac`
+- API: `DELETE /delivery/grubpac`
 - Service: `grubpacService.delete(ids)`
 - Body: `{ ids: string[] }`
 - Response handling:
@@ -147,7 +147,7 @@ All core GrubPacs list/search/mutation flows are API-driven through:
   - Toast error.
 
 ### Apply box actions/settings
-- API: `PATCH /food/grubpac/action`
+- API: `PATCH /delivery/grubpac/action`
 - Service: `grubpacService.action(payload)`
 - Body includes `ids` and action fields, for example:
   - `power_status`, `ioniser_status`
@@ -160,7 +160,7 @@ All core GrubPacs list/search/mutation flows are API-driven through:
   - Error toast or inline alert banner depending on screen.
 
 ### Remove employees from boxes
-- API: `PATCH /food/grubpac/remove/employee`
+- API: `PATCH /delivery/grubpac/remove/employee`
 - Service: `grubpacService.removeEmployeeFromBoxes(payload)`
 - Body: `{ box_ids: string[], employee_ids: string[] }`
 
@@ -287,7 +287,7 @@ Flow:
 3. Render tabs: `logs`, `track` only.
 4. Actions:
    - Activate (`PATCH /reactivate`)
-   - Delete (`DELETE /food/grubpac`)
+   - Delete (`DELETE /delivery/grubpac`)
 5. Sidebar lets user switch between suspended boxes via query id.
 
 ---
@@ -319,7 +319,7 @@ Validation and payload shaping:
 Sequence:
 1. User submits form.
 2. Modal builds `update` payload.
-3. Calls `grubpacService.update(payload)` -> `PUT /food/grubpac`.
+3. Calls `grubpacService.update(payload)` -> `PUT /delivery/grubpac`.
 4. On success:
    - optional parent refetch callback
    - success toast
@@ -461,7 +461,7 @@ Failure path:
 2. User chooses action (power/ioniser/temperature) from action bar.
 3. Apply Settings modal opens with selected count + action descriptor.
 4. On confirm, handler builds `ActionGrubPacBody` payload.
-5. Calls `PATCH /food/grubpac/action`.
+5. Calls `PATCH /delivery/grubpac/action`.
 6. On success:
    - selection cleared
    - modal closed
@@ -475,7 +475,7 @@ Failure path:
 2. Draft changes tracked against snapshot.
 3. User clicks apply, confirmation modal opens.
 4. Changed fields only are packed into action payload with `ids=[boxId]`.
-5. Calls `PATCH /food/grubpac/action`.
+5. Calls `PATCH /delivery/grubpac/action`.
 6. On success: snapshot updated, edit mode exits, success alert shown.
 7. On failure: error alert shown, draft remains for correction/retry.
 
@@ -483,7 +483,7 @@ Failure path:
 
 1. User opens suspend modal from row action, selection action bar, or details.
 2. Confirm suspend.
-3. Handler composes ids and calls `PATCH /food/grubpac/suspend` with `{ ids }`.
+3. Handler composes ids and calls `PATCH /delivery/grubpac/suspend` with `{ ids }`.
 4. On success:
    - selected ids removed from selection state
    - modal closes
@@ -495,7 +495,7 @@ Failure path:
 
 1. User clicks ACTIVATE (row/selected/all/details).
 2. Confirm activation modal path (where applicable).
-3. Calls `PATCH /food/grubpac/reactivate` with `{ ids }`.
+3. Calls `PATCH /delivery/grubpac/reactivate` with `{ ids }`.
 4. On success:
    - rows removed from suspended list or navigate back
    - success toast
@@ -506,7 +506,7 @@ Failure path:
 1. User opens Edit Details modal.
 2. User updates fields and submits.
 3. Modal validates required basics and sanitizes ids.
-4. Calls `PUT /food/grubpac`.
+4. Calls `PUT /delivery/grubpac`.
 5. On success:
    - optional refetch callback runs
    - success toast shown
@@ -517,7 +517,7 @@ Failure path:
 
 1. User triggers delete from suspended row/details (or other modal pathways).
 2. Confirm delete modal.
-3. Calls `DELETE /food/grubpac` with `{ ids }`.
+3. Calls `DELETE /delivery/grubpac` with `{ ids }`.
 4. On success:
    - row removed or navigation to list
    - success toast

@@ -16,7 +16,7 @@ It documents current behavior as implemented in code (including fallbacks and ga
 ## 1. Data Pipeline (API -> UI Table)
 
 ## 1.1 Endpoint and Fetch
-- Endpoint used by list screen: `GET /food/grubpac`
+- Endpoint used by list screen: `GET /delivery/grubpac`
 - Service call: `grubpacService.getList({ status: "active", ...apiParams })`
 - Route: `/grubpacs/list` renders `GrubPacsListScreen`, which renders `GrubPacDataTable`
 
@@ -374,7 +374,7 @@ Current behavior:
 
 ## 12. Implementation Checklist (If Rebuilding)
 
-1. Implement API fetch from `GET /food/grubpac` with `status=active`.
+1. Implement API fetch from `GET /delivery/grubpac` with `status=active`.
 2. Normalize API values to row model using the same fallback priorities.
 3. Recreate each column strictly by the state mappings above.
 4. Keep row-click suppression for interactive children.

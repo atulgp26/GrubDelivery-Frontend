@@ -1,4 +1,4 @@
-const AUTH_BASE = "/food/auth";
+const AUTH_BASE = "/delivery/auth";
 
 export const AUTH_URLS = {
   LOGIN: `${AUTH_BASE}/login`,

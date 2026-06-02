@@ -1,5 +1,5 @@
-const GRUBPAC_BASE = "/food/grubpac";
-const GRUBLOCK_BASE = "/food/grublock";
+const GRUBPAC_BASE = "/delivery/grubpac";
+const GRUBLOCK_BASE = "/delivery/grublock";
 
 export const GRUBLOCK_URLS = {
   LIST: GRUBLOCK_BASE,

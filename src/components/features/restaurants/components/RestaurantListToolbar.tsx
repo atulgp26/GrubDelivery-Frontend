@@ -46,11 +46,16 @@ export default function RestaurantListToolbar({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setTimeout(() => setIsFocused(false), 150)}
         />
+  
         {showDropdown && !isSearching && (
           <div className="absolute left-0 right-0 mt-2 overflow-hidden rounded-lg border border-[var(--color-stroke-neutral)] bg-white shadow-lg z-50">
-            {searchError ? (
+            {searchTerm.trim().length === 1 ? (
+              <div className="px-4 py-3 text-sm text-[var(--color-neutral-secondary)]">
+                Please enter at least 2 letters to search.
+              </div>
+            ) : searchError ? (
               <div className="px-4 py-3 text-sm text-red-500">
-                Search failed. Please try again.....
+                Search failed. Please try again.
               </div>
             ) : searchSuggestions.length === 0 ? (
               <div className="px-4 py-3 text-sm text-[var(--color-neutral-secondary)]">
@@ -82,9 +87,9 @@ export default function RestaurantListToolbar({
         <span className="font-normal text-[14px] leading-[22px] text-[#6B7971]">
           {isLoading ? "Searching..." : `${totalEntries} entries`}
         </span>
-        <FilterButton 
-          open={isFilterModalOpen} 
-          handleFilterClick={onFilterClick || (() => undefined)} 
+        <FilterButton
+          open={isFilterModalOpen}
+          handleFilterClick={onFilterClick || (() => undefined)}
         />
       </div>
     </div>

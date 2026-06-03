@@ -1,7 +1,9 @@
 import type { GroupCollapseTableGroup } from "../ui";
 import type { ApiEmployee } from "./employees";
 
-export type RestaurantStatus = "Active" | "Suspended" | "active" | "suspended";
+// export type RestaurantStatus = "Active" | "Suspended" | "active" | "suspended";
+
+export type RestaurantStatus = "active" | "suspended";
 
 export interface Restaurant {
   id: string;
@@ -20,7 +22,8 @@ export interface Restaurant {
   state?: string;
   pincode?: string;
   line_one?: string;
-  line_two?: string | null;
+  // line_two?: string | null;
+  line_two: string | null;
 }
 
 export interface RestaurantRequest {
@@ -30,7 +33,8 @@ export interface RestaurantRequest {
   city: string;
   pincode: string;
   line_one: string;
-  line_two?: string;
+  // line_two?: string;
+  line_two: string | null;
   latitude?: string;
   longitude?: string;
   status: "active" | "suspended";
@@ -104,9 +108,10 @@ export interface DeleteRestaurantRequest {
 }
 
 export interface AssignEmployeeRequest {
-  id: string; // restaurant id
+  id: string; // restaurant id  
   employee_ids: string[];
-  role: string;
+  // role: string;
+  role: "manager" | "delivery";
 }
 
 export interface ReassignResourceRequest {

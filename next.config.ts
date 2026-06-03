@@ -10,6 +10,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: "/api/proxy/:path*",
+        destination: "http://43.204.34.10:8000/api/v1/:path*",
+      },
+    ];
+  },
 };
 
 export default nextConfig;

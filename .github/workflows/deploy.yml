@@ -3,7 +3,7 @@ name: Auto Deploy Frontend
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   deploy:
@@ -25,7 +25,7 @@ jobs:
             set -e
             cd ~/grubFood-frontend
 
-            git pull origin master
+            git pull origin main
 
             docker compose -f docker-compose.prod.yml build
             docker compose -f docker-compose.prod.yml up -d --remove-orphans

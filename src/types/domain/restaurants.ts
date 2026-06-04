@@ -22,8 +22,8 @@ export interface Restaurant {
   state?: string;
   pincode?: string;
   line_one?: string;
-  // line_two?: string | null;
-  line_two: string | null;
+  line_two?: string | null;
+  // line_two: string | null;
 }
 
 export interface RestaurantRequest {
@@ -33,8 +33,8 @@ export interface RestaurantRequest {
   city: string;
   pincode: string;
   line_one: string;
-  // line_two?: string;
-  line_two: string | null;
+  line_two?: string;
+  // line_two: string | null;
   latitude?: string;
   longitude?: string;
   status: "active" | "suspended";

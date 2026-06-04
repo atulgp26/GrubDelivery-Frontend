@@ -141,7 +141,7 @@ export default function AddRestaurantModal({
       state: restaurant?.state || "",
       city: restaurant?.city || "",
       line1: restaurant?.line_one || "",
-      line2: restaurant?.line_two || "",
+    line2: restaurant?.line_two || undefined,
       status: restaurant?.status?.toLowerCase() === "suspended" ? "suspended" : "active",
       location: restaurant?.address || "",
       google_place_id: restaurant?.google_place_id || "",
@@ -382,7 +382,7 @@ export default function AddRestaurantModal({
         state: restaurant.state || "",
         city: restaurant.city || "",
         line1: restaurant.line_one || "",
-        line2: restaurant.line_two || "",
+    line2: restaurant.line_two || undefined,
         status: restaurant.status?.toLowerCase() === "suspended" ? "suspended" : "active",
         location: restaurant.address || "",
         google_place_id: restaurant.google_place_id || "",
@@ -397,7 +397,7 @@ export default function AddRestaurantModal({
         state: "",
         city: "",
         line1: "",
-        line2: "",
+        line2: undefined,
         status: "active",
         location: "",
         google_place_id: "",
@@ -408,13 +408,15 @@ export default function AddRestaurantModal({
       setFocusedInput(null);
     }
   }, [open, restaurant, reset]);
-
-  const onFormSubmit = async (data: RestaurantFormData) => {
-    if (!loading) {
-      onSubmit(data);
-    }
-  };
-
+const onFormSubmit = async (data: RestaurantFormData) => {
+  if (!loading) {
+    const cleaned = {
+      ...data,
+      line2: data.line2?.trim() || undefined,
+    };
+    onSubmit(cleaned);
+  }
+};
   const handleClose = () => {
     reset();
     setMapQuery("Delhi");

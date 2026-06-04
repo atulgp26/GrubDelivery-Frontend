@@ -591,6 +591,9 @@ export default function SuspendedRestaurantsList({ className = "" }: SuspendedRe
   const deletingRestaurantNames = deletingRestaurants.map(r => r.name);
   const hasAssignedResources = deletingRestaurants.some(r => r.boxCount > 0 || r.driverCount > 0);
 
+const _boxesCount = (selectedRestaurant as any)?._count?.boxes ?? selectedRestaurant?.boxes ?? 0;
+  const _employeesCount = (selectedRestaurant as any)?._count?.employees ?? selectedRestaurant?.drivers ?? (selectedRestaurant as any)?._count?.drivers ?? 0;
+
   return (
     <div className={`bg-white min-h-screen ${className}`}>
       {/* Header Section */}
@@ -826,12 +829,7 @@ export default function SuspendedRestaurantsList({ className = "" }: SuspendedRe
         loading={false}
       />
 
-      {/* Restaurant Details Modal */}
-      {
-        // compute counts using either _count (API shape) or top-level fields
-        const _boxesCount = (selectedRestaurant as any)?._count?.boxes ?? selectedRestaurant?.boxes ?? 0;
-        const _employeesCount = (selectedRestaurant as any)?._count?.employees ?? selectedRestaurant?.drivers ?? (selectedRestaurant as any)?._count?.drivers ?? 0;
-      }
+    
 
       <RestaurantDetailsModal
         open={showDetailsModal && !showReactivateModal && !showDeleteModal && !showEditModal}

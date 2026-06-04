@@ -92,91 +92,11 @@ export default function RestaurantGroupTable({
     closeAllModals,
   } = useRestaurantModals();
 
-  const [assignManagerManagers, setAssignManagerManagers] = useState<Manager[]>([]);
-  const [assignManagerTotalCount, setAssignManagerTotalCount] = useState(0);
-  const [assignManagerLoading, setAssignManagerLoading] = useState(false);
   const [resourceEmployees, setResourceEmployees] = useState<ResourceEmployee[]>([]);
   const [resourceEmployeeTotalEntries, setResourceEmployeeTotalEntries] = useState(0);
   const [resourceGrubPacs, setResourceGrubPacs] = useState<ResourceGrubPac[]>([]);
   const [resourceGrubPacTotalEntries, setResourceGrubPacTotalEntries] = useState(0);
   const [resourcesLoading, setResourcesLoading] = useState(false);
-
-  const toAssignManager = useCallback((employee: ApiEmployee): Manager => {
-    const mapped = apiEmployeeToEmployee(employee);
-    return {
-      id: mapped.id,
-      name: mapped.name,
-      employeeId: mapped.employeeId,
-      joinedDate: mapped.joinedDate,
-      phone: mapped.phone,
-      email: mapped.email,
-      added: mapped.added,
-    };
-  }, []);
-
-  const flattenManagerResponse = useCallback((data: EmployeeListData): Manager[] => {
-    let employees: ApiEmployee[] = [];
-
-    if (isRestaurantsGroupedResponse(data)) {
-      // Manager assignment modal should only show truly unassigned managers.
-      const unassignedGroup = Object.entries(data.groups).find(
-        ([key]) => key.toLowerCase() === "unassigned",
-      )?.[1];
-      employees = getWrappedGroupArray<ApiEmployee>(unassignedGroup);
-    } else if (isBoxesGroupedResponse(data)) {
-      employees = getWrappedGroupArray<ApiEmployee>(data.groups.managers);
-    } else {
-      employees = data.employees ?? [];
-    }
-
-    const uniqueManagerMap = new Map<string, Manager>();
-    employees
-      .filter((employee) => employee.role === "manager")
-      .forEach((employee) => {
-        uniqueManagerMap.set(employee.id, toAssignManager(employee));
-      });
-
-    return Array.from(uniqueManagerMap.values());
-  }, [toAssignManager]);
-
-  const fetchUnassignedManagers = useCallback(async (query = "", page = 1) => {
-    setAssignManagerLoading(true);
-    try {
-      const response = await employeeService.getList({
-        role: "manager",
-        status: "unassigned",
-        query: query.trim() || undefined,
-        limit: 50,
-        page,
-      });
-
-      if (response.success && response.data) {
-        setAssignManagerManagers(flattenManagerResponse(response.data));
-        setAssignManagerTotalCount(
-          typeof (response.data as { count?: unknown }).count === "number"
-            ? ((response.data as { count: number }).count)
-            : 0,
-        );
-      } else {
-        setAssignManagerManagers([]);
-        setAssignManagerTotalCount(0);
-        console.error("[RestaurantGroupTable] Failed to fetch unassigned managers", response.error);
-      }
-    } catch (error) {
-      setAssignManagerManagers([]);
-      setAssignManagerTotalCount(0);
-      console.error("[RestaurantGroupTable] Unexpected error while fetching unassigned managers", error);
-    } finally {
-      setAssignManagerLoading(false);
-    }
-  }, [flattenManagerResponse]);
-
-  const handleSearchManagers = useCallback(
-    (query: string, page: number) => {
-      void fetchUnassignedManagers(query, page);
-    },
-    [fetchUnassignedManagers],
-  );
 
   const toResourceEmployee = useCallback((employee: ApiEmployee): ResourceEmployee => {
     const mapped = apiEmployeeToEmployee(employee);
@@ -577,10 +497,7 @@ console.log("[fetchResourceEmployees] params:", {
   const handleAddManager = (row: GroupRow) => {
     const restaurant = group.items?.find(item => item.id === row.id);
     if (restaurant) {
-      setAssignManagerManagers([]);
-      setAssignManagerTotalCount(0);
       openAssignManagerModal(restaurant);
-      void fetchUnassignedManagers("", 1);
     }
   };
 
@@ -654,10 +571,6 @@ const handleViewManagerDetail = (row: GroupRow) => {
         resourceRefreshToken={resourceRefreshToken}
         resourceEmployeeTotalEntries={resourceEmployeeTotalEntries}
         resourceGrubPacTotalEntries={resourceGrubPacTotalEntries}
-        onSearchManagers={handleSearchManagers}
-        assignManagerTotalCount={assignManagerTotalCount}
-        assignManagerManagers={assignManagerManagers}
-        assignManagerLoading={assignManagerLoading}
         resourceEmployees={resourceEmployees}
         resourceGrubPacs={resourceGrubPacs}
         resourcesLoading={resourcesLoading}

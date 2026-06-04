@@ -5,7 +5,8 @@ RUN npm ci
 
 FROM node:22 AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+COPY package.json package-lock.json ./
+RUN npm ci
 COPY . .
 RUN npm run build
 

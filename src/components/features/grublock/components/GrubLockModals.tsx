@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import RestaurantDetailsModal from "@/components/features/shared/modals/RestaurantDetailsModal";
 import RestaurantResourcesModal, {
   type Employee as ResourceEmployee,
@@ -106,6 +106,9 @@ export default function GrubLockModals({
   const [reassignRestaurantsLoading, setReassignRestaurantsLoading] = useState(false);
   const [reassignSubmitting, setReassignSubmitting] = useState(false);
   const [selectedReassignBoxIds, setSelectedReassignBoxIds] = useState<string[]>([]);
+
+  // FIX: Track the real GrubPac count fetched from the API
+  const [realGrubPacCount, setRealGrubPacCount] = useState<number | null>(null);
 
   const selectedGroup = modalState.selectedGroup;
   const groupItems = selectedGroup?.items ?? [];
@@ -234,6 +237,9 @@ export default function GrubLockModals({
         };
       });
       setResourceGrubPacs(mappedBoxes);
+
+      // FIX: Update the real count once we have the actual data from the API
+      setRealGrubPacCount(mappedBoxes.length);
     } catch {
       setResourceEmployees([]);
       setResourceGrubPacs([]);
@@ -372,6 +378,21 @@ export default function GrubLockModals({
     void fetchRestaurantResources(restaurantId);
   };
 
+  // FIX: Fetch real count as soon as the group details modal opens so the correct
+  // number is shown immediately — not only after the user clicks VIEW LIST.
+  useEffect(() => {
+    if (modalState.isGroupDetailsModalOpen) {
+      const restaurantId = firstItem?.restaurantIds?.[0];
+      if (restaurantId) {
+        void fetchRestaurantResources(restaurantId);
+      }
+    } else {
+      // Reset when modal closes so stale count doesn't show on next open
+      setRealGrubPacCount(null);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modalState.isGroupDetailsModalOpen, firstItem?.restaurantIds?.[0]]);
+
   const groupedRestaurant = selectedGroup
     ? {
         name: String(firstItem?.restaurantName ?? selectedGroup.name ?? "Restaurant"),
@@ -381,7 +402,8 @@ export default function GrubLockModals({
         resources: [
           {
             label: "GrubPacs",
-            count: groupItems.length,
+            // FIX: Use realGrubPacCount if available (fetched from API), otherwise fall back to groupItems.length
+            count: realGrubPacCount ?? groupItems.length,
             onViewList: () => openGroupedResourcesModal("grubpacs"),
           },
           {
@@ -546,4 +568,3 @@ export default function GrubLockModals({
     </>
   );
 }
-

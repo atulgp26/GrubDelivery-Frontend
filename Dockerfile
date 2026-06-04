@@ -1,12 +1,8 @@
-FROM node:22-alpine AS deps
-WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
-
 FROM node:22 AS builder
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
+RUN npm install lightningcss-linux-x64-gnu @tailwindcss/oxide-linux-x64-gnu
 COPY . .
 RUN npm run build
 

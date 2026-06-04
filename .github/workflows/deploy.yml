@@ -18,24 +18,16 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -t rsa -H 13.127.79.155 >> ~/.ssh/known_hosts 2>/dev/null
-          cat >> ~/.ssh/config << EOF
-          Host 13.127.79.155
-            ServerAliveInterval 60
-            ServerAliveCountMax 20
-            TCPKeepAlive yes
-          EOF
+          printf "Host 13.127.79.155\n  ServerAliveInterval 60\n  ServerAliveCountMax 20\n  TCPKeepAlive yes\n" > ~/.ssh/config
 
       - name: Deploy via Docker
         run: |
           ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=20 -i ~/.ssh/id_rsa ubuntu@13.127.79.155 << 'DEPLOY_EOF'
             set -e
             cd ~/grubFood-frontend
-
             git pull origin main
-
             docker compose -f docker-compose.prod.yml build
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
-
             docker image prune -f
           DEPLOY_EOF
 

@@ -352,7 +352,7 @@ console.log("[fetchResourceEmployees] params:", {
         if (filters && filters.zone2Min !== -20) apiParams.zone2_min = filters.zone2Min;
         if (filters && filters.zone2Max !== 30) apiParams.zone2_max = filters.zone2Max;
 
-        const fallbackPowerStatus = showOfflineBoxes ? undefined : "on";
+        const fallbackPowerStatus = showOfflineBoxes ? "off" : "on";
 
         const response = await grubpacService.getList({
           restaurant_id: restaurantId,

@@ -9,13 +9,17 @@ interface FeedbackModalProps {
   onFeedbackAction: () => void;
 }
 
-const TEMP_FEEDBACK_FORM_URL = "about:blank";
+const FEEDBACK_MAILTO_URL =
+  "mailto:support@grubpac.com?subject=GrubPac%20Feedback&body=Hi%20GrubPac%20Team%2C%0A%0AHere%27s%20my%20feedback%3A%0A%0A";
 
 export default function FeedbackModal({ open, onCloseAction, onFeedbackAction }: FeedbackModalProps) {
-  const handleFeedbackClick = () => {
-    window.open(TEMP_FEEDBACK_FORM_URL, "_blank", "noopener,noreferrer");
-    onFeedbackAction();
-  };
+const handleFeedbackClick = () => {
+  window.open(
+    "https://mail.google.com/mail/?view=cm&to=support@grubpac.com&subject=GrubPac%20Feedback&body=Hi%20GrubPac%20Team%2C%0A%0AHere%27s%20my%20feedback%3A%0A%0A",
+    "_blank"
+  );
+  onFeedbackAction();
+};
 
   return (
     <Modal

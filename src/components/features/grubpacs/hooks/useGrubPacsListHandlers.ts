@@ -268,6 +268,15 @@ export function useGrubPacsListHandlers({
       return;
     }
 
+    const settingType = modalState.applySettings.settingType;
+
+    // Handle future feature: remove vehicle
+    if (settingType === "REMOVE ANY ROOM ASSIGNED") {
+      closeModal("applySettings");
+      showSuccess("Remove vehicle feature will be implemented in the future");
+      return;
+    }
+
     const actionType = modalState.applySettings.actionType;
     const actionValue = modalState.applySettings.actionValue;
     const temperature = modalState.applySettings.temperature;
@@ -395,12 +404,21 @@ export function useGrubPacsListHandlers({
         (group.items ?? []).flatMap((item) => item.restaurantEmployeeIds ?? []),
       ).size;
 
+      const restaurantIds = Array.from(
+        new Set(
+          (group.items ?? [])
+            .flatMap((item) => (item.restaurantIds ?? []).map(String))
+            .filter((id) => id.length > 0),
+        ),
+      );
+
       const modalGroup: GrubPacItem = {
         ...(firstItem ?? { id: groupName, name: groupName }),
         name: groupName,
         added: firstItem?.restaurantCreatedOn || firstItem?.added || firstItem?.addedDate || "-",
         location: firstItem?.restaurantAddress || firstItem?.location || groupName,
         restaurantStatus: firstItem?.restaurantStatus,
+        restaurantIds,
         resourceBoxCount: group.items?.length ?? 0,
         resourceEmployeeCount: employeeCount,
       };

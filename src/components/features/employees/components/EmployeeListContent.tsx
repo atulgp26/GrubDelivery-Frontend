@@ -89,12 +89,14 @@ export default function EmployeeListContent({
   const router = useRouter();
 
   const [selectedGroupedRestaurant, setSelectedGroupedRestaurant] = useState<Restaurant | null>(null);
+  const [boxesModalSource, setBoxesModalSource] = useState<"employee" | "restaurant">("employee");
   const [showGroupedRestaurantResourcesModal, setShowGroupedRestaurantResourcesModal] = useState(false);
   const [groupedRestaurantResourcesTab, setGroupedRestaurantResourcesTab] = useState<"grubpacs" | "employees">("grubpacs");
   const [resourceEmployees, setResourceEmployees] = useState<ResourceEmployee[]>([]);
   const [resourceGrubPacs, setResourceGrubPacs] = useState<ResourceGrubPac[]>([]);
   const [resourcesLoading, setResourcesLoading] = useState(false);
-
+const [showSharedBoxesModal, setShowSharedBoxesModal] = useState(false);
+const [sharedBoxesEmployee, setSharedBoxesEmployee] = useState<Employee | null>(null);
   const [showGroupedDeleteModal, setShowGroupedDeleteModal] = useState(false);
   const [showGroupedManageResourcesDeleteModal, setShowGroupedManageResourcesDeleteModal] = useState(false);
   const [showGroupedSuspendModal, setShowGroupedSuspendModal] = useState(false);
@@ -825,9 +827,15 @@ export default function EmployeeListContent({
                   openDetailsModal(employee);
                 }}
                 onViewLogs={handleViewLogs}
-                onViewAllBoxes={(employee) => {
-                  openResourcesModal(employee, "boxes");
-                }}
+              onViewAllBoxes={(employee) => {
+  setBoxesModalSource("employee");
+  openResourcesModal(employee, "boxes");
+}}
+
+onViewRestaurantBoxes={(employee) => {
+  setSharedBoxesEmployee(employee);
+  setShowSharedBoxesModal(true);
+}}
               />
             )}
             tableContainerClass="bg-white"
@@ -1012,15 +1020,45 @@ export default function EmployeeListContent({
             sourceEmployeeName={reassignSourceEmployees[0]?.name}
             loading={isReassigning || reassignRestaurantsLoading}
           />
-          {modalState.selectedEmployee && (
-            <EmployeeBoxesModal
-              open={modalState.isResourcesModalOpen && modalState.resourcesModalTab === "boxes"}
-              onClose={closeResourcesModal}
-              employeeId={modalState.selectedEmployee.id}
-              employeeName={modalState.selectedEmployee.name}
-              onEditList={() => {}}
-            />
-          )}
+        {modalState.selectedEmployee && (
+<EmployeeBoxesModal
+  open={modalState.isResourcesModalOpen && modalState.resourcesModalTab === "boxes"}
+  onClose={closeResourcesModal}
+  employeeId={boxesModalSource === "employee" ? modalState.selectedEmployee.id : undefined}
+  restaurantId={boxesModalSource === "restaurant" ? modalState.selectedEmployee.restaurantId : undefined}
+  employeeName={modalState.selectedEmployee.name}
+  onEditList={() => {}}
+/>
+)}
+
+{sharedBoxesEmployee && (
+  <EmployeeBoxesModal
+    open={showSharedBoxesModal}
+    onClose={() => {
+      setShowSharedBoxesModal(false);
+      setSharedBoxesEmployee(null);
+    }}
+    employeeId={undefined}
+    restaurantId={undefined}
+    staticBoxes={
+      (sharedBoxesEmployee.sharedBoxes ?? [])
+      .filter((b) => b.powerStatus === "on")
+      .map((b) => ({
+        id: b.id,
+        name: b.name,
+        details: [b.displayId, b.vehicleNumber].filter(Boolean).join(" | "),
+        power: b.powerStatus === "on" ? "on" : b.powerStatus === "off" ? "off" : "warning",
+        added: b.createdAt
+          ? new Date(b.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })
+          : "-",
+        isLocked: false,
+        isOffline: b.powerStatus === "off",
+      }))
+    }
+    employeeName={sharedBoxesEmployee.name}
+    onEditList={() => {}}
+  />
+)}
     </div>
   );
 }

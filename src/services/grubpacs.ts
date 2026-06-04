@@ -14,6 +14,18 @@ import type {
   RemoveEmployeeFromBoxesBody,
 } from "@/types/domain/grubpacs";
 
+// ── NEW TYPE ──────────────────────────────────────────────────────────────────
+export interface UpdateGrubPacSettingsBody {
+  id: string;
+  power_status?: "on" | "off";
+  ioniser_status?: "on" | "off";
+  dual_zone_status?: "on" | "off";
+  camera_status?: "on" | "off";
+  advert_screen_status?: "on" | "off";
+  zone1_temp?: number;
+  zone2_temp?: number;
+}
+
 const LIST_PARAM_KEYS: Array<keyof GrubPacListParams> = [
   "restaurant_id",
   "employee_id",
@@ -220,6 +232,39 @@ function sanitizeActionPayload(data: ActionGrubPacBody): ActionGrubPacBody | nul
   return payload;
 }
 
+// ── NEW SANITIZER ─────────────────────────────────────────────────────────────
+function sanitizeSettingsPayload(
+  data: UpdateGrubPacSettingsBody,
+): Record<string, unknown> | null {
+  const id = sanitizeOptionalString(data.id);
+  if (!id) return null;
+
+  const payload: Record<string, unknown> = { id };
+
+  const ON_OFF_KEYS = [
+    "power_status",
+    "ioniser_status",
+    "dual_zone_status",
+    "camera_status",
+    "advert_screen_status",
+  ] as const;
+
+  ON_OFF_KEYS.forEach((key) => {
+    const value = data[key];
+    if (value === "on" || value === "off") payload[key] = value;
+  });
+
+  if (typeof data.zone1_temp === "number" && Number.isFinite(data.zone1_temp)) {
+    payload.zone1_temp = data.zone1_temp;
+  }
+  if (typeof data.zone2_temp === "number" && Number.isFinite(data.zone2_temp)) {
+    payload.zone2_temp = data.zone2_temp;
+  }
+
+  // Reject if nothing changed besides id
+  return Object.keys(payload).length > 1 ? payload : null;
+}
+
 function sanitizeRemoveEmployeesPayload(
   data: RemoveEmployeeFromBoxesBody,
 ): Record<string, unknown> | null {
@@ -230,8 +275,6 @@ function sanitizeRemoveEmployeesPayload(
     return null;
   }
 
-  // Some backend revisions accept `ids`/`employee_id` instead of
-  // `box_ids`/`employee_ids`. Send both aliases for compatibility.
   return {
     box_ids: boxIds,
     ids: boxIds,
@@ -287,6 +330,15 @@ const grubpacService = {
     return httpClient.put(GRUBPAC_URLS.UPDATE, payload);
   },
 
+  // ── NEW METHOD ──────────────────────────────────────────────────────────────
+  async updateSettings(data: UpdateGrubPacSettingsBody) {
+    const payload = sanitizeSettingsPayload(data);
+    if (!payload) {
+      return failResponse("Please provide valid settings");
+    }
+    return httpClient.put(GRUBPAC_URLS.SETTINGS, payload);
+  },
+
   async action(data: ActionGrubPacBody) {
     const payload = sanitizeActionPayload(data);
     if (!payload) {
@@ -324,10 +376,10 @@ const grubpacService = {
       return failResponse("Please provide valid box ids");
     }
     const sanitizedIds = ids ? sanitizeIds(ids) : [];
-    return httpClient.patch(GRUBPAC_URLS.REACTIVATE, { 
+    return httpClient.patch(GRUBPAC_URLS.REACTIVATE, {
       ids: sanitizedIds.length > 0 ? sanitizedIds : undefined,
       all: all || undefined,
-      reassign: reassign !== undefined ? reassign : undefined
+      reassign: reassign !== undefined ? reassign : undefined,
     });
   },
 
@@ -338,6 +390,7 @@ const grubpacService = {
     }
     return httpClient.delete(GRUBPAC_URLS.DELETE, { ids: sanitizedIds });
   },
+
   async getSuspendedSummary() {
     return httpClient.get<{
       boxes: number;

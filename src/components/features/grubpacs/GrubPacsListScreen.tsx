@@ -135,6 +135,7 @@ export default function GrubPacsListScreen() {
   const [resourceEmployees, setResourceEmployees] = useState<ResourceEmployee[]>([]);
   const [resourceGrubPacs, setResourceGrubPacs] = useState<ResourceGrubPac[]>([]);
   const [resourcesLoading, setResourcesLoading] = useState(false);
+  const [groupedRestaurantEmployeeCount, setGroupedRestaurantEmployeeCount] = useState<number | null>(null);
   const [showReassignResourcesModal, setShowReassignResourcesModal] = useState(false);
   const [reassignMode, setReassignMode] = useState<"boxes" | "restaurantDelete">("boxes");
   const [reassignRestaurants, setReassignRestaurants] = useState<Restaurant[]>([]);
@@ -424,7 +425,7 @@ export default function GrubPacsListScreen() {
 
       try {
         const [employeesResponse, allRestaurantBoxes] = await Promise.all([
-          employeeService.getList({ query: "emp", limit: 50, restaurant_id: restaurantId }),
+          employeeService.getList({ restaurant_id: restaurantId, limit: 50 }),
           fetchAllRestaurantBoxes(restaurantId),
         ]);
 
@@ -460,7 +461,9 @@ export default function GrubPacsListScreen() {
               isAvailable: employee.status === "active",
             });
           });
-          setResourceEmployees(Array.from(uniqueEmployees.values()));
+          const resolvedEmployees = Array.from(uniqueEmployees.values());
+          setResourceEmployees(resolvedEmployees);
+          setGroupedRestaurantEmployeeCount(resolvedEmployees.length);
         } else {
           setResourceEmployees([]);
         }
@@ -792,6 +795,7 @@ export default function GrubPacsListScreen() {
       const restaurantId = selectedGroup?.restaurantIds?.[0];
       setGroupedRestaurantResourcesTab(tab);
       setShowGroupedRestaurantResourcesModal(true);
+      setGroupedRestaurantEmployeeCount(null);
       closeModal("groupModal");
       void fetchRestaurantResources(restaurantId);
     },
@@ -1225,9 +1229,11 @@ export default function GrubPacsListScreen() {
           {
             label: "employees",
             count:
-              typeof selectedGroup.resourceEmployeeCount === "number"
-                ? selectedGroup.resourceEmployeeCount
-                : 0,
+              groupedRestaurantEmployeeCount !== null
+                ? groupedRestaurantEmployeeCount
+                : typeof selectedGroup.resourceEmployeeCount === "number"
+                  ? selectedGroup.resourceEmployeeCount
+                  : 0,
             onViewList: () => openGroupedResourcesModal("employees"),
           },
         ],

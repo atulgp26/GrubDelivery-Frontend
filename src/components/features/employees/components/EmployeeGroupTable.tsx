@@ -71,7 +71,8 @@ type ActiveGroupTableProps = {
 	onSuspend?: (employee: Employee) => void;
 	onViewLogs?: (employee: Employee) => void;
 	onViewDetails?: (employee: Employee) => void;
-	onViewAllBoxes?: (employee: Employee) => void;
+onViewAllBoxes?: (employee: Employee) => void;
+onViewRestaurantBoxes?: (employee: Employee) => void;
 };
 
 type SuspendedGroupTableProps = {
@@ -166,15 +167,16 @@ export default function EmployeeGroupTable(props: EmployeeGroupTableProps) {
 		typeof props.group.name === "string" ? props.group.name : "";
 	const boxGroupType = groupNameToBoxGroupType(groupName);
 	const data = items.map((employee) => employeeToRow(employee, boxGroupType));
-	const {
-		onRowClick,
-		onEdit,
-		onDelete,
-		onSuspend,
-		onViewLogs,
-		onViewDetails,
-		onViewAllBoxes,
-	} = props;
+const {
+  onRowClick,
+  onEdit,
+  onDelete,
+  onSuspend,
+  onViewLogs,
+  onViewDetails,
+  onViewAllBoxes,
+  onViewRestaurantBoxes,
+} = props;
 
 	const getMenuItems = (
 		row: EmployeeRow,
@@ -238,14 +240,19 @@ export default function EmployeeGroupTable(props: EmployeeGroupTableProps) {
 						? (row) => onDelete(items.find((e) => e.id === row.id)!)
 						: undefined
 				}
-				onAllBoxes={
-					onViewAllBoxes
-						? (row) =>
-								onViewAllBoxes(
-									items.find((e) => e.id === row.id)!,
-								)
-						: undefined
-				}
+			onAllBoxes={
+  onViewAllBoxes
+    ? (row) => onViewAllBoxes(items.find((e) => e.id === row.id)!)
+    : undefined
+}
+
+onViewRestaurantBoxes={
+  onViewRestaurantBoxes
+    ? (row) => onViewRestaurantBoxes(items.find((e) => e.id === row.id)!)
+    : undefined
+}
+
+				
 				onMenuClick={
 					onRowClick
 						? (row) =>

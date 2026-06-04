@@ -1,4 +1,4 @@
-const GRUBPAC_BASE = "/delivery/grubpac";
+const GRUBPAC_BASE = "/food/grubpac";
 
 export const GRUBPAC_URLS = {
   LIST: GRUBPAC_BASE,
@@ -6,6 +6,7 @@ export const GRUBPAC_URLS = {
   SEARCH: `${GRUBPAC_BASE}/search`,
   CREATE: GRUBPAC_BASE,
   UPDATE: GRUBPAC_BASE,
+  SETTINGS: GRUBPAC_BASE,  
   DELETE: GRUBPAC_BASE,
   ACTION: `${GRUBPAC_BASE}/action`,
   REASSIGN: `${GRUBPAC_BASE}/reassign`,

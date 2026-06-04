@@ -22,10 +22,11 @@ const restaurantFormSchema = z
     state: z.string().min(1, "State is required").max(50, "State must be less than 50 characters"),
     city: z.string().min(1, "City is required").max(50, "City must be less than 50 characters"),
     line1: z.string().min(1, "Line 1 is required").max(255, "Line 1 must be less than 255 characters"),
-    line2: z.string().min(1, "Line 2 is required").max(255, "Line 2 must be less than 255 characters"),
+    // line2: z.string().max(255, "Line 2 must be less than 255 characters").optional(), // ← changed: no longer required
+    line2: z.string().max(255, "Line 2 must be less than 255 characters").optional().or(z.literal("")),
+    google_place_id: z.string().trim().optional().or(z.literal("")),
     status: z.enum(["active", "suspended"]),
     location: z.string().optional(),
-    google_place_id: z.string().trim().min(1, "Please select a location from map/search"),
     latitude: z.string().optional(),
     longitude: z.string().optional(),
   });
@@ -114,6 +115,7 @@ export default function AddRestaurantModal({
   const mapsRef = useRef<HTMLDivElement | null>(null);
   const locationInputRef = useRef<HTMLInputElement | null>(null);
   const autocompleteRef = useRef<any>(null);
+  const geocodeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
 
   const { isLoaded: isMapsLoaded, loadError: mapsLoadError } = useJsApiLoader({
@@ -121,7 +123,7 @@ export default function AddRestaurantModal({
     googleMapsApiKey,
     libraries: GOOGLE_MAP_LIBRARIES,
   });
-  
+
   const {
     register,
     handleSubmit,
@@ -129,6 +131,7 @@ export default function AddRestaurantModal({
     watch,
     reset,
     setValue,
+    getValues,
   } = useForm<RestaurantFormData>({
     resolver: zodResolver(restaurantFormSchema),
     mode: "onChange",
@@ -138,7 +141,7 @@ export default function AddRestaurantModal({
       state: restaurant?.state || "",
       city: restaurant?.city || "",
       line1: restaurant?.line_one || "",
-      line2: restaurant?.line_two || "",
+    line2: restaurant?.line_two || undefined,
       status: restaurant?.status?.toLowerCase() === "suspended" ? "suspended" : "active",
       location: restaurant?.address || "",
       google_place_id: restaurant?.google_place_id || "",
@@ -170,6 +173,50 @@ export default function AddRestaurantModal({
 
   const onMapUnmount = () => {
     setMapInstance(null);
+  };
+
+  const geocodeAddressFields = (overrides: Partial<Record<"line1" | "city" | "state" | "pincode", string>> = {}) => {
+    if (geocodeDebounceRef.current) clearTimeout(geocodeDebounceRef.current);
+
+    geocodeDebounceRef.current = setTimeout(() => {
+      const maps = (globalThis as typeof globalThis & { google?: any }).google;
+      if (!maps?.maps?.Geocoder) return;
+
+      const line1Val = overrides.line1 ?? getValues("line1") ?? "";
+      const cityVal = overrides.city ?? getValues("city") ?? "";
+      const stateVal = overrides.state ?? getValues("state") ?? "";
+      const pinVal = overrides.pincode ?? getValues("pincode") ?? "";
+
+      // Need at least one meaningful field to attempt geocoding
+      if (!line1Val && !cityVal && !stateVal && !pinVal) return;
+
+      const addressStr = [line1Val, cityVal, stateVal, pinVal].filter(Boolean).join(", ");
+
+      const geocoder = new maps.maps.Geocoder();
+      geocoder.geocode({ address: addressStr }, (results: any, status: string) => {
+        if (status === "OK" && results?.[0]) {
+          const place = results[0];
+          const lat = place.geometry?.location?.lat();
+          const lng = place.geometry?.location?.lng();
+
+          setValue("google_place_id", place.place_id, { shouldDirty: true, shouldValidate: true });
+          setValue("latitude", typeof lat === "number" ? String(lat) : "", { shouldDirty: true });
+          setValue("longitude", typeof lng === "number" ? String(lng) : "", { shouldDirty: true });
+          setValue("location", place.formatted_address || "", { shouldDirty: true });
+          setMapQuery(place.formatted_address || "");
+
+          if (typeof lat === "number" && typeof lng === "number" && mapInstance) {
+            mapInstance.panTo({ lat, lng });
+            mapInstance.setZoom(15);
+          }
+        } else {
+          // Geocode failed — clear pin silently, don't block submission
+          setValue("google_place_id", "", { shouldDirty: true });
+          setValue("latitude", "", { shouldDirty: true });
+          setValue("longitude", "", { shouldDirty: true });
+        }
+      });
+    }, 800);
   };
 
   const resetMapSelectionFromManualAddressEdit = () => {
@@ -215,9 +262,9 @@ export default function AddRestaurantModal({
       const fallbackCity = components.find((c: any) => c.types.includes("administrative_area_level_2"));
       if (fallbackCity) city = fallbackCity.long_name;
     }
-    
+
     if (!line1 && placeName) {
-       line1 = placeName;
+      line1 = placeName;
     }
 
     return { line1, line2, city, state, pincode };
@@ -227,10 +274,10 @@ export default function AddRestaurantModal({
     if (!e.latLng) return;
     const lat = e.latLng.lat();
     const lng = e.latLng.lng();
-    
+
     setValue("latitude", lat.toString(), { shouldDirty: true, shouldValidate: true });
     setValue("longitude", lng.toString(), { shouldDirty: true, shouldValidate: true });
-    
+
     const maps = (globalThis as typeof globalThis & { google?: any }).google;
     if (!maps?.maps?.Geocoder) return;
 
@@ -239,14 +286,14 @@ export default function AddRestaurantModal({
       if (status === "OK" && results?.[0]) {
         const place = results[0];
         setValue("google_place_id", place.place_id, { shouldDirty: true, shouldValidate: true });
-        
+
         if (place.formatted_address) {
           setValue("location", place.formatted_address, { shouldDirty: true, shouldValidate: true });
           setMapQuery(place.formatted_address);
         }
 
         const { line1, line2, city, state, pincode } = parseAddressComponents(place.address_components);
-        
+
         if (line1) setValue("line1", line1, { shouldDirty: true, shouldValidate: true });
         if (line2) setValue("line2", line2, { shouldDirty: true, shouldValidate: true });
         if (city) setValue("city", city, { shouldDirty: true, shouldValidate: true });
@@ -304,7 +351,7 @@ export default function AddRestaurantModal({
         }
 
         const { line1, line2, city, state, pincode } = parseAddressComponents(details?.address_components || [], details?.name);
-        
+
         if (line1) setValue("line1", line1, { shouldDirty: true, shouldValidate: true });
         if (line2) setValue("line2", line2, { shouldDirty: true, shouldValidate: true });
         if (city) setValue("city", city, { shouldDirty: true, shouldValidate: true });
@@ -335,7 +382,7 @@ export default function AddRestaurantModal({
         state: restaurant.state || "",
         city: restaurant.city || "",
         line1: restaurant.line_one || "",
-        line2: restaurant.line_two || "",
+    line2: restaurant.line_two || undefined,
         status: restaurant.status?.toLowerCase() === "suspended" ? "suspended" : "active",
         location: restaurant.address || "",
         google_place_id: restaurant.google_place_id || "",
@@ -350,7 +397,7 @@ export default function AddRestaurantModal({
         state: "",
         city: "",
         line1: "",
-        line2: "",
+        line2: undefined,
         status: "active",
         location: "",
         google_place_id: "",
@@ -361,13 +408,15 @@ export default function AddRestaurantModal({
       setFocusedInput(null);
     }
   }, [open, restaurant, reset]);
-
-  const onFormSubmit = async (data: RestaurantFormData) => {
-    if (!loading) {
-      onSubmit(data);
-    }
-  };
-
+const onFormSubmit = async (data: RestaurantFormData) => {
+  if (!loading) {
+    const cleaned = {
+      ...data,
+      line2: data.line2?.trim() || undefined,
+    };
+    onSubmit(cleaned);
+  }
+};
   const handleClose = () => {
     reset();
     setMapQuery("Delhi");
@@ -396,7 +445,7 @@ export default function AddRestaurantModal({
             className="flex items-center text-[var(--color-neutral-secondary)] border border-[#E0E3E1] py-2 px-3 rounded-lg hover:text-[var(--color-neutral-secondary)] text-sm font-medium"
             onClick={handleClose}
           >
-            
+
             <Icon name="arrow" className="w-5 h-5 mr-2 rotate-180 text-[#99A39D]" />
             <span className="text-[#99A39D]">GO BACK</span>
           </Button>
@@ -408,7 +457,7 @@ export default function AddRestaurantModal({
           Where&apos;s Your Business Operating?
         </h2>
         <p className="text-[var(--color-neutral-secondary)] text-lg font-normal">
-          {isEditMode 
+          {isEditMode
             ? "Update your restaurant details to manage your Grubpacs efficiently."
             : "Add your restaurant to start managing your Grubpacs efficiently."
           }
@@ -447,7 +496,9 @@ export default function AddRestaurantModal({
                     width="w-1/3"
                     className="!h-10"
                     maxLength={6}
-                    onChange={resetMapSelectionFromManualAddressEdit}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      geocodeAddressFields({ pincode: e.target.value });
+                    }}
                     onInput={(e: React.FormEvent<HTMLInputElement>) => {
                       e.currentTarget.value = e.currentTarget.value.replace(/\D/g, "");
                     }}
@@ -463,7 +514,9 @@ export default function AddRestaurantModal({
                     width="w-1/3"
                     className="!h-10"
                     maxLength={50}
-                    onChange={resetMapSelectionFromManualAddressEdit}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      geocodeAddressFields({ state: e.target.value });
+                    }}
                   />
                   <FormField
                     name="city"
@@ -476,7 +529,9 @@ export default function AddRestaurantModal({
                     width="w-1/3"
                     className="!h-10"
                     maxLength={50}
-                    onChange={resetMapSelectionFromManualAddressEdit}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      geocodeAddressFields({ city: e.target.value });
+                    }}
                   />
                 </div>
                 <FormField
@@ -489,20 +544,22 @@ export default function AddRestaurantModal({
                   setFocusedInput={setFocusedInput}
                   className="!h-10"
                   maxLength={255}
-                  onChange={resetMapSelectionFromManualAddressEdit}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    geocodeAddressFields({ line1: e.target.value });
+                  }}
                 />
                 <div className="h-4"></div>
+                {/* line2 is optional, no geocode trigger needed */}
                 <FormField
                   name="line2"
                   label=""
-                  placeholder="Line 2"
+                  placeholder="Line 2 (optional)"
                   register={register}
                   errors={errors}
                   focusedInput={focusedInput}
                   setFocusedInput={setFocusedInput}
                   className="!h-10"
                   maxLength={255}
-                  onChange={resetMapSelectionFromManualAddressEdit}
                 />
               </div>
 
@@ -533,7 +590,7 @@ export default function AddRestaurantModal({
 
             <div className="flex flex-col justify-start gap-4">
               <div ref={mapsRef} className="hidden" aria-hidden="true" />
-              <div 
+              <div
                 className="relative shadow-lg"
                 style={{ width: '500px', height: '484px', borderRadius: '16px', overflow: 'hidden' }}
               >
@@ -565,7 +622,7 @@ export default function AddRestaurantModal({
                         }
                       }}
                       disabled={!googleMapsApiKey || Boolean(mapsLoadError)}
-                      style={{ 
+                      style={{
                         display: 'flex',
                         height: '48px',
                         minWidth: '40px',
@@ -589,7 +646,7 @@ export default function AddRestaurantModal({
                     placeholder="Loading Maps..."
                     className="absolute top-3 left-3 right-3 z-10 bg-white rounded-lg shadow-sm"
                     disabled={true}
-                    style={{ 
+                    style={{
                       display: 'flex',
                       height: '48px',
                       minWidth: '40px',
@@ -622,8 +679,8 @@ export default function AddRestaurantModal({
                     }}
                   >
                     {latitude && longitude && (
-                      <MarkerF 
-                        position={{ lat: Number(latitude), lng: Number(longitude) }} 
+                      <MarkerF
+                        position={{ lat: Number(latitude), lng: Number(longitude) }}
                         draggable={true}
                         onDragEnd={(e) => {
                           if (e.latLng) {
@@ -644,16 +701,6 @@ export default function AddRestaurantModal({
                   Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to enable location search and place capture.
                 </p>
               )}
-              {errors.google_place_id ? (
-                <p className="max-w-[500px] text-sm text-red-500">
-                  {errors.google_place_id.message as string}
-                </p>
-              ) : null}
-              {submitCount > 0 && Object.keys(errors).length > 0 ? (
-                <p className="max-w-[500px] text-sm text-red-500">
-                  Please complete all required fields.
-                </p>
-              ) : null}
               <div className="max-w-[500px] flex justify-end w-full">
                 <Button
                   type="submit"

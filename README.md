@@ -52,7 +52,7 @@ This update focuses on bulk recovery operations and standardized management of s
   - **"Activate All" Logic**: Implemented the bulk reactivation workflow for suspended boxes, matching the patterns used in Employee and Restaurant modules.
   - **Intelligent Recovery Modal**: Introduced a dynamic activation modal that identifies previously assigned locations and offers reassignment options during the reactivation process.
 - **Standardized Bulk Actions**:
-  - Unified the reactivation API consumption to use the new `/food/grubpac/suspended/summary` endpoint for precise item counting and relationship verification.
+  - Unified the reactivation API consumption to use the new `/delivery/grubpac/suspended/summary` endpoint for precise item counting and relationship verification.
 - **Refined Permissions Component**:
   - Updated the "Permissions" column in the main list to display precise `<count> EXCLUDED` counts directly from the optimized API response.
 

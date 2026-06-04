@@ -361,7 +361,7 @@ export default function GrubLockListContent({
         title: "Box locked successfully!",
         description:
           "An OTP will be sent to the recipient when the delivery person initiates the drop-off.",
-        viewDetailsHref: `/grublock/details?id=${selectedBoxId}`,
+        viewDetailsHref: `/grubpacs/details?id=${selectedBoxId}&pinSelected=1&from=%2Fgrublock%2Flist`,
       });
       await refetch();
       clearStatusOverrides(targetIds);
@@ -597,9 +597,9 @@ export default function GrubLockListContent({
                     onRowSelect={handleRowSelect}
                     onSelectAll={handleSelectAll}
                     onRowClick={handleRowClick}
-                    onViewDetailsClick={(box) => {
-                      router.push(`/grublock/details?id=${box.id}`);
-                    }}
+                  onViewDetailsClick={(box) => {
+  router.push(`/grubpacs/details?id=${box.id}&pinSelected=1&from=%2Fgrublock%2Flist`);
+}}
                     onViewInGrubPacsClick={(box) => {
                       router.push(`/grubpacs/list?selectBoxId=${encodeURIComponent(String(box.id))}&from=%2Fgrublock%2Flist`);
                     }}

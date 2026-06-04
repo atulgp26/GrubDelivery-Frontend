@@ -77,10 +77,11 @@ export default function RestaurantListScreen() {
         pincode: data.pincode || "",
         line_one: data.line1 || "",
         line_two: data.line2 || "",
+        // line_two: data.line2?.trim() || null,
         latitude: data.latitude?.trim() || undefined,
         longitude: data.longitude?.trim() || undefined,
         status: data.status,
-        google_place_id: data.google_place_id.trim(),
+        google_place_id: data.google_place_id?.trim() || undefined,
       };
 
       let response;

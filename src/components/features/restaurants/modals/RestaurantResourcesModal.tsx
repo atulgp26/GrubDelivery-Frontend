@@ -109,7 +109,7 @@ export default function RestaurantResourcesModal({
   const [state, setState] = useState<ModalState>({
     activeTab: tab,
     searchTerm: "",
-    showOfflineBoxes: true,
+    showOfflineBoxes: false,
     filterState: defaultBoxFilters,
     currentPage: 1,
     selectedBoxIds: new Set(),
@@ -165,12 +165,12 @@ export default function RestaurantResourcesModal({
       lastFetchedGrubPacsSignatureRef.current = null;
 
       if (tab === "grubpacs" && onFetchGrubPacs) {
-        const signature = `${refreshToken}:1::true:${JSON.stringify(defaultBoxFilters)}`;
+        const signature = `${refreshToken}:1::false:${JSON.stringify(defaultBoxFilters)}`;
         lastFetchedGrubPacsSignatureRef.current = signature;
         onFetchGrubPacs({
           page: 1,
           query: "",
-          showOfflineBoxes: true,
+          showOfflineBoxes: false,
           filters: defaultBoxFilters,
         });
       }
@@ -190,7 +190,7 @@ export default function RestaurantResourcesModal({
         ...prev,
         activeTab: tab,
         searchTerm: "",
-        showOfflineBoxes: true,
+        showOfflineBoxes: false,
         currentPage: 1,
         selectedBoxIds: new Set(),
         selectedEmployeeIds: new Set(),

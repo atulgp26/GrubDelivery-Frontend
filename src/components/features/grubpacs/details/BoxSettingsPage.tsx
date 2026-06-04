@@ -170,7 +170,7 @@ export default function BoxSettingsPage({ boxId, pinSelectedOnLoad = false, back
     closeEditDetailsModal,
   } = useGrubLockModals();
 
-  const { grubpacsData, isLoading } = useGrubPacsData();
+  const { grubpacsData, isLoading , refetch} = useGrubPacsData();
 
   const sidebarBoxes = useMemo(() => {
     if (!pinSelectedOnLoad) return grubpacsData;
@@ -270,6 +270,7 @@ export default function BoxSettingsPage({ boxId, pinSelectedOnLoad = false, back
   );
 
   useEffect(() => {
+    if (isSettingsApplying) return;
     setSettingsDraft(initialSettingsDraft);
     setSettingsSnapshot(initialSettingsDraft);
     setIsSettingsEditMode(false);
@@ -441,76 +442,69 @@ export default function BoxSettingsPage({ boxId, pinSelectedOnLoad = false, back
     setIsSettingsConfirmOpen(false);
   };
 
-  const buildSettingsPayload = (): ActionGrubPacBody => {
+
+
+const handleConfirmApplySettings = async () => {
+  if (!canApplySettingsChanges) {
+    setIsSettingsConfirmOpen(false);
+    return;
+  }
+
+  try {
+    setIsSettingsApplying(true);
+
     const payload: ActionGrubPacBody = { ids: [String(selectedBox.id)] };
 
-    if (settingsDraft.power_status !== settingsSnapshot.power_status) {
+    if (settingsDraft.power_status !== settingsSnapshot.power_status)
       payload.power_status = settingsDraft.power_status;
-    }
-    if (settingsDraft.ioniser_status !== settingsSnapshot.ioniser_status) {
+    if (settingsDraft.ioniser_status !== settingsSnapshot.ioniser_status)
       payload.ioniser_status = settingsDraft.ioniser_status;
-    }
-    if (settingsDraft.dual_zone_status !== settingsSnapshot.dual_zone_status) {
+    if (settingsDraft.dual_zone_status !== settingsSnapshot.dual_zone_status)
       payload.dual_zone_status = settingsDraft.dual_zone_status;
-    }
-    if (settingsDraft.camera_status !== settingsSnapshot.camera_status) {
+    if (settingsDraft.camera_status !== settingsSnapshot.camera_status)
       payload.camera_status = settingsDraft.camera_status;
-    }
-    if (settingsDraft.advert_screen_status !== settingsSnapshot.advert_screen_status) {
+    if (settingsDraft.advert_screen_status !== settingsSnapshot.advert_screen_status)
       payload.advert_screen_status = settingsDraft.advert_screen_status;
-    }
-    if (settingsDraft.zone1_temp !== settingsSnapshot.zone1_temp) {
+    if (settingsDraft.zone1_temp !== settingsSnapshot.zone1_temp && settingsDraft.zone1_temp > 0)
       payload.zone1_temp = settingsDraft.zone1_temp;
-    }
-    if (settingsDraft.zone2_temp !== settingsSnapshot.zone2_temp) {
+    if (settingsDraft.zone2_temp !== settingsSnapshot.zone2_temp && settingsDraft.zone2_temp > 0)
       payload.zone2_temp = settingsDraft.zone2_temp;
-    }
 
-    return payload;
-  };
+    const response = await grubpacService.action(payload);
 
-  const handleConfirmApplySettings = async () => {
-    if (!canApplySettingsChanges) {
+    if (!response.success) {
+      setStatusAlert({
+        variant: "error",
+        title: "Failed to apply settings",
+        description: response.error ?? "Unable to apply settings. Please try again.",
+      });
       setIsSettingsConfirmOpen(false);
       return;
     }
 
-    const payload = buildSettingsPayload();
-
-    try {
-      setIsSettingsApplying(true);
-      const response = await grubpacService.action(payload);
-
-      if (!response.success) {
-        setStatusAlert({
-          variant: "error",
-          title: "Failed to apply settings",
-          description: response.error ?? "Unable to apply settings. Please try again.",
-        });
-        setIsSettingsConfirmOpen(false);
-        return;
-      }
-
-      setSettingsSnapshot(settingsDraft);
-      setIsSettingsConfirmOpen(false);
-      setIsSettingsEditMode(false);
-      setStatusAlert({
-        variant: "success",
-        title: "Settings applied successfully!",
-        description: "Changes will reflect shortly.",
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to apply settings.";
-      setStatusAlert({
-        variant: "error",
-        title: "Failed to apply settings",
-        description: message,
-      });
-      setIsSettingsConfirmOpen(false);
-    } finally {
-      setIsSettingsApplying(false);
-    }
-  };
+    await refetch();
+const appliedDraft = { ...settingsDraft };  
+setIsSettingsConfirmOpen(false);
+setIsSettingsEditMode(false);
+setSettingsDraft(appliedDraft);             
+setSettingsSnapshot(appliedDraft);          
+setStatusAlert({
+  variant: "success",
+  title: "Settings applied successfully!",
+  description: "Changes will reflect shortly.",
+});
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to apply settings.";
+    setStatusAlert({
+      variant: "error",
+      title: "Failed to apply settings",
+      description: message,
+    });
+    setIsSettingsConfirmOpen(false);
+  } finally {
+    // setIsSettingsApplying(false);
+  }
+};
 
   const handleSidebarBoxClick = (targetId: string | number) => {
     const nextId = String(targetId);

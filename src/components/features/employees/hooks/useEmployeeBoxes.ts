@@ -23,6 +23,7 @@ interface UseEmployeeBoxesOptions {
   limit?: number;
   searchTerm?: string;
   filters?: FilterState;
+  restaurantId?: string;
 }
 
 interface UseEmployeeBoxesResult {
@@ -135,6 +136,7 @@ function mapFiltersToListParams(filters?: FilterState): Partial<GrubPacListParam
 
 export function useEmployeeBoxes({
   employeeId,
+  restaurantId,
   fetchExcluded = false,
   showOfflineBoxes = false,
   enabled = true,
@@ -156,7 +158,7 @@ export function useEmployeeBoxes({
 
   useEffect(() => {
     const run = async () => {
-      if (!enabled || !employeeId) {
+if (!enabled || (!employeeId && !restaurantId)) {
         setBoxes([]);
         setExcludedBoxes([]);
         setError(null);
@@ -169,11 +171,12 @@ export function useEmployeeBoxes({
       try {
         const permissionStatus = fetchExcluded ? "blocked" : "shared";
         const apiFilterParams = mapFiltersToListParams(filters);
-        const fallbackPowerStatus = showOfflineBoxes ? undefined : "on";
-
-        const listRes = await grubpacService.getList({
-          employee_id: employeeId,
-          permission_status: permissionStatus,
+  const fallbackPowerStatus = showOfflineBoxes ? "off" : "on";
+const listRes = await grubpacService.getList({
+  ...(restaurantId 
+    ? { restaurant_id: restaurantId } 
+    : { employee_id: employeeId }),
+          permission_status: restaurantId ? undefined : permissionStatus, 
           power_status: apiFilterParams.power_status ?? fallbackPowerStatus,
           connection_status: apiFilterParams.connection_status,
           health_status: apiFilterParams.health_status,
@@ -230,7 +233,7 @@ export function useEmployeeBoxes({
     };
 
     void run();
-  }, [employeeId, enabled, fetchExcluded, reloadToken, showOfflineBoxes, page, limit, searchTerm, filters]);
+  }, [employeeId, enabled, restaurantId, fetchExcluded, reloadToken, showOfflineBoxes, page, limit, searchTerm, filters]);
 
   return {
     boxes,

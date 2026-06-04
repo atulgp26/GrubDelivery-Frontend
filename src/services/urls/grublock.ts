@@ -1,3 +1,4 @@
+const GRUBPAC_BASE = "/delivery/grubpac";
 const GRUBLOCK_BASE = "/delivery/grublock";
 
 export const GRUBLOCK_URLS = {

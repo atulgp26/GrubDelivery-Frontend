@@ -198,18 +198,26 @@ export default function RestaurantGroupTable({
     async (restaurantId: string, query = "", page = 1, withLoading = true, availableDriversOnly = false, roles?: string[]) => {
       if (withLoading) setResourcesLoading(true);
       try {
-        const apiRoles = (roles && roles.length > 0)
-          ? roles.map(r => r === "driver" ? "delivery" : r)
-          : ["manager", "delivery"];
+      const apiRoles = (roles && roles.length > 0)
+  ? roles.map(r => r === "driver" ? "delivery" : r)
+  : [];
 
-        const employeesResponse = await employeeService.getList({
-          role: apiRoles as any,
-          status: availableDriversOnly ? "unassigned" : "active",
-          restaurant_id: availableDriversOnly ? undefined : (restaurantId || undefined),
-          limit: 50,
-          page,
-          query: query.trim() || undefined,
-        });
+const employeesResponse = await employeeService.getList({
+  ...(apiRoles.length === 1 ? { role: apiRoles[0] as "manager" | "delivery" } : {}),
+  status: availableDriversOnly ? "unassigned" : undefined,
+  restaurant_id: availableDriversOnly ? undefined : (restaurantId || undefined),
+  limit: 50,
+  page,
+  query: query.trim() || undefined,
+});
+
+console.log("[fetchResourceEmployees] params:", {
+  role: apiRoles[0],
+  status: availableDriversOnly ? "unassigned" : undefined,
+  restaurant_id: availableDriversOnly ? undefined : restaurantId,
+  availableDriversOnly,
+  restaurantId,
+});
 
         if (employeesResponse.success && employeesResponse.data) {
           const employeeData = employeesResponse.data;
@@ -344,7 +352,7 @@ export default function RestaurantGroupTable({
         if (filters && filters.zone2Min !== -20) apiParams.zone2_min = filters.zone2Min;
         if (filters && filters.zone2Max !== 30) apiParams.zone2_max = filters.zone2Max;
 
-        const fallbackPowerStatus = showOfflineBoxes ? undefined : "on";
+        const fallbackPowerStatus = showOfflineBoxes ? "off" : "on";
 
         const response = await grubpacService.getList({
           restaurant_id: restaurantId,
@@ -521,13 +529,12 @@ export default function RestaurantGroupTable({
     }
   };
 
-  const handleViewGrubPacs = () => {
-    if (modalState.selectedRestaurant) {
-      openResourcesModal(modalState.selectedRestaurant, "grubpacs");
-      void fetchRestaurantResources();
-    }
-  };
-
+ const handleViewGrubPacs = () => {
+  if (modalState.selectedRestaurant) {
+    openResourcesModal(modalState.selectedRestaurant, "grubpacs");
+    void fetchResourceGrubPacs(modalState.selectedRestaurant.id);  
+  }
+};
   const handleAssignManagerConfirm = async (manager: Manager, restaurant: Restaurant) => {
     try {
       const response = await foodService.assignEmployees({
@@ -560,12 +567,12 @@ export default function RestaurantGroupTable({
     }
   };
 
-  const handleViewEmployees = () => {
-    if (modalState.selectedRestaurant) {
-      openResourcesModal(modalState.selectedRestaurant, "employees");
-      void fetchRestaurantResources();
-    }
-  };
+ const handleViewEmployees = () => {
+  if (modalState.selectedRestaurant) {
+    openResourcesModal(modalState.selectedRestaurant, "employees");
+    void fetchResourceEmployees(modalState.selectedRestaurant.id, "", 1);  
+  }
+};
 
   const handleAddManager = (row: GroupRow) => {
     const restaurant = group.items?.find(item => item.id === row.id);
@@ -577,29 +584,28 @@ export default function RestaurantGroupTable({
     }
   };
 
-  const handleViewManagerDetail = (row: GroupRow) => {
-    const restaurant = group.items?.find(item => item.id === row.id);
-    if (restaurant) {
-      openResourcesModal(restaurant, "employees", ["manager"]);
-      void fetchRestaurantResources();
-    }
-  };
+const handleViewManagerDetail = (row: GroupRow) => {
+  const restaurant = group.items?.find(item => item.id === row.id);
+  if (restaurant) {
+    openResourcesModal(restaurant, "employees", ["manager"]);
+    void fetchResourceEmployees(restaurant.id, "", 1, true, false, ["manager"]);
+  } 
+}; 
+ const handleAssignDrivers = (row: GroupRow) => {
+  const restaurant = group.items?.find(item => item.id === row.id);
+  if (restaurant) {
+    openResourcesModal(restaurant, "employees", ["driver"], true);
+    void fetchResourceEmployees(restaurant.id, "", 1, true, true, ["driver"]); 
+  }
+};
 
-  const handleAssignDrivers = (row: GroupRow) => {
-    const restaurant = group.items?.find(item => item.id === row.id);
-    if (restaurant) {
-      openResourcesModal(restaurant, "employees", ["driver"], true);
-      void fetchRestaurantResources();
-    }
-  };
-
-  const handleViewDriversList = (row: GroupRow) => {
-    const restaurant = group.items?.find(item => item.id === row.id);
-    if (restaurant) {
-      openResourcesModal(restaurant, "employees", ["driver"]);
-      void fetchRestaurantResources();
-    }
-  };
+ const handleViewDriversList = (row: GroupRow) => {
+  const restaurant = group.items?.find(item => item.id === row.id);
+  if (restaurant) {
+    openResourcesModal(restaurant, "employees", ["driver"]);
+    void fetchResourceEmployees(restaurant.id, "", 1, true, false, ["driver"]);  
+  }
+};
 
   const handleAssignBoxes = (row: GroupRow) => {
     const restaurant = group.items?.find(item => item.id === row.id);

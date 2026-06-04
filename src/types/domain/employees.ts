@@ -25,6 +25,17 @@ export interface Employee {
     displayId: string;
     status?: string;
   };
+
+  sharedBoxes?: Array<{
+  id: string;
+  name: string;
+  displayId: string;
+  vehicleNumber?: string;
+  powerStatus?: string;
+  connectionStatus?: string;
+  healthStatus?: string;
+  createdAt?: string;
+}>;
   added: string;
   restaurantName?: string;
   restaurantId?: string;
@@ -104,6 +115,7 @@ export interface ApiEmployee {
   total_boxes?: number | string;
   connected_boxes_status?: boolean;
   connected_boxes_count?: number;
+  shared_boxes_count?: number;  
   handler_box?: ApiConnectedBox | null;
 }
 
@@ -382,17 +394,18 @@ export function apiEmployeeToEmployee(e: ApiEmployee): Employee {
     }
     return null;
   };
-
-  const connectedBoxesCount = parseCount(e.connected_boxes_count);
-
-  const boxCount =
-    connectedBoxesCount ??
-    parseCount(e.box_count) ??
-    parseCount(e.boxes_count) ??
-    parseCount(e.grubpac_count) ??
-    parseCount(e.total_boxes) ??
-    0;
-
+const connectedBoxesCount = parseCount(e.connected_boxes_count) ?? 0;
+const sharedBoxesCount = Array.isArray((e as any).shared_boxes)
+  ? (e as any).shared_boxes.filter((b: any) => b.power_status === "on").length
+  : parseCount(e.shared_boxes_count) ?? 0;
+const boxCount =
+  (connectedBoxesCount + sharedBoxesCount) > 0
+    ? connectedBoxesCount + sharedBoxesCount
+    : parseCount(e.box_count) ??
+      parseCount(e.boxes_count) ??
+      parseCount(e.grubpac_count) ??
+      parseCount(e.total_boxes) ??
+      0;
   const boxId =
     (typeof e.box_display_id === "string" && e.box_display_id.trim()) ||
     (typeof e.box_id === "string" && e.box_id.trim()) ||
@@ -456,13 +469,25 @@ export function apiEmployeeToEmployee(e: ApiEmployee): Employee {
         : connectedBoxesCount !== null
           ? connectedBoxesCount > 0
           : boxCount > 0,
-    handlerBox: e.handler_box
+  handlerBox: e.handler_box
       ? {
           id: e.handler_box.id,
           name: e.handler_box.name,
           displayId: e.handler_box.box_display_id,
           status: e.handler_box.status,
         }
+      : undefined,
+    sharedBoxes: Array.isArray((e as any).shared_boxes)
+      ? (e as any).shared_boxes.map((b: any) => ({
+          id: b.id,
+          name: b.name,
+          displayId: b.box_display_id,
+          vehicleNumber: b.vehicle_number ?? undefined,
+          powerStatus: b.power_status ?? undefined,
+          connectionStatus: b.connection_status ?? undefined,
+          healthStatus: b.health_status ?? undefined,
+          createdAt: b.created_at ?? undefined,
+        }))
       : undefined,
   };
 }

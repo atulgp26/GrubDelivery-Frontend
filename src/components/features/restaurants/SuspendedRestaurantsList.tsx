@@ -591,6 +591,9 @@ export default function SuspendedRestaurantsList({ className = "" }: SuspendedRe
   const deletingRestaurantNames = deletingRestaurants.map(r => r.name);
   const hasAssignedResources = deletingRestaurants.some(r => r.boxCount > 0 || r.driverCount > 0);
 
+const _boxesCount = (selectedRestaurant as any)?._count?.boxes ?? selectedRestaurant?.boxes ?? 0;
+  const _employeesCount = (selectedRestaurant as any)?._count?.employees ?? selectedRestaurant?.drivers ?? (selectedRestaurant as any)?._count?.drivers ?? 0;
+
   return (
     <div className={`bg-white min-h-screen ${className}`}>
       {/* Header Section */}
@@ -826,7 +829,8 @@ export default function SuspendedRestaurantsList({ className = "" }: SuspendedRe
         loading={false}
       />
 
-      {/* Restaurant Details Modal */}
+    
+
       <RestaurantDetailsModal
         open={showDetailsModal && !showReactivateModal && !showDeleteModal && !showEditModal}
         onClose={() => {
@@ -840,8 +844,8 @@ export default function SuspendedRestaurantsList({ className = "" }: SuspendedRe
           suspendedOn: (selectedRestaurant as any)?.suspendedOn,
           address: selectedRestaurant?.address,
           resources: [
-            { label: "GrubPacs", count: selectedRestaurant?.boxes || 0 },
-            { label: "employees", count: selectedRestaurant?.drivers || 0 },
+            { label: "GrubPacs", count: _boxesCount },
+            { label: "employees", count: _employeesCount },
           ],
         }}
         onActivate={handleActivateFromDetails}

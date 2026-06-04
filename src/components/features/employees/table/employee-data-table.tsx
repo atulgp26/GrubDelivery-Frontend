@@ -26,6 +26,7 @@ import {
 	MessageSquareLinesIcon,
 	TrashIcon,
 } from "@/components/ui/data-table-cells";
+import { FiFileText } from "react-icons/fi";
 import {
 	DropdownMenu,
 	DropdownMenuTrigger,
@@ -82,7 +83,8 @@ export interface EmployeeDataTableProps {
 	onSelectionChange?: (ids: Set<string>) => void;
 	onActivate?: (row: EmployeeRow) => void;
 	onDelete?: (row: EmployeeRow) => void;
-	onAllBoxes?: (row: EmployeeRow) => void;
+onAllBoxes?: (row: EmployeeRow) => void;
+onViewRestaurantBoxes?: (row: EmployeeRow) => void;
 	onMenuClick?: (row: EmployeeRow) => void;
 	onAddClick?: (row: EmployeeRow) => void;
 	onEditEmployee?: (row: EmployeeRow) => void;
@@ -127,6 +129,7 @@ export function EmployeeDataTable({
 	onActivate,
 	onDelete,
 	onAllBoxes,
+	onViewRestaurantBoxes,
 	onMenuClick,
 	onAddClick,
 	onEditEmployee,
@@ -267,7 +270,9 @@ export function EmployeeDataTable({
 		onActivate,
 		onDelete,
 		onAllBoxes,
+		onViewRestaurantBoxes,
 		onMenuClick,
+		
 		onAddClick,
 		onEditEmployee,
 		onViewDetails,
@@ -350,6 +355,7 @@ interface CellCallbacks {
 	onActivate?: (row: EmployeeRow) => void;
 	onDelete?: (row: EmployeeRow) => void;
 	onAllBoxes?: (row: EmployeeRow) => void;
+	onViewRestaurantBoxes?: (row: EmployeeRow) => void; 
 	onMenuClick?: (row: EmployeeRow) => void;
 	onAddClick?: (row: EmployeeRow) => void;
 	onEditEmployee?: (row: EmployeeRow) => void;
@@ -481,39 +487,40 @@ function renderCell(
 			);
 
 			let tooltipContent: React.ReactNode = null;
-			let tooltipContentClickable = false;
+let tooltipContentClickable = false;
 
-			if (isManagerGroupRow) {
-				tooltipContent = "Visit list";
-			}
+if (isManagerGroupRow) {
+    tooltipContent = "View list";
+    tooltipContentClickable = true;
+} else if (!isConnected) {
+    if (normalizedCount > 0) {
+        tooltipContent = "View list";
+        tooltipContentClickable = true;
+    } else {
+        tooltipContent = "Ask handler to connect";
+    }
+} else if (hasNoBoxes) {
+    tooltipContent = (
+        <div>
+            <span className="text-[14px] leading-[22px]">No assigned GrubPacs.</span>
+            <br />
+            <span className="text-[var(--gp-color-text-brand)] font-semibold text-[14px] leading-[22px]">
+                Open GrubPacs to assign {">>"}
+            </span>
+        </div>
+    );
+} else {
+    tooltipContent = connectedTooltipContent;
+    tooltipContentClickable = true;
+}
 
-			if (!isManagerGroupRow && !isConnected) {
-				// State 2: Disconnected - "Ask handler to connect"
-				tooltipContent = "Ask handler to connect";
-			} else if (!isManagerGroupRow && hasNoBoxes) {
-				// State 4: Connected but no assigned boxes 
-				tooltipContent = (
-					<div>
-						<span className="text-[14px] leading-[22px]">No assigned GrubPacs.</span>
-						<br />
-						<span className="text-[var(--gp-color-text-brand)] font-semibold text-[14px] leading-[22px]">
-							Open GrubPacs to assign {">>"}
-						</span>
-					</div>
-				);
-			} else if (!isManagerGroupRow) {
-				// Connected box rows always show the connected box tooltip (including multiple-box rows).
-				tooltipContent = connectedTooltipContent;
-				tooltipContentClickable = canOpenSettings;
-			}
-
-			const onTooltipClick = tooltipContentClickable
-				? (event: React.MouseEvent<HTMLDivElement> | React.PointerEvent<HTMLDivElement>) => {
-					event.preventDefault();
-					event.stopPropagation();
-					void callbacks.onOpenBoxSettings?.(row);
-				}
-				: undefined;
+const onTooltipClick = tooltipContentClickable
+    ? (event: React.MouseEvent<HTMLDivElement> | React.PointerEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
+   callbacks.onViewRestaurantBoxes?.(row);  // ← was onOpenBoxSettings, now onAllBoxes
+    }
+    : undefined;
 			
 			return (
 				<Tooltip>
@@ -644,13 +651,20 @@ function renderActions(
 					sideOffset={8}
 					className="bg-white border border-[var(--gp-color-border-neutral-secondary)] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.1),4px_4px_8px_0px_rgba(0,0,0,0.12)] p-0 min-w-[200px]"
 				>
-					<DropdownMenuItem 
-						onSelect={() => callbacks.onEditEmployee?.(row)}
-						className="flex items-center gap-[var(--gp-space-m)] px-[var(--gp-space-l)] py-[var(--gp-space-m)] border-t border-[var(--gp-color-border-neutral-secondary)] first:border-t-0 hover:bg-[var(--gp-color-background-interactive-brand-secondary-button-default)] cursor-pointer text-[14px] leading-[22px] text-[var(--gp-color-text-neutral-secondary)] font-normal"
-					>
-						<DropdownIcon src="/Employee/dropdown/Dropdown/pen-line.svg" alt="Edit" />
-						<span>Edit employee details</span>
-					</DropdownMenuItem>
+				<DropdownMenuItem 
+  onSelect={() => callbacks.onEditEmployee?.(row)}
+  className="flex items-center gap-[var(--gp-space-m)] px-[var(--gp-space-l)] py-[var(--gp-space-m)] border-t border-[var(--gp-color-border-neutral-secondary)] first:border-t-0 hover:bg-[var(--gp-color-background-interactive-brand-secondary-button-default)] cursor-pointer text-[14px] leading-[22px] text-[var(--gp-color-text-neutral-secondary)] font-normal"
+>
+  <DropdownIcon src="/Employee/dropdown/Dropdown/pen-line.svg" alt="Edit" />
+  <span>Edit employee details</span>
+</DropdownMenuItem>
+<DropdownMenuItem 
+  onSelect={() => callbacks.onViewLogs?.(row)}
+  className="flex items-center gap-[var(--gp-space-m)] px-[var(--gp-space-l)] py-[var(--gp-space-m)] border-t border-[var(--gp-color-border-neutral-secondary)] hover:bg-[var(--gp-color-background-interactive-brand-secondary-button-default)] cursor-pointer text-[14px] leading-[22px] text-[var(--gp-color-text-neutral-secondary)] font-normal"
+>
+<FiFileText className="w-[18px] h-[18px] text-[var(--gp-color-text-neutral-secondary)]" />
+  <span>View logs</span>
+</DropdownMenuItem>
 					<DropdownMenuItem 
 						onSelect={() => callbacks.onSuspendEmployee?.(row)}
 						className="flex items-center gap-[var(--gp-space-m)] px-[var(--gp-space-l)] py-[var(--gp-space-m)] border-t border-[var(--gp-color-border-neutral-secondary)] hover:bg-[var(--gp-color-background-interactive-brand-secondary-button-default)] cursor-pointer text-[14px] leading-[22px] text-[var(--gp-color-text-neutral-secondary)] font-normal"

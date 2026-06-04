@@ -26,9 +26,13 @@ const foodService = {
     return httpClient.get<{ restaurants?: RestaurantData[] }>(FOOD_URLS.RESTAURANT_SEARCH, params as unknown as Record<string, unknown>);
   },
 
-  async updateRestaurant(data: RestaurantRequest) {
-    return httpClient.put(FOOD_URLS.RESTAURANT, data);
-  },
+async updateRestaurant(data: RestaurantRequest) {
+  const payload = {
+    ...data,
+    line_two: data.line_two?.trim() || undefined,
+  };
+  return httpClient.put(FOOD_URLS.RESTAURANT, payload);
+},
   
   async suspendRestaurants(data: SuspendRestaurantRequest) {
     return httpClient.patch(FOOD_URLS.SUSPEND, data);

@@ -118,24 +118,6 @@ const BoxDetails = () => {
     );
   }, [modalState]);
 
-  const detailsRows = useMemo(() => {
-    const fallbackName = "BOX-2456";
-    const fallbackCode = "DL12345";
-    const fallbackSecondary = "DL2BD1234";
-    const resolvedName = box?.name || fallbackName;
-    const resolvedCode = box?.boxCode || box?.boxDisplayId || box?.boxId || fallbackCode;
-    const resolvedSecondary = box?.boxCode2 || box?.boxDisplayId || fallbackSecondary;
-    const resolvedStatus = box ? (box.status === "locked" ? "Box locked" : "Box unlocked") : "Box unlocked";
-
-    return Array.from({ length: 4 }).map(() => ({
-      timestamp: "06 Jun '25, 10:45:10",
-      name: resolvedName,
-      code: resolvedCode,
-      secondaryCode: resolvedSecondary,
-      status: resolvedStatus,
-    }));
-  }, [box]);
-
   const handleLockActionClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!box) return;
 
@@ -180,7 +162,8 @@ const BoxDetails = () => {
       title: "Box locked successfully!",
       description:
         "An OTP will be sent to the recipient when the delivery person initiates the drop-off.",
-      viewDetailsHref: `/grublock/details?id=${box.id}`,
+      // FIX: Navigate to box settings page (same as clicking box name), not the details/logs page
+      viewDetailsHref: `/grubpacs/details?id=${box.id}`,
     });
   };
 
@@ -220,7 +203,8 @@ const BoxDetails = () => {
     setSuccessAlert({
       title: "Emergency unlock successful!",
       description: "The box has been unlocked without OTP verification.",
-      viewDetailsHref: `/grublock/details?id=${box.id}`,
+      // FIX: Navigate to box settings page (same as clicking box name), not the details/logs page
+      viewDetailsHref: `/grubpacs/details?id=${box.id}`,
     });
   };
 
@@ -293,27 +277,7 @@ const BoxDetails = () => {
                   </TableCell>
                 </TableRow>
               ))
-            : detailsRows.map((item, index) => (
-                <TableRow key={`${item.code}-${index}`}>
-                  <TableCell className="py-5 !text-base font-semibold !text-[var(--color-neutral-secondary)]">
-                    {item.timestamp}
-                  </TableCell>
-                  <TableCell className="py-5">
-                    <div>
-                      <div className="!text-base font-semibold text-[var(--color-neutral-secondary)] uppercase">
-                        {item.name || `BOX-${item.code || "N/A"}`}
-                      </div>
-                      <div className="text-[14px] text-[var(--color-neutral-tertiary)]">
-                        #{item.code || "N/A"}
-                        {item.secondaryCode ? ` | ${item.secondaryCode}` : ""}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-5 !text-base !font-semibold !text-[var(--color-brand-default)]">
-                    {item.status}
-                  </TableCell>
-                </TableRow>
-              ))}
+            : null}
         </TableBody>
       </Table>
 
@@ -347,4 +311,3 @@ const BoxDetails = () => {
 };
 
 export default BoxDetails;
-

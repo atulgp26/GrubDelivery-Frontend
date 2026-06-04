@@ -68,6 +68,13 @@ export default function RestaurantModals({
   onViewEmployees,
   onAssignManager,
 }: RestaurantModalsProps) {
+  const boxesCount = modalState.selectedRestaurant
+    ? ((modalState.selectedRestaurant as any)?._count?.boxes ?? modalState.selectedRestaurant.boxes ?? 0)
+    : 0;
+
+  const employeesCount = modalState.selectedRestaurant
+    ? ((modalState.selectedRestaurant as any)?._count?.employees ?? modalState.selectedRestaurant.drivers ?? (modalState.selectedRestaurant as any)?._count?.drivers ?? 0)
+    : 0;
   return (
     <>
       {modalState.selectedRestaurant && (
@@ -82,12 +89,12 @@ export default function RestaurantModals({
             resources: [
               {
                 label: "GrubPacs",
-                count: modalState.selectedRestaurant.boxes,
+                count: boxesCount,
                 onViewList: onViewGrubPacs || (() => {}),
               },
               {
                 label: "employees",
-                count: modalState.selectedRestaurant.drivers,
+                count: employeesCount,
                 onViewList: onViewEmployees || (() => {}),
               },
             ],

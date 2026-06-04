@@ -10,9 +10,17 @@ import { useProfileData } from "@/hooks/useProfileData";
 export default function DashboardPage() {
   const { userData, loading } = useProfileData();
   const displayName = userData?.name?.trim();
-  const greeting = loading
-    ? "Good morning!"
-    : `Good morning ${displayName || "Guest User"}!`;
+
+const getTimeGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+};
+
+const greeting = loading
+  ? `${getTimeGreeting()}!`
+  : `${getTimeGreeting()} ${displayName || "Guest User"}!`;
 
   return (
     <>

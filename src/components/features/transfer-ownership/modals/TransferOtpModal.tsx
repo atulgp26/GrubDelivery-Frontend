@@ -11,6 +11,7 @@ interface TransferOtpModalProps {
   onVerify: (otp: string) => void;
   transferType: "selected" | "all";
   selectedCount: number;
+  onResend?: () => Promise<void>;
 }
 
 export default function TransferOtpModal({
@@ -20,8 +21,9 @@ export default function TransferOtpModal({
   onVerify,
   transferType,
   selectedCount,
+  onResend,
 }: TransferOtpModalProps) {
-  const { otp, setOtp, timer, otpRefs, handleResend } = useTransferOtp(open);
+  const { otp, setOtp, timer, otpRefs, handleResend } = useTransferOtp(open, onResend);
 
   const handleVerify = () => {
     onVerify(otp.join(""));
@@ -40,7 +42,7 @@ export default function TransferOtpModal({
       otpRefs={otpRefs}
       onResend={handleResend}
       title="OTP Verification"
-      message="We've sent a 6-digit OTP to your registered mobile number. Enter it below to authorize the transfer."
+      message="We've sent a 4-digit OTP to your registered email. Enter it below to authorize the transfer."
       buttonText={getOtpButtonLabel(transferType, selectedCount)}
     />
   );

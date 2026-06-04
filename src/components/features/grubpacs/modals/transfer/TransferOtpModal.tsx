@@ -11,7 +11,8 @@ export default function TransferOtpModal({
   selectedCount = 3,
   transferType = "selected",
   ownerDetails,
-  onSuccess,
+  onVerify,
+  onResend,
 }: {
   open: boolean;
   onClose: () => void;
@@ -19,10 +20,11 @@ export default function TransferOtpModal({
   selectedCount?: number;
   transferType?: string;
   ownerDetails?: { phone?: string };
-  onSuccess: () => void;
+  onVerify: (otp: string) => void;
+  onResend?: () => Promise<void>;
 }) {
   const [otp, setOtp] = useState(["", "", "", ""])
-  const [timer, setTimer] = useState(12)
+  const [timer, setTimer] = useState(0)
   const [otpError, setOtpError] = useState(false)
   const otpRefs: RefObject<HTMLInputElement | null>[] = [
     useRef<HTMLInputElement>(null),
@@ -41,7 +43,6 @@ export default function TransferOtpModal({
     return () => clearInterval(interval)
   }, [timer, open])
 
-  // Reset timer and OTP when modal opens
   useEffect(() => {
     if (open) {
       setTimer(12)
@@ -52,26 +53,22 @@ export default function TransferOtpModal({
 
   const handleVerify = () => {
     const otpString = otp.join("")
-    if (otpString === "2222") { // Demo OTP
-      onSuccess()
-    } else {
-      setOtpError(true)
-      // Reset OTP on error
-      setOtp(["", "", "", ""])
-      otpRefs[0].current?.focus()
-    }
+    if (otpString.length !== 4) return
+    onVerify(otpString)
   }
 
-  const handleResend = () => {
+  // ✅ Clean handleResend — sirf parent onResend call karo
+  const handleResend = async () => {
+    console.log("🔥 TransferOtpModal handleResend called")
     setTimer(12)
     setOtp(["", "", "", ""])
     setOtpError(false)
     otpRefs[0].current?.focus()
+    if (onResend) await onResend()
   }
 
   const getOwnerPhone = () => {
     if (ownerDetails?.phone) {
-      // Mask the phone number for security
       const phone = ownerDetails.phone
       return phone.replace(/\d(?=\d{4})/g, "X")
     }
@@ -92,14 +89,14 @@ export default function TransferOtpModal({
       onVerify={handleVerify}
       otpRefs={otpRefs}
       otpError={otpError}
-      onResend={handleResend}
+      onResend={handleResend}  // ✅ handleResend — not handleOtpResend
       title="OTP Verification"
       message={customMessage}
       showBackButton={true}
-      buttonText={transferType === "account" 
-        ? "VERIFY AND TRANSFER ACCOUNT" 
+      buttonText={transferType === "account"
+        ? "VERIFY AND TRANSFER ACCOUNT"
         : `VERIFY AND TRANSFER ${selectedCount} GRUBPACS`
       }
     />
   )
-} 
+}

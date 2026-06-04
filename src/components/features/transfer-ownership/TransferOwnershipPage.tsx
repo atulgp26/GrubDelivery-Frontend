@@ -67,6 +67,40 @@ export default function TransferOwnershipPage() {
       selectedRows: [],
     }));
 
+    
+const handleOtpResend = async () => {
+  if (!state.ownerData || isSubmittingTransfer) return;
+
+  const numericCountryCode =
+    state.ownerData.dialCode.replace(/\D/g, "") || state.ownerData.countryCode.replace(/\D/g, "");
+
+  const payload = {
+    transfer_mode: state.transferType,
+    ...(state.transferType === "selected" ? { ids: state.selectedIds } : {}),
+    name: state.ownerData.fullName.trim(),
+    organization_name: state.ownerData.organisationName.trim(),
+    country_code: numericCountryCode,
+    phone: state.ownerData.phone.trim(),
+    email: state.ownerData.email.trim(),
+    country: state.ownerData.country.trim(),
+    state: (state.ownerData.stateLabel || state.ownerData.state).trim(),
+  };
+
+  setIsSubmittingTransfer(true);
+  try {
+    const response = await accountService.transferOwnership(payload);
+    if (!response.success) {
+      showError(response.error ?? "Failed to resend OTP.");
+      return;
+    }
+    setOtpId(response.data?.otp_id ?? null); // ✅ update otpId with new one
+  } catch (error) {
+    showError(error instanceof Error ? error.message : "Failed to resend OTP.");
+  } finally {
+    setIsSubmittingTransfer(false);
+  }
+};
+
   // NEXT pressed in TransferSelectModal
   const handleSelectNext = ({
     selectedIds,
@@ -358,6 +392,7 @@ export default function TransferOwnershipPage() {
         onClose={closeAll}
         onBack={handleOtpBack}
         onVerify={handleOtpVerify}
+        onResend={handleOtpResend}
         transferType={state.transferType}
         selectedCount={state.selectedCount}
       />

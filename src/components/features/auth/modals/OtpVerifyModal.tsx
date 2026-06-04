@@ -54,6 +54,14 @@ export default function OtpVerifyModal({
     onVerify();
   };
 
+  // ✅ Change 1: Added handleResend
+  const handleResend = () => {
+     console.log("🔥 OtpVerifyModal handleResend called")
+      console.log("🔥 onResend value:", onResend)
+    setOtp(["", "", "", ""]);
+    onResend();
+  };
+
   const isDisabled = otp.join("").length !== 4;
   const defaultMessage = `Enter the OTP sent to ${email || "your email"}`;
   const displayMessage = message ?? defaultMessage;
@@ -82,11 +90,11 @@ export default function OtpVerifyModal({
     >
       {errorMessage && onDismissError && (
         <div className="fixed top-[10px] left-0 right-0 z-[9999] flex justify-center w-full pointer-events-none">
-          <Alert 
-            variant="error" 
-            appearance="solid" 
-            autoDismiss 
-            onDismiss={onDismissError} 
+          <Alert
+            variant="error"
+            appearance="solid"
+            autoDismiss
+            onDismiss={onDismissError}
             dismissTime={3000}
             className="rounded cursor-pointer shadow-md w-[95vw] pointer-events-auto"
           >
@@ -98,10 +106,16 @@ export default function OtpVerifyModal({
         </div>
       )}
       <div className="flex flex-col items-center justify-center h-full w-full pt-8">
-        <h2 className="text-2xl font-semibold text-[var(--gp-color-text-primary)] text-center" style={{ marginTop: "var(--gp-space-xl)", marginBottom: "var(--gp-space-xl)" }}>
+        <h2
+          className="text-2xl font-semibold text-[var(--gp-color-text-primary)] text-center"
+          style={{ marginTop: "var(--gp-space-xl)", marginBottom: "var(--gp-space-xl)" }}
+        >
           {title}
         </h2>
-        <p className="text-[var(--gp-color-text-neutral-secondary)] text-lg text-center" style={{ marginBottom: "var(--gp-space-xl)" }}>
+        <p
+          className="text-[var(--gp-color-text-neutral-secondary)] text-lg text-center"
+          style={{ marginBottom: "var(--gp-space-xl)" }}
+        >
           {displayMessage}
         </p>
         <OtpInputs otp={otp} setOtp={setOtp} otpRefs={otpRefs} otpError={otpError} />
@@ -114,12 +128,11 @@ export default function OtpVerifyModal({
               appearance="ghost"
               type="button"
               className="font-normal text-[16px] !py-1 !px-1 btn-size-md-lg focus:outline-none"
-              onClick={onResend}
+              onClick={handleResend} // ✅ Change 2: onClick updated
             >
               <span>RESEND OTP</span>
             </Button>
           )}
-          
         </div>
         <Button
           variant="primary"

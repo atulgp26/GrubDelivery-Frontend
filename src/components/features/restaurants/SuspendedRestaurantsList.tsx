@@ -370,12 +370,15 @@ export default function SuspendedRestaurantsList({ className = "" }: SuspendedRe
     setIsReactivating(true);
 
     try {
-      const response = await foodService.reactivateRestaurants({
-        ids: isActivateAll ? undefined : activatingRestaurantIds,
-        all: isActivateAll || undefined,
-        reactivate_employees: reassign,
-        reactivate_boxes: reassign
-      });
+    const idsToReactivate = isActivateAll
+  ? restaurants.map((r) => r.id)
+  : activatingRestaurantIds;
+
+const response = await foodService.reactivateRestaurants({
+  ids: idsToReactivate,
+  reactivate_employees: reassign,
+  reactivate_boxes: reassign,
+});
 
       if (response.success) {
         showSuccess("Reactivated", `${isActivateAll || activatingRestaurantIds.length > 1 ? 'Restaurants' : 'Restaurant'} reactivated successfully.`);

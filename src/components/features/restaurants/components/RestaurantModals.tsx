@@ -38,6 +38,7 @@ interface RestaurantModalsProps {
   onDelete?: (restaurant: Restaurant) => void;
   onReassignBoxes?: (boxIds: string[]) => void;
   onEditList?: (boxIds: string[]) => void;
+  onRemoveEmployees?: (employeeIds: string[]) => void;
   onViewGrubPacs?: () => void;
   onViewEmployees?: () => void;
   onAssignManager?: (manager: Manager, restaurant: Restaurant) => void;
@@ -64,6 +65,7 @@ export default function RestaurantModals({
   onDelete,
   onReassignBoxes,
   onEditList,
+  onRemoveEmployees,
   onViewGrubPacs,
   onViewEmployees,
   onAssignManager,
@@ -149,6 +151,7 @@ export default function RestaurantModals({
           grubPacPageSize={10}
           onReassignBoxes={onReassignBoxes || (() => {})}
           onEditList={onEditList || (() => {})}
+           onRemoveEmployees={onRemoveEmployees}
           loading={resourcesLoading}
         />
       )}

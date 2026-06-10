@@ -50,6 +50,10 @@ async updateRestaurant(data: RestaurantRequest) {
     return httpClient.patch(FOOD_URLS.ASSIGN, data);
   },
 
+  async unassignEmployees(data: { id: string; employee_ids: string[] }) {
+    return httpClient.delete(FOOD_URLS.UNASSIGN_EMPLOYEES, data);
+  },
+
   async reassignResource(data: ReassignResourceRequest) {
     return httpClient.patch(FOOD_URLS.REASSIGN_RESOURCE, data);
   },

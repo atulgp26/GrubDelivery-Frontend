@@ -567,6 +567,47 @@ console.log("[fetchResourceEmployees] params:", {
     }
   };
 
+  const handleRemoveEmployees = useCallback(async (employeeIds: string[]) => {
+  const restaurantId = modalState.selectedRestaurant?.id;
+  const restaurantName = modalState.selectedRestaurant?.name ?? "restaurant";
+  if (!restaurantId || employeeIds.length === 0) return;
+
+  try {
+    const response = await foodService.unassignEmployees({
+      id: restaurantId,
+      employee_ids: employeeIds,
+    });
+
+    if (response.success) {
+      showSuccess(
+        "Removed",
+        `${employeeIds.length} employee${employeeIds.length > 1 ? "s" : ""} removed from ${restaurantName}.`,
+      );
+      // Re-fetch employees so the modal list updates
+      void fetchResourceEmployees(restaurantId, "", 1, true, false, 
+         modalState.resourcesModalRoles ?? undefined
+      );
+      if (onRefresh) void onRefresh();
+    } else {
+      showError(
+        getContextualErrorMessage(
+          "assignment.employee",
+          response,
+          "Could not remove employee(s). Please try again.",
+        ),
+      );
+    }
+  } catch (error) {
+    showError(
+      getContextualErrorMessage(
+        "assignment.employee",
+        error,
+        "Could not remove employee(s). Please try again.",
+      ),
+    );
+  }
+}, [modalState.selectedRestaurant, modalState.resourcesModalRoles, fetchResourceEmployees, onRefresh]);
+
  const handleViewEmployees = () => {
   if (modalState.selectedRestaurant) {
     openResourcesModal(modalState.selectedRestaurant, "employees");
@@ -655,6 +696,7 @@ const handleViewManagerDetail = (row: GroupRow) => {
         resourceEmployeeTotalEntries={resourceEmployeeTotalEntries}
         resourceGrubPacTotalEntries={resourceGrubPacTotalEntries}
         onSearchManagers={handleSearchManagers}
+        onRemoveEmployees={handleRemoveEmployees}
         assignManagerTotalCount={assignManagerTotalCount}
         assignManagerManagers={assignManagerManagers}
         assignManagerLoading={assignManagerLoading}

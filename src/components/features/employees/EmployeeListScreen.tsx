@@ -47,6 +47,7 @@ export default function EmployeeListScreen() {
     isLoadingDropdowns,
     fetchDropdowns,
     refetchGroup,
+    refetchActive,
     totalEntries,
   } = useEmployeeData({ 
     includeSuspended: false, 
@@ -217,6 +218,7 @@ export default function EmployeeListScreen() {
         groups={groups}
         isLoading={isLoading || isPageLoading}
         onAddEmployee={handleAddEmployee}
+         onRefetch={refetchActive} 
         onEditEmployee={handleEditEmployee}
         onViewSuspended={handleViewSuspended}
         onSuspendEmployees={handleSuspendEmployees}

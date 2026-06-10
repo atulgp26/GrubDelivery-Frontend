@@ -273,7 +273,7 @@ export default function SuspendedEmployeesScreen() {
         open={showDeleteModal}
         onClose={handleCloseDeleteModal}
         onConfirm={handleDeleteConfirm}
-        onSuspend={handleSuspendInstead}
+        // onSuspend={handleSuspendInstead}
         employeeName={getEmployeeName()}
         employeeCount={getEmployeeCount()}
         loading={false}

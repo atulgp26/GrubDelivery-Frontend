@@ -30,10 +30,3 @@ export interface NotificationGroupOption {
   id: string;                          // standardise to string
   label: string;
 }
-
-export interface MultiSelectOption {
-  id: string;
-  label: string;
-  code?: string;
-  display_id?: string;
-}

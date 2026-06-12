@@ -695,11 +695,7 @@ const handleViewManagerDetail = (row: GroupRow) => {
         resourceRefreshToken={resourceRefreshToken}
         resourceEmployeeTotalEntries={resourceEmployeeTotalEntries}
         resourceGrubPacTotalEntries={resourceGrubPacTotalEntries}
-        onSearchManagers={handleSearchManagers}
         onRemoveEmployees={handleRemoveEmployees}
-        assignManagerTotalCount={assignManagerTotalCount}
-        assignManagerManagers={assignManagerManagers}
-        assignManagerLoading={assignManagerLoading}
         resourceEmployees={resourceEmployees}
         resourceGrubPacs={resourceGrubPacs}
         resourcesLoading={resourcesLoading}

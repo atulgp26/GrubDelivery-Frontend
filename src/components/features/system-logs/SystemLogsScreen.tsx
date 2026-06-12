@@ -528,12 +528,12 @@ const hasDraftAdvancedFilters = draftOptions.length > 0;
         <h1 className="h-10 font-[var(--gp-font-heading)] font-semibold text-[24px] leading-[36px] text-[#03130A]">
           System logs
         </h1>
-        <button
+        {/* <button
           type="button"
           className="flex h-10 items-center justify-center px-4 py-2 font-[var(--gp-font-interactive)] text-[16px] font-medium uppercase leading-[20px] text-[#6B7971] cursor-pointer"
         >
           Export
-        </button>
+        </button> */}
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start">

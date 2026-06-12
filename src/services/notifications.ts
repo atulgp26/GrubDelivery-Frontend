@@ -13,6 +13,10 @@ export interface NotificationDropdownsResponse {
   types: { id: string; label: string }[];
 }
 
+export interface NotificationCountResponse {
+  count: number;
+}
+
 export const notificationsService = {
   getNotifications: () =>
     makeRequest<NotificationsResponse>({
@@ -24,5 +28,30 @@ export const notificationsService = {
     makeRequest<NotificationDropdownsResponse>({
       method: "GET",
       url: "/delivery/notification/dropdowns",
+    }),
+
+  markAsRead: (ids: string[]) =>
+    makeRequest({
+      method: "PATCH",
+      url: "/delivery/notification",
+   data: { ids, is_read: true },
+    }),
+
+  getUnreadCount: () =>
+    makeRequest<NotificationCountResponse>({
+      method: "GET",
+      url: "/delivery/notification/count",
+    }),
+
+  dismissNotification: (id: string) =>
+    makeRequest({
+      method: "PATCH",
+      url: `/delivery/notification/${id}/dismiss`,
+    }),
+
+  dismissAllNotifications: () =>
+    makeRequest({
+      method: "PATCH",
+      url: "/delivery/notification/dismiss-all",
     }),
 };

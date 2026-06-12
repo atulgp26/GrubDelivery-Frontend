@@ -1,31 +1,39 @@
-export type NotificationTone = "warning" | "error" | "success" | "info" | "danger";
+export type NotificationTone = "warning" | "error" | "success" | "info" | "danger" | "notification";
 
 export type NotificationStatus = "read" | "unread";
 
 export type NotificationFilterType = "severe" | "success" | "warning";
 
 export interface Notification {
-  id: number;
+  id: string;                          // ULID string from API
+  client_id: string;
+  box_id: string | null;
+  box_display_id: string | null;
+  box_name: string | null;
+  restaurant_name: string | null;
   type: NotificationTone;
   title: string;
-  message: string;
-  code: string;
-  time: string;
-  date: string;
-  boxId: number;
-  category: string;
-  status?: NotificationStatus;
-  restaurantId?: NotificationGroupOption["id"];
+  description: string;                 // was "message" — API field is "description"
+  is_read: boolean;
+  is_dismissed: boolean;
+  created_at: string;                  // ISO date string
+  updated_at: string;
 }
 
 export interface NotificationSuggestion {
-  id: number;
+  id: string;                          // was number
   title: string;
-  category: string;
+  // removed "category" — doesn't exist in API
 }
 
 export interface NotificationGroupOption {
-  id: number | string;
+  id: string;                          // standardise to string
   label: string;
 }
 
+export interface MultiSelectOption {
+  id: string;
+  label: string;
+  code?: string;
+  display_id?: string;
+}

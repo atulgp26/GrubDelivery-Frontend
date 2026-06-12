@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/Button";
 
 export default function NotificationsPage() {
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [dismissedNotificationIds, setDismissedNotificationIds] = useState<number[]>([]);
+const [dismissedNotificationIds, setDismissedNotificationIds] = useState<string[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -89,6 +89,27 @@ export default function NotificationsPage() {
     [filteredNotifications, dismissedNotificationIds],
   );
 
+const handleMarkAsRead = async (ids: string[]) => {
+  // Optimistically update UI
+  setNotifications((prev) =>
+    prev.map((n) =>
+      ids.includes(n.id) ? { ...n, is_read: true } : n
+    )
+  );
+
+    try {
+    await notificationsService.markAsRead(ids);
+  } catch (error) {
+    console.error("Failed to mark notifications as read", error);
+    // Rollback on failure
+    setNotifications((prev) =>
+      prev.map((n) =>
+        ids.includes(n.id) ? { ...n, is_read: false } : n
+      )
+    );
+  }
+};
+
   const allVisibleSelected =
     visibleNotifications.length > 0 &&
     visibleNotifications.every((notification) =>
@@ -109,12 +130,12 @@ export default function NotificationsPage() {
     });
   };
 
-  const handleDismiss = (notificationId: number) => {
-    setDismissedNotificationIds((prev) =>
-      prev.includes(notificationId) ? prev : [...prev, notificationId],
-    );
-    setSelectedNotificationIds((prev) => prev.filter((id) => id !== notificationId));
-  };
+const handleDismiss = (notificationId: string) => { // was number
+  setDismissedNotificationIds((prev) =>
+    prev.includes(notificationId) ? prev : [...prev, notificationId],
+  );
+  setSelectedNotificationIds((prev) => prev.filter((id) => id !== notificationId));
+};
 
   const handleDismissAll = () => {
     setDismissedNotificationIds((prev) => [
@@ -159,6 +180,7 @@ export default function NotificationsPage() {
               />
             );
           case "info":
+            case "notification": 
             return (
               <Image
                 src="/Icon-alert.svg"
@@ -230,6 +252,7 @@ export default function NotificationsPage() {
         allSelected={allVisibleSelected}
         onToggleAll={handleToggleAllVisible}
         onDismiss={handleDismiss}
+        onMarkAsRead={handleMarkAsRead}
       />
     </>
   );

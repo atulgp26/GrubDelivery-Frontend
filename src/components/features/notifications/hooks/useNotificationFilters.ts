@@ -70,54 +70,61 @@ export function useNotificationFilters({
   const allowedTones = useMemo(() => deriveAllowedTones(selectedTypes), [selectedTypes]);
   const activeStatusSet = useMemo(() => new Set(selectedStatuses), [selectedStatuses]);
 
-  const filteredNotifications = useMemo(() => {
-    const searchTerm = debouncedSearch.trim().toLowerCase();
-    const hasBoxFilters = selectedBoxes.length > 0;
-    const hasRestaurantFilters = selectedRestaurants.length > 0;
-    const shouldFilterByStatus = activeStatusSet.size > 0 && activeStatusSet.size < 2;
+const filteredNotifications = useMemo(() => {
+  const searchTerm = debouncedSearch.trim().toLowerCase();
+  const hasBoxFilters = selectedBoxes.length > 0;
+  const hasRestaurantFilters = selectedRestaurants.length > 0;
+  const shouldFilterByStatus = activeStatusSet.size > 0 && activeStatusSet.size < 2;
 
-    return notifications.filter((notification) => {
-      if (!allowedTones.has(notification.type)) return false;
+  return notifications.filter((notification) => {
+    if (!allowedTones.has(notification.type)) return false;
 
-      if (searchTerm.length > 0) {
-        const titleMatch = notification.title.toLowerCase().includes(searchTerm);
-        const messageMatch = notification.message.toLowerCase().includes(searchTerm);
-        if (!titleMatch && !messageMatch) {
-          return false;
-        }
-      }
+    if (searchTerm.length > 0) {
+      const titleMatch = notification.title.toLowerCase().includes(searchTerm);
+      const descMatch = notification.description.toLowerCase().includes(searchTerm); // was .message
+      if (!titleMatch && !descMatch) return false;
+    }
 
-      if (hasBoxFilters && !selectedBoxes.includes(notification.boxId)) {
-        return false;
-      }
+    if (hasBoxFilters && !selectedBoxes.includes(notification.box_id ?? "")) { // was .boxId
+      return false;
+    }
 
+    // restaurant_name filter — API has no restaurantId, filter by name if needed
+    if (hasRestaurantFilters) {
       if (
-        hasRestaurantFilters &&
-        (notification.restaurantId === undefined ||
-          !selectedRestaurants.includes(notification.restaurantId))
+        !notification.restaurant_name ||
+        !selectedRestaurants.includes(notification.restaurant_name)
       ) {
         return false;
       }
+    }
 
-      if (shouldFilterByStatus) {
-        const status = notification.status ?? "unread";
-        if (!activeStatusSet.has(status)) {
-          return false;
-        }
-      }
+    if (shouldFilterByStatus) {
+      const status: NotificationStatus = notification.is_read ? "read" : "unread"; // was .status
+      if (!activeStatusSet.has(status)) return false;
+    }
 
-      return true;
-    });
-  }, [notifications, allowedTones, debouncedSearch, selectedBoxes, selectedRestaurants, activeStatusSet]);
+    return true;
+  });
+}, [notifications, allowedTones, debouncedSearch, selectedBoxes, selectedRestaurants, activeStatusSet]);
 
-  const notificationSuggestions = useMemo<NotificationSuggestion[]>(() => {
-    if (!debouncedSearch.trim()) return [];
-    const lowered = debouncedSearch.trim().toLowerCase();
+const notificationSuggestions = useMemo<NotificationSuggestion[]>(() => {
+  if (!debouncedSearch.trim()) return [];
+  const lowered = debouncedSearch.trim().toLowerCase();
 
-    return notifications
-      .filter((notification) => notification.title.toLowerCase().includes(lowered))
-      .map(({ id, title, category }) => ({ id, title, category }));
-  }, [notifications, debouncedSearch]);
+  return notifications
+    .filter((n) => n.title.toLowerCase().includes(lowered))
+    .map(({ id, title }) => ({ id, title })); // removed "category" — doesn't exist
+}, [notifications, debouncedSearch]);
+
+  // const notificationSuggestions = useMemo<NotificationSuggestion[]>(() => {
+  //   if (!debouncedSearch.trim()) return [];
+  //   const lowered = debouncedSearch.trim().toLowerCase();
+
+  //   return notifications
+  //     .filter((notification) => notification.title.toLowerCase().includes(lowered))
+  //     .map(({ id, title, category }) => ({ id, title, category }));
+  // }, [notifications, debouncedSearch]);
 
   useEffect(() => {
     setSelectedNotificationIds((prev) =>

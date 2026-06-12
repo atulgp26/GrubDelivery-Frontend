@@ -54,7 +54,6 @@ export default function NotificationFilterBar({
             onSelect={(item) => setSearch(item.title)}
             data={notificationSuggestions}
             getLabel={(n) => n.title}
-            getSubLabel={(n) => n.category}
             placeholder="Search"
             clearable={true}
             onClear={() => setSearch("")}

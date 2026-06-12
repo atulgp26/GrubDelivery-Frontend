@@ -167,9 +167,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       >
         <Sidebar collapsed={collapsed} onClose={handleCloseSidebar} />
         <div
-          className={`flex-1 flex flex-col transition-[margin] duration-300 ${
-            collapsed ? "md:ml-0" : "md:ml-60"
-          }`}
+          className={`flex-1 flex flex-col transition-[margin] duration-300 ${collapsed ? "md:ml-0" : "md:ml-60"
+            }`}
         >
           <Header collapsed={collapsed} onToggleSidebarAction={handleToggleSidebar} />
           <main className="flex-1 px-4 py-8 md:px-4 md:py-10 space-y-10">

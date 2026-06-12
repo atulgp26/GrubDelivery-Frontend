@@ -14,6 +14,7 @@ interface NotificationListProps {
   allSelected: boolean;
   onToggleAll: () => void;
   onDismiss: (id: Notification["id"]) => void;
+  onMarkAsRead: (ids: Array<Notification["id"]>) => void;
 }
 
 export default function NotificationList({
@@ -24,9 +25,15 @@ export default function NotificationList({
   allSelected,
   onToggleAll,
   onDismiss,
+  onMarkAsRead,
 }: NotificationListProps) {
   const showMultiSelectBar = selected.length > 0;
   const someSelected = selected.length > 0 && selected.length < filtered.length;
+
+  const handleMarkAsRead = () => {
+    onMarkAsRead(selected);
+    setSelected([]);
+  };
 
   return (
     <div className="bg-[var(--background\/interactive\/neutral---text-field\/default-\&-filled,white)] w-full rounded-lg overflow-hidden">
@@ -42,7 +49,7 @@ export default function NotificationList({
         </span>
       </div>
       <div className="divide-y divide-[var(--stroke\/neutral---secondary,#e0e3e1)] cursor-pointer">
-        {filtered.map((notification, idx) => (
+        {filtered.map((notification) => (
           <NotificationItem
             key={notification.id}
             notification={notification}
@@ -56,7 +63,6 @@ export default function NotificationList({
             }
             onDismiss={onDismiss}
             getNotificationIcon={getNotificationIcon}
-            isLast={idx === filtered.length - 1}
             tone="neutral"
           />
         ))}
@@ -80,7 +86,7 @@ export default function NotificationList({
           <Button
             variant="primary"
             className="flex cursor-pointer gap-4 px-8 py-2 items-center"
-            onClick={() => setSelected([])}
+            onClick={handleMarkAsRead}
           >
             <Icon name="tick_mark" className="text-[var(--color-brand-default)]" />
             MARK ALL AS READ
@@ -90,4 +96,3 @@ export default function NotificationList({
     </div>
   );
 }
-

@@ -250,12 +250,12 @@ const totalEntries = staticBoxes ? staticBoxes.length : totalCount;
       await onConfirmRemoval?.(selectedIds);
       await refetch();
       
-      showSuccess(
-        "Removed",
-        selectedIds.length > 1
-          ? "Employee removed from selected boxes."
-          : "Employee removed from box."
-      );
+  showSuccess(
+  "Removed",
+  selectedIds.length > 1
+    ? "Boxes removed from employee successfully."
+    : "Box removed from employee successfully."
+);
 
       if (state.view === "editAssigned") {
         setState((prev) => ({

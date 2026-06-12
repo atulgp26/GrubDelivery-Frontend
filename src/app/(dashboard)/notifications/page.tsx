@@ -5,23 +5,57 @@ import NotificationFilterBar from "@/components/features/notifications/Notificat
 import NotificationList from "@/components/features/notifications/NotificationList";
 import NotificationFilterModal from "@/components/features/notifications/NotificationFilterModal";
 import { useNotificationFilters } from "@/components/features/notifications/hooks/useNotificationFilters";
-import {
-  MOCK_BOXES,
-  MOCK_RESTAURANTS,
-  MOCK_NOTIFICATIONS,
-} from "@/components/features/notifications/constants";
-import type { NotificationTone } from "@/types";
+import { notificationsService } from "@/services/notifications";
+import type { NotificationTone, Notification, MultiSelectOption, NotificationGroupOption } from "@/types";
 import { Button } from "@/components/ui/Button";
 
 export default function NotificationsPage() {
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [dismissedNotificationIds, setDismissedNotificationIds] = useState<number[]>([]);
+const [dismissedNotificationIds, setDismissedNotificationIds] = useState<string[]>([]);
 
-  // 1500ms Delay for testing on skeletons
   const [isLoading, setIsLoading] = useState(true);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [boxes, setBoxes] = useState<MultiSelectOption[]>([]);
+  const [restaurants, setRestaurants] = useState<NotificationGroupOption[]>([]);
+  const [types, setTypes] = useState<any[]>([]);
+
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1500);
-    return () => clearTimeout(timer);
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        // Force clear any stale state from fast refresh
+        setNotifications([]);
+        setBoxes([]);
+        setRestaurants([]);
+        setTypes([]);
+
+        const [notifRes, dropRes] = await Promise.all([
+          notificationsService.getNotifications(),
+          notificationsService.getNotificationDropdowns(),
+        ]);
+
+        if (notifRes.success && notifRes.data) {
+          setNotifications(notifRes.data.notifications);
+        }
+
+        if (dropRes.success && dropRes.data) {
+          // Map display_id to code so it shows correctly in the dropdown
+          const mappedBoxes = dropRes.data.boxes.map((b: any) => ({
+            ...b,
+            code: b.display_id ? `(#${b.display_id})` : b.code,
+          }));
+          setBoxes(mappedBoxes);
+          setRestaurants(dropRes.data.restaurants);
+          setTypes(dropRes.data.types || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch notifications data", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const {
@@ -42,9 +76,9 @@ export default function NotificationsPage() {
     boxOptions,
     restaurantOptions,
   } = useNotificationFilters({
-    notifications: MOCK_NOTIFICATIONS,
-    boxes: MOCK_BOXES,
-    restaurants: MOCK_RESTAURANTS,
+    notifications,
+    boxes,
+    restaurants,
   });
 
   const visibleNotifications = useMemo(
@@ -54,6 +88,27 @@ export default function NotificationsPage() {
       ),
     [filteredNotifications, dismissedNotificationIds],
   );
+
+const handleMarkAsRead = async (ids: string[]) => {
+  // Optimistically update UI
+  setNotifications((prev) =>
+    prev.map((n) =>
+      ids.includes(n.id) ? { ...n, is_read: true } : n
+    )
+  );
+
+    try {
+    await notificationsService.markAsRead(ids);
+  } catch (error) {
+    console.error("Failed to mark notifications as read", error);
+    // Rollback on failure
+    setNotifications((prev) =>
+      prev.map((n) =>
+        ids.includes(n.id) ? { ...n, is_read: false } : n
+      )
+    );
+  }
+};
 
   const allVisibleSelected =
     visibleNotifications.length > 0 &&
@@ -75,12 +130,12 @@ export default function NotificationsPage() {
     });
   };
 
-  const handleDismiss = (notificationId: number) => {
-    setDismissedNotificationIds((prev) =>
-      prev.includes(notificationId) ? prev : [...prev, notificationId],
-    );
-    setSelectedNotificationIds((prev) => prev.filter((id) => id !== notificationId));
-  };
+const handleDismiss = (notificationId: string) => { // was number
+  setDismissedNotificationIds((prev) =>
+    prev.includes(notificationId) ? prev : [...prev, notificationId],
+  );
+  setSelectedNotificationIds((prev) => prev.filter((id) => id !== notificationId));
+};
 
   const handleDismissAll = () => {
     setDismissedNotificationIds((prev) => [
@@ -125,6 +180,7 @@ export default function NotificationsPage() {
               />
             );
           case "info":
+            case "notification": 
             return (
               <Image
                 src="/Icon-alert.svg"
@@ -196,6 +252,7 @@ export default function NotificationsPage() {
         allSelected={allVisibleSelected}
         onToggleAll={handleToggleAllVisible}
         onDismiss={handleDismiss}
+        onMarkAsRead={handleMarkAsRead}
       />
     </>
   );

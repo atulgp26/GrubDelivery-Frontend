@@ -67,6 +67,7 @@ interface EmployeeListContentProps {
   onRolesChange?: (roles: Array<"manager" | "delivery">) => void;
   onPageChange?: (group: EmployeeGroup, page: number) => void;
   totalEntries?: number;
+    onRefetch?: () => void;
 }
 
 export default function EmployeeListContent({
@@ -82,6 +83,7 @@ export default function EmployeeListContent({
   pageSize = 50,
   className,
   onGroupByChange,
+  onRefetch,
   onRolesChange,
   onPageChange,
   totalEntries: totalCountProp = 0,
@@ -1038,25 +1040,48 @@ onViewRestaurantBoxes={(employee) => {
       setShowSharedBoxesModal(false);
       setSharedBoxesEmployee(null);
     }}
-    employeeId={undefined}
+    employeeId={sharedBoxesEmployee.id}
     restaurantId={undefined}
     staticBoxes={
       (sharedBoxesEmployee.sharedBoxes ?? [])
-      .filter((b) => b.powerStatus === "on")
-      .map((b) => ({
-        id: b.id,
-        name: b.name,
-        details: [b.displayId, b.vehicleNumber].filter(Boolean).join(" | "),
-        power: b.powerStatus === "on" ? "on" : b.powerStatus === "off" ? "off" : "warning",
-        added: b.createdAt
-          ? new Date(b.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })
-          : "-",
-        isLocked: false,
-        isOffline: b.powerStatus === "off",
-      }))
+        .filter((b) => b.powerStatus === "on")
+        .map((b) => ({
+          id: b.id,
+          name: b.name,
+          details: [b.displayId, b.vehicleNumber].filter(Boolean).join(" | "),
+          power: b.powerStatus === "on" ? "on" : b.powerStatus === "off" ? "off" : "warning",
+          added: b.createdAt
+            ? new Date(b.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })
+            : "-",
+          isLocked: false,
+          isOffline: b.powerStatus === "off",
+        }))
     }
     employeeName={sharedBoxesEmployee.name}
     onEditList={() => {}}
+    onConfirmRemoval={async (removedBoxIds) => {
+      // Update sharedBoxesEmployee state to remove the deleted boxes
+      setSharedBoxesEmployee((prev) => {
+    if (!prev) return null;
+    return {
+      ...prev,
+      sharedBoxes: (prev.sharedBoxes ?? []).filter(
+        (b) => !removedBoxIds.includes(b.id)
+      ),
+      boxCount: Math.max(0, (prev.boxCount ?? 0) - removedBoxIds.length), // ← update count
+    };
+      });
+
+      // Close modal if no boxes left
+      setSharedBoxesEmployee((prev) => {
+        if (!prev || (prev.sharedBoxes ?? []).length === 0) {
+          setShowSharedBoxesModal(false);
+          return null;
+        }
+        return prev;
+      });
+       onRefetch?.();
+    }}
   />
 )}
     </div>

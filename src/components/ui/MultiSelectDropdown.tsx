@@ -111,7 +111,9 @@ export default function MultiSelectDropdown({
         <span
           className={`ml-2 flex items-center transition-transform duration-200 ${open ? "rotate-180" : "rotate-0"}`}
         >
-          <FigIcon name="Settings/Side Nav/Nav/chevron-down" size={16} className="w-4 h-4" />
+          <span style={{ filter: "invert(58%) sepia(72%) saturate(800%) hue-rotate(340deg) brightness(105%)" }}>
+  <FigIcon name="Settings/Side Nav/Nav/chevron-down" size={16} className="w-4 h-4" />
+</span>
         </span>
       </button>
 

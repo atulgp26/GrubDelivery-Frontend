@@ -8,45 +8,7 @@ import { PiWarningFill } from "react-icons/pi";
 import { Button } from "../ui/Button";
 import { Skeleton } from "../ui/skeleton";
 import type { HeaderProps, HeaderNotificationItem, NotificationItem } from "@/types";
-
-const mockNotifications: HeaderNotificationItem[] = [
-  {
-    type: "warning",
-    title: "Battery below 20%",
-    message:
-      "The battery for [Box name] [Box ID] seems to be draining. Charge the device before you head outdoor.",
-    time: "12:15 PM",
-    date: "Today",
-    code: "#DL12345",
-    deviceId: "DL2BD1234",
-    place: "da Pizza Place",
-    active: true,
-  },
-  {
-    type: "error",
-    title: "Camera not working",
-    message:
-      "It seems the camera for [Box name] [Box ID] is not functioning properly. Try restarting the device once.",
-    time: "12:15 PM",
-    date: "Today",
-    code: "#DL12345",
-    deviceId: "DL2BD1234",
-    place: "da Pizza Place",
-    active: true,
-  },
-  {
-    type: "success",
-    title: "Locked opened.",
-    message:
-      "You successfully opened the Grublock for [Box name] [Box ID].",
-    time: "12:15 PM",
-    date: "Today",
-    code: "#DL12345",
-    deviceId: "DL2BD1234",
-    place: "da Pizza Place",
-    active: false,
-  },
-];
+import { notificationsService } from "@/services/notifications";
 
 export default function Header({
   onToggleSidebarAction,
@@ -61,19 +23,40 @@ export default function Header({
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const isNotificationPage = pathname === "/notifications";
 
-  // 1500ms Delay for testing on skeletons
   const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [apiNotifications, setApiNotifications] = useState<HeaderNotificationItem[]>([]);
+  const [hasFetched, setHasFetched] = useState(false);
+
   useEffect(() => {
-    if (showDropdown) {
+    if (showDropdown && !hasFetched) {
       setNotificationsLoading(true);
-      const timer = setTimeout(() => setNotificationsLoading(false), 1500);
-      return () => clearTimeout(timer);
+      notificationsService.getNotifications()
+        .then(res => {
+          if (res.success && res.data) {
+            const mapped = res.data.notifications.map((n: any) => ({
+              id: n.id,
+              type: n.type,
+              title: n.title,
+              message: n.message,
+              time: n.time,
+              date: n.date,
+              code: n.code,
+              deviceId: n.deviceId,
+              place: n.restaurantName || "Naya wala Restra",
+              active: n.status === "unread",
+            }));
+            setApiNotifications(mapped);
+            setHasFetched(true);
+          }
+        })
+        .catch(err => console.error("Failed to fetch header notifications", err))
+        .finally(() => setNotificationsLoading(false));
     }
-  }, [showDropdown]);
+  }, [showDropdown, hasFetched]);
 
   const isLoading = isLoadingProp ?? notificationsLoading;
 
-  const notifications = notificationsProp ?? mockNotifications;
+  const notifications = notificationsProp ?? (hasFetched ? apiNotifications : []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

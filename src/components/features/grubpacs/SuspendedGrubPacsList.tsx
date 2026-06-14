@@ -405,116 +405,119 @@ export default function SuspendedGrubPacsList({ className = "" }: SuspendedGrubP
     const showSearchDropdown = isSearchFocused && searchTerm.trim().length > 0;
 
     return (
-        <div className={`bg-white min-h-screen ${className}`}>
-            {/* Header Section */}
-            <div className="flex items-center justify-between px-[var(--gp-space-xl)] py-[var(--gp-space-l)] border-b border-[var(--gp-color-border-neutral-secondary)]">
-                <div className="flex items-center gap-[var(--gp-space-l)]">
-          <button
-            onClick={handleGoBack}
-            className="flex items-center justify-center size-8 rounded-[var(--gp-radius-base)] hover:bg-[#EFF1F0] transition-colors"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M15 18L9 12L15 6" stroke="#37493f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <h1 className="font-[var(--gp-font-heading)] text-[24px] leading-[32px] font-semibold text-[var(--gp-color-text-neutral-secondary)]">
-            Suspended GrubPacs
-          </h1>
-        </div>
-                <Button
-                    variant="primary"
-                    appearance="solid"
-                    state="press"
-                    size="md"
-                    onClick={handleActivateAll}
-                    className="text-white font-medium"
-                >
-                    <span>ACTIVATE ALL</span>
-
-                </Button>
-            </div>
-
-            {/* Search and Filter Section */}
-            <div className="flex items-center justify-between px-[var(--gp-space-xl)] py-[var(--gp-space-l)] border-b border-[var(--gp-color-border-neutral-secondary)]">
-                <div className="relative w-[240px]">
-                    <SearchInput
-                        value={searchTerm}
-                        onChange={(event) => setSearchTerm(event.target.value)}
-                        onClear={() => setSearchTerm("")}
-                        placeholder="Search box"
-                        className="w-full"
-                        onFocus={() => setIsSearchFocused(true)}
-                        onBlur={() => setTimeout(() => setIsSearchFocused(false), 150)}
-                    />
-                    {showSearchDropdown && !isSearching && (
-                        <div className="absolute left-0 right-0 mt-2 overflow-hidden rounded-lg border border-[var(--color-stroke-neutral)] bg-white shadow-lg z-50">
-                            {searchError ? (
-                                <div className="px-4 py-3 text-sm text-red-500">Search failed. Please try again.</div>
-                            ) : searchResults.length === 0 ? (
-                                <div className="px-4 py-3 text-sm text-[var(--color-neutral-secondary)]">No suspended boxes found</div>
-                            ) : (
-                                searchResults.slice(0, 6).map((item) => (
-                                    <button
-                                        key={item.id}
-                                        type="button"
-                                        className="w-full px-4 py-3 flex flex-col items-start justify-center gap-0.5 text-left hover:bg-[var(--color-neutral-secondary-bg)] focus:bg-[var(--color-neutral-secondary-bg)] focus:outline-none border-b border-b-[var(--color-stroke-neutral)] last:border-b-0 transition-colors"
-                                        onMouseDown={() => {
-                                            handleSearchSuggestionSelect(item);
-                                            setIsSearchFocused(false);
-                                        }}
-                                    >
-                                        <div className="w-full text-base font-medium text-[#37493F]">
-                                            {highlightMatch(item.name, searchTerm)}
-                                        </div>
-                                        <div className="w-full text-sm text-[#7E8982]">
-                                            #{item.box_display_id || item.box_id || "-"}
-                                        </div>
-                                    </button>
-                                ))
-                            )}
-                        </div>
-                    )}
+        <div className={`flex flex-col h-full min-h-0 overflow-hidden ${className}`}>
+            {/* Sticky Header */}
+            <div className="flex-shrink-0">
+                <div className="flex items-center justify-between px-[var(--gp-space-xl)] py-[var(--gp-space-l)] border-b border-[var(--gp-color-border-neutral-secondary)]">
+                    <div className="flex items-center gap-[var(--gp-space-l)]">
+                        <button
+                            onClick={handleGoBack}
+                            className="flex items-center justify-center size-8 rounded-[var(--gp-radius-base)] hover:bg-[#EFF1F0] transition-colors"
+                        >
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M15 18L9 12L15 6" stroke="#37493f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </button>
+                        <h1 className="font-[var(--gp-font-heading)] text-[24px] leading-[32px] font-semibold text-[var(--gp-color-text-neutral-secondary)]">
+                            Suspended GrubPacs
+                        </h1>
+                    </div>
+                    <Button
+                        variant="primary"
+                        appearance="solid"
+                        state="press"
+                        size="md"
+                        onClick={handleActivateAll}
+                        className="text-white font-medium"
+                    >
+                        <span>ACTIVATE ALL</span>
+                    </Button>
                 </div>
-                <div className="flex items-center gap-4">
-                    <span className="font-normal text-[14px] leading-[22px] text-[#6B7971]">
-                        {isSearching
-                            ? "Searching..."
-                            : `${totalEntries} entries`}
-                    </span>
-                    <label className="flex items-center gap-2 cursor-pointer select-none">
-                        <CheckBox
-                            checked={isGrouped}
-                            onChange={(e) => {
-                                const checked = e.target.checked;
-                                if (switchTimerRef.current) clearTimeout(switchTimerRef.current);
-                                setIsSwitching(true);
-                                switchTimerRef.current = setTimeout(() => {
-                                    setIsGrouped(checked);
-                                    setIsSwitching(false);
-                                }, 150);
+
+                <div className="flex items-center justify-between px-[var(--gp-space-xl)] py-[var(--gp-space-l)] border-b border-[var(--gp-color-border-neutral-secondary)]">
+                    <div className="relative w-[240px]">
+                        <SearchInput
+                            value={searchTerm}
+                            onChange={(event) => setSearchTerm(event.target.value)}
+                            onClear={() => setSearchTerm("")}
+                            placeholder="Search box"
+                            className="w-full"
+                            onFocus={() => setIsSearchFocused(true)}
+                            onBlur={() => setTimeout(() => setIsSearchFocused(false), 150)}
+                        />
+                        {showSearchDropdown && !isSearching && (
+                            <div className="absolute left-0 right-0 mt-2 overflow-hidden rounded-lg border border-[var(--color-stroke-neutral)] bg-white shadow-lg z-50">
+                                {searchError ? (
+                                    <div className="px-4 py-3 text-sm text-red-500">Search failed. Please try again.</div>
+                                ) : searchResults.length === 0 ? (
+                                    <div className="px-4 py-3 text-sm text-[var(--color-neutral-secondary)]">No suspended boxes found</div>
+                                ) : (
+                                    searchResults.slice(0, 6).map((item) => (
+                                        <button
+                                            key={item.id}
+                                            type="button"
+                                            className="w-full px-4 py-3 flex flex-col items-start justify-center gap-0.5 text-left hover:bg-[var(--color-neutral-secondary-bg)] focus:bg-[var(--color-neutral-secondary-bg)] focus:outline-none border-b border-b-[var(--color-stroke-neutral)] last:border-b-0 transition-colors"
+                                            onMouseDown={() => {
+                                                handleSearchSuggestionSelect(item);
+                                                setIsSearchFocused(false);
+                                            }}
+                                        >
+                                            <div className="w-full text-base font-medium text-[#37493F]">
+                                                {highlightMatch(item.name, searchTerm)}
+                                            </div>
+                                            <div className="w-full text-sm text-[#7E8982]">
+                                                #{item.box_display_id || item.box_id || "-"}
+                                            </div>
+                                        </button>
+                                    ))
+                                )}
+                            </div>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <span className="font-normal text-[14px] leading-[22px] text-[#6B7971]">
+                            {isSearching
+                                ? "Searching..."
+                                : `${totalEntries} entries`}
+                        </span>
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                            <CheckBox
+                                checked={isGrouped}
+                                onChange={(e) => {
+                                    const checked = e.target.checked;
+                                    if (switchTimerRef.current) clearTimeout(switchTimerRef.current);
+                                    setIsSwitching(true);
+                                    switchTimerRef.current = setTimeout(() => {
+                                        setIsGrouped(checked);
+                                        setIsSwitching(false);
+                                    }, 150);
+                                }}
+                            />
+                            <span className="text-lg text-[var(--color-neutral-secondary)]">
+                                Grouped
+                            </span>
+                        </label>
+                        <FilterButton
+                            open={showFilterModal}
+                            handleFilterClick={() => setShowFilterModal(!showFilterModal)}
+                        />
+
+                        <SuspendedBoxFilterModal
+                            open={showFilterModal}
+                            onClose={() => setShowFilterModal(false)}
+                            initialFilters={activeFilters}
+                            onApply={(filters) => {
+                                setActiveFilters(filters);
+                                setShowFilterModal(false);
+                                void fetchSuspended(filters);
                             }}
                         />
-                        <span className="text-lg text-[var(--color-neutral-secondary)]">
-                            Grouped
-                        </span>
-                    </label>
-                    <FilterButton
-                        open={showFilterModal}
-                        handleFilterClick={() => setShowFilterModal(!showFilterModal)}
-                    />
-
-                    <SuspendedBoxFilterModal
-                        open={showFilterModal}
-                        onClose={() => setShowFilterModal(false)}
-                        initialFilters={activeFilters}
-                        onApply={(filters) => {
-                            setActiveFilters(filters);
-                            setShowFilterModal(false);
-                            void fetchSuspended(filters);
-                        }}
-                    />
+                    </div>
                 </div>
             </div>
+
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto min-h-0 pt-4 space-y-6">
 
             {/* Table Section */}
             <div className="px-[var(--gp-space-xl)] py-[var(--gp-space-l)]">
@@ -641,5 +644,6 @@ export default function SuspendedGrubPacsList({ className = "" }: SuspendedGrubP
                 firstBoxName={suspendedSummary?.first_box_name ?? ""}
             />
         </div>
+    </div>
     );
 }

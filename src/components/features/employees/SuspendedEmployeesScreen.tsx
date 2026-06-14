@@ -225,7 +225,7 @@ export default function SuspendedEmployeesScreen() {
   };
 
   return (
-    <>
+    <div className="h-full">
       {statusAlert && (
         <div className="fixed top-2 left-2 right-2 z-[9999]">
           <Alert
@@ -278,7 +278,7 @@ export default function SuspendedEmployeesScreen() {
         employeeCount={getEmployeeCount()}
         loading={false}
       />
-    </>
+    </div>
   );
 }
 

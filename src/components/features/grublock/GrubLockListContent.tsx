@@ -24,6 +24,7 @@ import grublockService from "@/services/grublock";
 import { useGrubLockQuery } from "./hooks/useGrubLockQuery";
 import { mapGrubLockFiltersToApiParams } from "./utils/filterParams";
 import { getApiErrorMessage, getContextualErrorMessage } from "@/lib/errors";
+import { cn } from "@/lib/utils/cn";
 
 export default function GrubLockListContent({
   className,
@@ -513,7 +514,7 @@ export default function GrubLockListContent({
   };
 
   return (
-    <div className={className}>
+    <div className={cn("h-full", className)}>
       {isError && showLoadErrorAlert && (
         <div className={`fixed left-2 right-2 z-[9999] ${actionAlert ? "top-20" : "top-2"}`}>
           <Alert variant="error" appearance="solid" className="px-6 py-3">
@@ -555,7 +556,7 @@ export default function GrubLockListContent({
         </div>
       )}
 
-      <div className="flex flex-col h-full overflow-hidden">
+      <div className={cn("flex flex-col h-full overflow-hidden", className)}>
         <div className="flex-shrink-0 space-y-6">
         <GrubLockListHeader onViewAllBoxes={handleViewAllBoxes} />
 

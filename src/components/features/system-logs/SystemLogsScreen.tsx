@@ -560,7 +560,7 @@ const hasDraftAdvancedFilters = draftOptions.length > 0;
   selectsRange
   startDate={startDate}
   endDate={endDate}
-  onChange={(update) => setDateRange(update as [Date | null, Date | null])}
+   onChange={(update: [Date | null, Date | null]) => setDateRange(update)}
   placeholderText="Date range"
   className="pr-10 !w-44 !h-8 cursor-pointer !rounded-lg border border-[#A4ACA7] text-[#37493F] px-3 text-sm outline-none"
   dateFormat="dd MMM yy"

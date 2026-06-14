@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+.next
+.git
+.github
+.env.*
+Dockerfile
+docker-compose*.yml
+.dockerignore
+README.md
+*.md
+.gitignore
+.eslintrc.json
+.prettierrc
+tsconfig.tsbuildinfo
+next-env.d.ts

@@ -30,4 +30,3 @@ export interface NotificationGroupOption {
   id: string;                          // standardise to string
   label: string;
 }
-

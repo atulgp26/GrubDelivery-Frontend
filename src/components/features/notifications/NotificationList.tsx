@@ -65,6 +65,7 @@ export default function NotificationList({
             getNotificationIcon={getNotificationIcon}
             isLast={index === filtered.length - 1}
             tone="neutral"
+            isLast={index === filtered.length - 1}
           />
         ))}
       </div>

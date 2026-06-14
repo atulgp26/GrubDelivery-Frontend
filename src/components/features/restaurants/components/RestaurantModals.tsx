@@ -27,10 +27,6 @@ interface RestaurantModalsProps {
   resourceRefreshToken?: number;
   resourceEmployeeTotalEntries?: number;
   resourceGrubPacTotalEntries?: number;
-  onSearchManagers?: (query: string, page: number) => void;
-  assignManagerTotalCount?: number;
-  assignManagerManagers?: Manager[];
-  assignManagerLoading?: boolean;
   resourceEmployees?: ResourceEmployee[];
   resourceGrubPacs?: ResourceGrubPac[];
   resourcesLoading?: boolean;
@@ -54,10 +50,6 @@ export default function RestaurantModals({
   resourceRefreshToken,
   resourceEmployeeTotalEntries,
   resourceGrubPacTotalEntries,
-  onSearchManagers,
-  assignManagerTotalCount,
-  assignManagerManagers = [],
-  assignManagerLoading = false,
   resourceEmployees = [],
   resourceGrubPacs = [],
   resourcesLoading = false,

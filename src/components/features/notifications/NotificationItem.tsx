@@ -1,6 +1,7 @@
 import type { ChangeEvent, ReactNode } from "react";
 import TableCheckbox from "@/components/ui/TableCheckbox";
 import type { Notification, NotificationTone } from "@/types";
+import { formatDate } from "@/lib/utils/date";
 
 interface NotificationItemProps {
   notification: Notification;
@@ -23,11 +24,7 @@ export default function NotificationItem({
 }: NotificationItemProps) {
   const createdAt = new Date(notification.created_at);
   const time = createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  const date = createdAt.toLocaleDateString([], {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  const date = formatDate(notification.created_at);
 
   return (
     <div className="flex w-full items-center bg-white hover:bg-[var(--color-neutral-secondary-bg)]">

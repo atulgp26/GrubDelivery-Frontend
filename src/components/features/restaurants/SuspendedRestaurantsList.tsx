@@ -21,6 +21,7 @@ import foodService from "@/services/food";
 import { showError, showSuccess } from "@/components/ui/toast";
 import { useRestaurantSearch } from "./hooks/useRestaurantSearch";
 import { highlightMatch } from "@/lib/utils/highlightMatch";
+import { formatDate } from "@/lib/utils/date";
 
 // Columns that match the Figma design: Name, Address, Added, Suspended, Actions
 const SUSPENDED_COLUMNS: GroupColumnId[] = [
@@ -150,21 +151,9 @@ export default function SuspendedRestaurantsList({ className = "" }: SuspendedRe
           managerCount: r._count?.managers || 0,
           driverCount: r._count?.drivers || 0,
           boxCount: (r._count?.boxes || 0) + (r._count?.suspended_boxes || 0),
-          updated: r.updated_at ? new Date(r.updated_at).toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: '2-digit'
-          }).replace(/ (\d{2})$/, "'$1") : "",
-          suspended: r.updated_at ? new Date(r.updated_at).toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: '2-digit'
-          }).replace(/ (\d{2})$/, "'$1") : "",
-          added: r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: '2-digit'
-          }).replace(/ (\d{2})$/, "'$1") : "",
+          updated: formatDate(r.updated_at),
+          suspended: formatDate(r.updated_at),
+          added: formatDate(r.created_at),
           status: "suspended" as const,
           description: `(and ${(r._count?.boxes || 0) + (r._count?.suspended_boxes || 0)} boxes, ${r._count?.drivers || 0} drivers, ${r._count?.managers || 0} manager)`,
           // Add these for the details/edit modals
@@ -548,15 +537,7 @@ const response = await foodService.reactivateRestaurants({
           drivers: r._count?.drivers || 0,
           boxes: r._count?.boxes || 0,
           suspended_boxes: r._count?.suspended_boxes || 0,
-          updated: r.updated_at
-            ? new Date(r.updated_at)
-                .toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "2-digit",
-                })
-                .replace(/ (\d{2})$/, "'$1")
-            : "-",
+          updated: formatDate(r.updated_at) || "-",
           status: r.status === "suspended" ? "suspended" : "active",
           city: r.city,
           state: r.state,

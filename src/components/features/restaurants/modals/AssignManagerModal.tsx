@@ -343,6 +343,7 @@ import Pagination from "@/components/ui/Pagination";
 import { IoChevronBack } from "react-icons/io5";
 import { AddManagerTable, type AddManagerRow } from "@/components/ui/add-manager-table";
 import { useDebounce } from "@/lib/hooks/useDebounce";
+import { formatDate } from "@/lib/utils/date";
 
 export interface Manager {
   id: string;
@@ -448,9 +449,7 @@ const fetchManagers = useCallback(async (query: string, page: number) => {
       joinedDate: emp.joining_date,
       phone: `${emp.country_code} ${emp.mobile_number}`,
       email: emp.email,
-      added: emp.created_at
-        ? new Date(emp.created_at).toLocaleDateString()
-        : "Today",
+      added: formatDate(emp.created_at) || "Today",
     }));
 
     setManagers(mapped);

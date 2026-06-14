@@ -4,6 +4,7 @@ import {
   normalizeHandlerStatus,
   normalizePowerStatus,
 } from "@/lib/utils/grubpacStatus";
+import { formatDate } from "@/lib/utils/date";
 
 // ── API shapes ────────────────────────────────────────────────────────────────
 
@@ -276,11 +277,7 @@ export interface RemoveEmployeeFromBoxesBody {
 
 function formatApiDate(isoDate: string): string {
   if (!isoDate) return "";
-  return new Date(isoDate).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "2-digit",
-  });
+  return formatDate(isoDate);
 }
 
 function isNonEmptyString(value: unknown): value is string {

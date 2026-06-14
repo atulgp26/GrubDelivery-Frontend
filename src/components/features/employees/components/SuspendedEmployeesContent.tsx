@@ -205,7 +205,123 @@ export default function SuspendedEmployeesContent({
     const SUSPENDED_COLUMNS: ColumnId[] = ["name", "message", "role", "added", "suspended", "actions"];
 
     return (
-      <div className="bg-white min-h-screen">
+      <div className="flex flex-col h-full min-h-0 overflow-hidden">
+        {/* Sticky Header */}
+        <div className="flex-shrink-0">
+          <div className="flex items-center justify-between px-[var(--gp-space-xl)] py-[var(--gp-space-l)]">
+            <div className="flex items-center gap-[var(--gp-space-l)]">
+              <button
+                onClick={handleGoBack}
+                className="flex items-center justify-center size-8 rounded-[var(--gp-radius-base)] hover:bg-[#EFF1F0] transition-colors"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M15 18L9 12L15 6" stroke="#37493f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <h1 className="font-[var(--gp-font-heading)] text-[24px] leading-[32px] font-semibold text-[var(--gp-color-text-neutral-secondary)]">
+                Suspended Employees
+              </h1>
+            </div>
+            <Button
+              variant="primary"
+              appearance="solid"
+              state="press"
+              size="md"
+              onClick={handleActivateAll}
+              disabled={isActivateAllDisabled}
+              className="text-white font-medium"
+            >
+              <span>ACTIVATE ALL</span>
+            </Button>
+          </div>
+
+          <div className="px-[var(--gp-space-xl)] py-[var(--gp-space-l)]">
+            <EmployeeToolbar
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              onSearchClear={clearSearch}
+              totalEntries={totalEntries}
+              isGrouped={isGrouped}
+              onGroupedChange={handleGroupedChange}
+              selectedRoles={selectedRoles}
+              onRolesChange={handleRolesChange}
+              showAvailableDriversOnly={showAvailableDriversOnly}
+              onAvailableDriversOnlyChange={setShowAvailableDriversOnly}
+              roleOptions={roleOptions}
+              showRoleFilter={true}
+              searchSuggestions={searchSuggestions}
+              isSearching={isSearching}
+              searchError={searchError}
+            />
+          </div>
+        </div>
+
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto min-h-0 pt-4 space-y-6">
+          <div className="px-[var(--gp-space-xl)] py-[var(--gp-space-l)]">
+            {isLoading ? (
+              <div className="space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-14 bg-gray-100 rounded animate-pulse" />
+                ))}
+              </div>
+            ) : allData.length === 0 ? (
+              <div className="px-4 pb-4">
+                <p className="text-[var(--color-neutral-light)] text-sm">
+                  {searchTerm ? "No employees match your search." : "No suspended employees found."}
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="mb-6">
+                  <Pagination
+                    currentPage={safePage}
+                    pageSize={pageSize}
+                    totalItems={totalItems}
+                    onPrev={() => onPageChange?.(Math.max(1, safePage - 1))}
+                    onNext={() => onPageChange?.(Math.min(totalPages, safePage + 1))}
+                  />
+                </div>
+                <EmployeeDataTable
+                  data={paginatedData}
+                  columns={SUSPENDED_COLUMNS}
+                  selectedIds={selectedIds}
+                  onSelectionChange={(ids) => {
+                    allEmployees.forEach((emp) => {
+                      const shouldBeSelected = ids.has(emp.id);
+                      const isSelected = selectedIds.has(emp.id);
+                      if (shouldBeSelected !== isSelected) {
+                        handleRowSelect(emp.id, shouldBeSelected);
+                      }
+                    });
+                  }}
+                  onActivate={(row) => handleActivate(row.id)}
+                  onDelete={(row) => handleDelete(row.id)}
+                  onAllBoxes={undefined}
+                  onMenuClick={(row) => {
+                    const emp = allEmployees.find((e) => e.id === row.id);
+                    if (emp) navigateToLogs(emp);
+                  }}
+                />
+              </>
+            )}
+          </div>
+
+          <EmployeeActionBar
+            selectedCount={selectedIds.size}
+            onClearSelection={clearSelection}
+            onDelete={handleDeleteSelectionAction}
+            onActivate={handleActivateSelection}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
+      {/* Sticky Header */}
+      <div className="flex-shrink-0">
         <div className="flex items-center justify-between px-[var(--gp-space-xl)] py-[var(--gp-space-l)]">
           <div className="flex items-center gap-[var(--gp-space-l)]">
             <button
@@ -226,7 +342,6 @@ export default function SuspendedEmployeesContent({
             state="press"
             size="md"
             onClick={handleActivateAll}
-            disabled={isActivateAllDisabled}
             className="text-white font-medium"
           >
             <span>ACTIVATE ALL</span>
@@ -238,6 +353,15 @@ export default function SuspendedEmployeesContent({
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             onSearchClear={clearSearch}
+            onSuggestionSelect={(emp) => {
+              setSearchTerm(emp.name);
+              const groupIndex = filteredGroups.findIndex((group) =>
+                (group.items || []).some((item) => item.id === emp.id)
+              );
+              if (groupIndex !== -1) {
+                setOpenIndex(groupIndex);
+              }
+            }}
             totalEntries={totalEntries}
             isGrouped={isGrouped}
             onGroupedChange={handleGroupedChange}
@@ -252,122 +376,10 @@ export default function SuspendedEmployeesContent({
             searchError={searchError}
           />
         </div>
-
-        <div className="px-[var(--gp-space-xl)] py-[var(--gp-space-l)]">
-          {isLoading ? (
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-14 bg-gray-100 rounded animate-pulse" />
-              ))}
-            </div>
-          ) : allData.length === 0 ? (
-            <div className="px-4 pb-4">
-              <p className="text-[var(--color-neutral-light)] text-sm">
-                {searchTerm ? "No employees match your search." : "No suspended employees found."}
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="mb-6">
-                <Pagination
-                  currentPage={safePage}
-                  pageSize={pageSize}
-                  totalItems={totalItems}
-                  onPrev={() => onPageChange?.(Math.max(1, safePage - 1))}
-                  onNext={() => onPageChange?.(Math.min(totalPages, safePage + 1))}
-                />
-              </div>
-              <EmployeeDataTable
-                data={paginatedData}
-                columns={SUSPENDED_COLUMNS}
-                selectedIds={selectedIds}
-                onSelectionChange={(ids) => {
-                  allEmployees.forEach((emp) => {
-                    const shouldBeSelected = ids.has(emp.id);
-                    const isSelected = selectedIds.has(emp.id);
-                    if (shouldBeSelected !== isSelected) {
-                      handleRowSelect(emp.id, shouldBeSelected);
-                    }
-                  });
-                }}
-                onActivate={(row) => handleActivate(row.id)}
-                onDelete={(row) => handleDelete(row.id)}
-                onAllBoxes={undefined}
-                onMenuClick={(row) => {
-                  const emp = allEmployees.find((e) => e.id === row.id);
-                  if (emp) navigateToLogs(emp);
-                }}
-              />
-            </>
-          )}
-        </div>
-
-        <EmployeeActionBar
-          selectedCount={selectedIds.size}
-          onClearSelection={clearSelection}
-          onDelete={handleDeleteSelectionAction}
-          onActivate={handleActivateSelection}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-white min-h-screen">
-      <div className="flex items-center justify-between px-[var(--gp-space-xl)] py-[var(--gp-space-l)]">
-        <div className="flex items-center gap-[var(--gp-space-l)]">
-          <button
-            onClick={handleGoBack}
-            className="flex items-center justify-center size-8 rounded-[var(--gp-radius-base)] hover:bg-[#EFF1F0] transition-colors"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M15 18L9 12L15 6" stroke="#37493f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <h1 className="font-[var(--gp-font-heading)] text-[24px] leading-[32px] font-semibold text-[var(--gp-color-text-neutral-secondary)]">
-            Suspended Employees
-          </h1>
-        </div>
-        <Button
-          variant="primary"
-          appearance="solid"
-          state="press"
-          size="md"
-          onClick={handleActivateAll}
-          className="text-white font-medium"
-        >
-          <span>ACTIVATE ALL</span>
-        </Button>
       </div>
 
-      <div className="px-[var(--gp-space-xl)] py-[var(--gp-space-l)]">
-        <EmployeeToolbar
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          onSearchClear={clearSearch}
-          onSuggestionSelect={(emp) => {
-            setSearchTerm(emp.name);
-            const groupIndex = filteredGroups.findIndex((group) =>
-              (group.items || []).some((item) => item.id === emp.id)
-            );
-            if (groupIndex !== -1) {
-              setOpenIndex(groupIndex);
-            }
-          }}
-          totalEntries={totalEntries}
-          isGrouped={isGrouped}
-          onGroupedChange={handleGroupedChange}
-          selectedRoles={selectedRoles}
-          onRolesChange={handleRolesChange}
-          showAvailableDriversOnly={showAvailableDriversOnly}
-          onAvailableDriversOnlyChange={setShowAvailableDriversOnly}
-          roleOptions={roleOptions}
-          showRoleFilter={true}
-          searchSuggestions={searchSuggestions}
-          isSearching={isSearching}
-          searchError={searchError}
-        />
-      </div>
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto min-h-0 pt-4 space-y-6">
 
       <div className="px-[var(--gp-space-xl)] py-[var(--gp-space-l)]">
         {isLoading ? (
@@ -407,6 +419,7 @@ export default function SuspendedEmployeesContent({
         onDelete={handleDeleteSelectionAction}
         onActivate={handleActivateSelection}
       />
+      </div>
     </div>
   );
 }

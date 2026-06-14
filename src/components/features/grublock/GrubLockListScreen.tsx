@@ -15,7 +15,7 @@ const queryClient = new QueryClient({
 export default function GrubLockListScreen() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="space-y-6 ml-4">
+      <div className="space-y-6 ml-4 h-full">
         <GrubLockListContent />
       </div>
     </QueryClientProvider>

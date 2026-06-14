@@ -10,7 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/text-field";
 import { Label } from "@/components/ui/label";
-import { PhoneDropdown, COUNTRIES } from "@/components/ui/phone-dropdown";
+
 import { EMAIL_PATTERN } from "@/components/features/auth/validation";
 import {
   DropdownMenu,
@@ -485,7 +485,7 @@ export default function AddEmployeeModal({
   useEffect(() => {
     if (open && employee) {
       const isoCode = employee.countryDialCode
-        ? (COUNTRIES.find((c) => c.dialCode === employee.countryDialCode)?.code ?? "IN")
+        ? "IN"
         : "IN";
       const nextFormData: EmployeeFormData = {
         firstName: employee.name?.split(" ")[0] || "",
@@ -648,18 +648,20 @@ contact: normalizedContact ?? "",
           </Label>
           <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 w-full">
             <div className="flex-1 min-w-0">
-              <PhoneDropdown
-                value={formData.countryCode}
-                phoneNumber={formData.contact}
-                onCountryChange={(country) =>
-                  setFormData((prev) => ({ ...prev, countryCode: country.code }))
-                }
-                onPhoneNumberChange={(phone) =>
-                  setFormData((prev) => ({ ...prev, contact: sanitizeContactInput(phone) }))
-                }
-                placeholder="00000 00000"
-                width="100%"
-              />
+              <div className="flex items-center gap-3 rounded-lg border border-[var(--gp-color-border-neutral)] bg-white h-12 px-4 w-full">
+                <span className="text-sm font-medium text-[var(--gp-color-text-neutral-primary)] whitespace-nowrap">+91</span>
+                <div className="shrink-0 self-stretch w-px bg-[#e0e3e1]" />
+                <input
+                  type="tel"
+                  value={formData.contact}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, contact: sanitizeContactInput(e.target.value) }))
+                  }
+                  placeholder="00000 00000"
+                  className="flex-1 min-w-0 bg-transparent outline-none border-none text-[16px] leading-[24px] text-[#37493f] placeholder:text-[var(--gp-color-text-neutral-light)]"
+                  style={{ fontFamily: "var(--gp-font-text)", fontWeight: 400 }}
+                />
+              </div>
             </div>
             <div className="flex-1 min-w-0">
               <TextField

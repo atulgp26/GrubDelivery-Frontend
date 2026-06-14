@@ -160,18 +160,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       )}
 
       <div
-        className="min-h-screen flex bg-[var(--color-app-bg)]"
+        className="min-h-screen h-screen overflow-hidden flex bg-[var(--color-app-bg)]"
         style={{
           "--table-action-bar-left": collapsed ? "1rem" : "calc(240px + 1rem)",
         } as React.CSSProperties}
       >
         <Sidebar collapsed={collapsed} onClose={handleCloseSidebar} />
         <div
-          className={`flex-1 flex flex-col transition-[margin] duration-300 ${collapsed ? "md:ml-0" : "md:ml-60"
+          className={`flex-1 flex flex-col overflow-hidden transition-[margin] duration-300 ${collapsed ? "md:ml-0" : "md:ml-60"
             }`}
         >
           <Header collapsed={collapsed} onToggleSidebarAction={handleToggleSidebar} />
-          <main className="flex-1 px-4 py-8 md:px-4 md:py-10 space-y-10">
+          <main className="flex-1 overflow-y-auto px-4 py-8 md:px-4 md:py-10 space-y-10">
             {children}
           </main>
         </div>

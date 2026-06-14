@@ -589,9 +589,10 @@ export default function RestaurantListContent({
       );
 
   return (
-    <div className={cn("space-y-6", className)}>
+    <div className={cn("flex flex-col h-full overflow-hidden", className)}>
       {(forceListLayout || hasAnyRestaurants || searchTerm !== "" || isLoading || isSearching || selectedResources.length > 0) ? (
         <>
+          <div className="flex-shrink-0 space-y-6">
           <RestaurantListHeader onAddNew={onAddRestaurant} onViewSuspended={onViewSuspended} />
           <RestaurantListToolbar
             searchTerm={searchTerm}
@@ -605,6 +606,8 @@ export default function RestaurantListContent({
             isSearching={isSearching}
             searchError={searchError}
           />
+          </div>
+          <div className="flex-1 overflow-y-auto min-h-0 pt-4 space-y-6">
           <RestaurantFilterModal
             open={showFilterModal}
             onClose={() => {
@@ -741,6 +744,7 @@ export default function RestaurantListContent({
             allowSuspend={true}
             allowDelete={true}
           />
+        </div>
         </>
       ) : (
         <RestaurantListEmptyState 

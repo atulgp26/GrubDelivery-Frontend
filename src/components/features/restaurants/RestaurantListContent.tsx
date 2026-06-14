@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils/cn";
+import { formatDate } from "@/lib/utils/date";
 import GroupCollapseTable from "@/components/ui/GroupCollapseTable";
 import RestaurantGroupTable from "./components/RestaurantGroupTable";
 import RestaurantListHeader from "./components/RestaurantListHeader";
@@ -117,15 +118,7 @@ export default function RestaurantListContent({
     drivers: r._count?.drivers || 0,
     boxes: r._count?.boxes || 0,
     suspended_boxes: r._count?.suspended_boxes || 0,
-    updated: r.updated_at
-      ? new Date(r.updated_at)
-          .toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "short",
-            year: "2-digit",
-          })
-          .replace(/ (\d{2})$/, "'$1")
-      : "-",
+    updated: r.updated_at ? formatDate(r.updated_at) : "-",
     status: r.status === "suspended" ? "suspended" : "active",
     city: r.city,
     state: r.state,

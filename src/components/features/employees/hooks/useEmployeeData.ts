@@ -21,6 +21,7 @@ import {
   type UpdateEmployeeBody,
   type ReassignEmployeeBody,
 } from "@/types/domain/employees";
+import { formatDate } from "@/lib/utils/date";
 import { groupEmployeesByRestaurant } from "../utils/filterUtils";
 import type { EmployeeDropdownsData, ApiEmployeeDropdownsData } from "@/types/domain/employees";
 import type { ApiGrubPac, GrubPacListData } from "@/types/domain/grubpacs";
@@ -77,11 +78,7 @@ interface UseEmployeeDataReturn {
 }
 
 function apiDateToDisplay(isoDate: string): string {
-  return new Date(isoDate).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "2-digit",
-  });
+  return formatDate(isoDate);
 }
 
 interface UseEmployeeDataOptions {
@@ -103,11 +100,7 @@ function formatRestaurantDate(value?: string): string {
   if (!value) return "";
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return "";
-  return parsed.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "2-digit",
-  });
+  return formatDate(parsed);
 }
 
 const EMPLOYEE_NAME_LENGTH_ERROR_MESSAGE = "First name and last name must be 20 characters or fewer.";

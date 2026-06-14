@@ -1,5 +1,6 @@
 import type { GroupCollapseTableGroup } from "@/types/ui";
 import { getWrappedGroupArray } from "@/lib/utils/groupedResponse";
+import { formatDate } from "@/lib/utils/date";
 
 export type EmployeeStatus = "Active" | "Suspended";
 
@@ -425,14 +426,7 @@ const boxCount =
     id: e.id,
     name: e.full_name || `${e.first_name} ${e.last_name}`,
     employeeId: e.employee_id,
-    joinedDate: (() => {
-      if (!e.joining_date) return "";
-      const d = new Date(e.joining_date);
-      const day = d.getDate();
-      const month = d.toLocaleString("en-GB", { month: "long" });
-      const year = String(d.getFullYear()).slice(-2);
-      return `${day} ${month} '${year}`;
-    })(),
+    joinedDate: e.joining_date ? formatDate(e.joining_date) : "",
     phone: `${e.country_code}${e.mobile_number}`,
     countryDialCode: e.country_code,
     mobileNumber: e.mobile_number,
@@ -440,11 +434,7 @@ const boxCount =
     role: e.role === "delivery" ? "Driver" : "Manager",
     boxCount,
     boxDetails: boxId || licenseNumber || settingsId ? { boxId, licenseNumber, settingsId } : undefined,
-    added: e.created_at ? new Date(e.created_at).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "2-digit",
-    }) : "-",
+    added: e.created_at ? formatDate(e.created_at) : "-",
     restaurantName: e.restaurant?.name,
     restaurantId: e.restaurant?.id,
     restaurantStatus: e.restaurant?.status,
@@ -457,10 +447,10 @@ const boxCount =
         )
       : undefined,
     restaurantUpdated: e.restaurant?.updated_at
-      ? new Date(e.restaurant.updated_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })
+      ? formatDate(e.restaurant.updated_at)
       : undefined,
     restaurantAdded: e.restaurant?.created_at
-      ? new Date(e.restaurant.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })
+      ? formatDate(e.restaurant.created_at)
       : undefined,
     status: e.status === "suspended" ? "Suspended" : "Active",
     connectedBoxesStatus:

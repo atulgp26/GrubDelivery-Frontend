@@ -50,6 +50,7 @@ import { highlightMatch } from "@/lib/utils/highlightMatch";
 import { flattenWrappedGroupRecord, getWrappedGroupArray } from "@/lib/utils/groupedResponse";
 import { showError, showSuccess } from "@/components/ui/toast";
 import { getContextualErrorMessage } from "@/lib/errors";
+import { formatDate } from "@/lib/utils/date";
 
 export default function GrubPacsListScreen() {
   const {
@@ -479,11 +480,7 @@ export default function GrubPacsListScreen() {
             details: detailsParts.join(" | "),
             power: powerStatus === "on" ? "on" : powerStatus === "off" ? "off" : "warning",
             driver: undefined,
-            added: new Date(box.created_at).toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "short",
-              year: "2-digit",
-            }),
+            added: formatDate(box.created_at),
             isLocked: box.lock?.lock_status === "locked",
             isOffline: powerStatus === "off",
           };
@@ -812,13 +809,7 @@ export default function GrubPacsListScreen() {
     drivers: restaurant._count?.employees ?? 0,
     boxes: restaurant._count?.boxes ?? 0,
     suspended_boxes: restaurant._count?.suspended_boxes ?? 0,
-    updated: restaurant.updated_at
-      ? new Date(restaurant.updated_at).toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "2-digit",
-        })
-      : "-",
+    updated: formatDate(restaurant.updated_at) || "-",
     status: restaurant.status === "suspended" ? "suspended" : "active",
     city: restaurant.city,
     state: restaurant.state,

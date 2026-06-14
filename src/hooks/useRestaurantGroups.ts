@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { flattenWrappedGroupRecord } from "@/lib/utils/groupedResponse";
 import type { RestaurantGroup, Restaurant, RestaurantData } from "@/types/domain/restaurants";
 import foodService from "@/services/food";
+import { formatDate } from "@/lib/utils/date";
 
 export interface UseRestaurantGroupsOptions {
   searchTerm?: string;
@@ -136,11 +137,7 @@ export function useRestaurantGroups({
           drivers: r._count?.drivers || 0,
           boxes: r._count?.boxes || 0,
           suspended_boxes: r._count?.suspended_boxes || 0,
-          updated: r.updated_at ? new Date(r.updated_at).toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: '2-digit'
-          }).replace(/ (\d{2})$/, "'$1") : "",
+          updated: r.updated_at ? formatDate(r.updated_at) : "",
           status: r.status as any,
           city: r.city,
           state: r.state,
@@ -290,11 +287,7 @@ export function useRestaurantGroups({
             drivers: r._count?.drivers || 0,
             boxes: r._count?.boxes || 0,
             suspended_boxes: r._count?.suspended_boxes || 0,
-            updated: r.updated_at ? new Date(r.updated_at).toLocaleDateString('en-GB', {
-              day: '2-digit',
-              month: 'short',
-              year: '2-digit'
-            }).replace(/ (\d{2})$/, "'$1") : "",
+            updated: r.updated_at ? formatDate(r.updated_at) : "",
             status: r.status as any,
             city: r.city,
             state: r.state,

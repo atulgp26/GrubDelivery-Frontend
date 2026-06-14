@@ -26,6 +26,7 @@ import type {
   Employee as ResourceEmployee,
   GrubPac as ResourceGrubPac,
 } from "../modals/RestaurantResourcesModal";
+import { formatDate } from "@/lib/utils/date";
 
 interface RestaurantGroupTableProps {
   group: RestaurantGroup;
@@ -395,11 +396,7 @@ console.log("[fetchResourceEmployees] params:", {
                     ? "off"
                     : "warning",
               driver: undefined,
-              added: new Date(box.created_at).toLocaleDateString("en-GB", {
-                day: "2-digit",
-                month: "short",
-                year: "2-digit",
-              }),
+              added: formatDate(box.created_at),
               isLocked: box.lock?.lock_status === "locked",
               isOffline: normalizedPowerStatus === "off",
             };

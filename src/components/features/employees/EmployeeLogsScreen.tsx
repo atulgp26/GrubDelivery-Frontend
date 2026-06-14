@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { DateRange } from "react-day-picker";
 import { endOfDay, format, isValid, parseISO, startOfDay } from "date-fns";
+import { formatDate } from "@/lib/utils/date";
 import { createPortal } from "react-dom";
 import { useDebounce } from "@/lib/hooks";
 import { Calendar } from "@/components/ui/calendar";
@@ -101,8 +102,8 @@ function formatLogTimestamp(value: string | undefined): string {
 function formatDateLabel(range?: DateRange): string {
 	if (!range?.from) return "Last 7 days";
 
-	const from = format(range.from, "dd MMM ''yy");
-	const to = range.to ? format(range.to, "dd MMM ''yy") : from;
+	const from = formatDate(range.from);
+	const to = range.to ? formatDate(range.to) : from;
 
 	return from === to ? from : `${from} - ${to}`;
 }

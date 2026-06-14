@@ -17,6 +17,7 @@ import type {
   FieldsState,
   UserDataState,
 } from "@/components/features/account/types";
+import { formatDate as fmtDate } from "@/lib/utils/date";
 
 const DEFAULT_FIELDS: FieldsState = {
   name: "",
@@ -28,11 +29,7 @@ const DEFAULT_FIELDS: FieldsState = {
 
 function formatDate(dateString?: string): string {
   if (!dateString) return "Not specified";
-  try {
-    return new Date(dateString).toLocaleDateString();
-  } catch {
-    return "Not specified";
-  }
+  try { return fmtDate(dateString) || "Not specified"; } catch { return "Not specified"; }
 }
 
 function formatRole(role: string): string {

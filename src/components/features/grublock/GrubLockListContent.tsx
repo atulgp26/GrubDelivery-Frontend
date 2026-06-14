@@ -555,7 +555,8 @@ export default function GrubLockListContent({
         </div>
       )}
 
-      <div className="space-y-6">
+      <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex-shrink-0 space-y-6">
         <GrubLockListHeader onViewAllBoxes={handleViewAllBoxes} />
 
         <GrubLockListToolbar
@@ -572,7 +573,9 @@ export default function GrubLockListContent({
           searchResults={searchResults}
           onSearchResultClick={handleSearchResultClick}
         />
+      </div>
 
+        <div className="flex-1 overflow-y-auto min-h-0 pt-4 space-y-6">
         {shouldShowSkeleton ? (
           <GrubLockListSkeleton />
         ) : (
@@ -704,6 +707,7 @@ export default function GrubLockListContent({
             await refetch();
           }}
         />
+      </div>
       </div>
     </div>
   );

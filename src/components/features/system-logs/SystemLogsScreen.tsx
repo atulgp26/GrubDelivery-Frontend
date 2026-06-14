@@ -523,8 +523,8 @@ const applyAdvancedFilters = () => {
 const hasDraftAdvancedFilters = draftOptions.length > 0;
 
   return (
-    <div className="flex min-h-[calc(100vh-130px)] flex-col gap-6 px-4 pb-4">
-      <div className="flex items-start justify-between">
+    <div className="flex flex-col gap-6 px-4 h-full overflow-hidden">
+      <div className="flex items-start justify-between flex-shrink-0">
         <h1 className="h-10 font-[var(--gp-font-heading)] font-semibold text-[24px] leading-[36px] text-[#03130A]">
           System logs
         </h1>
@@ -536,7 +536,7 @@ const hasDraftAdvancedFilters = draftOptions.length > 0;
         </button> */}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start flex-shrink-0">
         <SearchInput
           value={search}
           onChange={(event) => setSearch(event.target.value)}
@@ -806,28 +806,32 @@ const hasDraftAdvancedFilters = draftOptions.length > 0;
         </div>
       </div>
 
-      {isLoading ? (
-        <SystemLogsPaginationSkeleton />
-      ) : (
-        <Pagination
-          currentPage={page}
-          pageSize={PAGE_SIZE}
-          totalItems={totalCount}
-          onPrev={() => setPage((prev) => Math.max(1, prev - 1))}
-          onNext={() => setPage((prev) => Math.min(pageCount, prev + 1))}
-          className="w-full"
-        />
-      )}
+      <div className="flex-shrink-0">
+        {isLoading ? (
+          <SystemLogsPaginationSkeleton />
+        ) : (
+          <Pagination
+            currentPage={page}
+            pageSize={PAGE_SIZE}
+            totalItems={totalCount}
+            onPrev={() => setPage((prev) => Math.max(1, prev - 1))}
+            onNext={() => setPage((prev) => Math.min(pageCount, prev + 1))}
+            className="w-full"
+          />
+        )}
+      </div>
 
-      {isLoading ? (
-        <SystemLogsTableSkeleton />
-      ) : (
-        <SystemLogsTable
-          data={advancedFilteredRows}
-          columns={["timestamp", "type", "action"]}
-          emptyStateText={loadError ?? "No logs match the selected filters."}
-        />
-      )}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        {isLoading ? (
+          <SystemLogsTableSkeleton />
+        ) : (
+          <SystemLogsTable
+            data={advancedFilteredRows}
+            columns={["timestamp", "type", "action"]}
+            emptyStateText={loadError ?? "No logs match the selected filters."}
+          />
+        )}
+      </div>
     </div>
   );
 }

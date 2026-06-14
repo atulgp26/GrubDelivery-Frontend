@@ -213,7 +213,7 @@ export default function EmployeeListScreen() {
   };
 
   return (
-    <div className="space-y-6 ml-4">
+    <div className="flex flex-col ml-4 h-full overflow-hidden">
       <EmployeeListContent
         groups={groups}
         isLoading={isLoading || isPageLoading}

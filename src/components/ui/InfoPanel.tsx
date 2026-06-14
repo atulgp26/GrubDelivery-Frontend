@@ -34,7 +34,7 @@ export default function InfoPanel({
                             <Image
                                 src={image}
                                 alt={imageAlt ?? (typeof name === "string" ? name : "Empty")}
-                                className="w-64 h-48 object-contain rounded-lg"
+                                className="w-72 h-72 object-contain rounded-lg"
                                 width={256}
                                 height={192}
                             />

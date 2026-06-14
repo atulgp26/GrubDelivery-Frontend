@@ -33,22 +33,24 @@ export default function HelpScreen() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-130px)] flex-col px-6">
+    <div className="flex flex-col px-6 h-full overflow-hidden">
       {/* Header — always visible */}
-      <header className="mb-6">
+      <header className="mb-6 flex-shrink-0">
         <h1 className="text-[length:var(--gp-heading-size-lg)] font-[var(--gp-font-weight-heading)] leading-[var(--gp-heading-line-height-lg)] text-[var(--color-neutral-primary)]">How can we help?</h1>
       </header>
 
       {/* Search bar — always visible */}
-      <HelpSearchInput data={searchResults} isSearching={isSearching} onSelect={handleSearchSelect} onSearchChange={handleSearchChange} />
-      {searchError && (
-        <Alert variant="error" className="mt-3" onClick={() => setSearchError(null)}>
-          <AlertDescription>{searchError}</AlertDescription>
-        </Alert>
-      )}
+      <div className="flex-shrink-0">
+        <HelpSearchInput data={searchResults} isSearching={isSearching} onSelect={handleSearchSelect} onSearchChange={handleSearchChange} />
+        {searchError && (
+          <Alert variant="error" className="mt-3" onClick={() => setSearchError(null)}>
+            <AlertDescription>{searchError}</AlertDescription>
+          </Alert>
+        )}
+      </div>
 
       {/* Cards grid */}
-      <section className="mt-8 mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="mt-8 mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 flex-1 overflow-y-auto min-h-0">
         {isLoading
           ? Array.from({ length: 6 }).map((_, i) => (
               <div
@@ -81,7 +83,7 @@ export default function HelpScreen() {
       </section>
 
       {/* Write to us banner — always visible */}
-      <div className="mt-auto">
+      <div className="mt-auto flex-shrink-0">
         <HelpWriteToUs className="mt-8" onClick={() => setIsFeedbackModalOpen(true)} />
       </div>
 

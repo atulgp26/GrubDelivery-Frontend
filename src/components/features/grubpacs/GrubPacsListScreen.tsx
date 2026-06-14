@@ -1241,7 +1241,8 @@ export default function GrubPacsListScreen() {
     : null;
 
   return (
-      <div className="space-y-6">
+      <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex-shrink-0 space-y-6">
         <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-[var(--color-neutral-primary)]">GrubPacs</h1>
           {headerActions}
@@ -1289,8 +1290,9 @@ export default function GrubPacsListScreen() {
           </div>
           {filterActions}
         </div>
+      </div>
 
-        <div>
+        <div className="flex-1 overflow-y-auto min-h-0 pt-4 space-y-6">
           {isLoading || isSwitching ? (
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
@@ -1608,7 +1610,6 @@ export default function GrubPacsListScreen() {
               </Collapse>
             </div>
           )}
-        </div>
 
         <SuspendBoxModal
           open={modalState.suspend.open}
@@ -1775,6 +1776,7 @@ export default function GrubPacsListScreen() {
         initialBlockedCount={editingGrubPac?.permissionsBlockedCount}
         onUpdatedAction={refetchGrubPacs}
       />
+      </div>
       </div>
   );
 }

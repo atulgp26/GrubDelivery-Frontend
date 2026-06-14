@@ -6,7 +6,7 @@ import Modal from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/text-field";
 import { Label } from "@/components/ui/label";
-import { PhoneDropdown } from "@/components/ui/phone-dropdown";
+
 import { cn } from "@/lib/utils";
 import FigIcon from "@/components/ui/FigIcon";
 import { FaChevronRight } from "react-icons/fa6";
@@ -137,18 +137,20 @@ export default function AddOwnerDetailsModal({
               Contact details
             </Label>
             <div className="flex gap-4 w-full">
-              <div className="flex-1 min-w-0">
-                <PhoneDropdown
-                  value={form.countryCode}
-                  phoneNumber={form.phone}
-                  onCountryChange={(country) =>
-                    setForm((prev) => ({ ...prev, countryCode: country.code, dialCode: country.dialCode }))
-                  }
-                  onPhoneNumberChange={set("phone")}
-                  placeholder="00000 00000"
-                  width="100%"
-                />
-              </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 rounded-lg border border-[var(--gp-color-border-neutral)] bg-white h-12 px-4 w-full">
+                    <span className="text-sm font-medium text-[var(--gp-color-text-neutral-primary)] whitespace-nowrap">+91</span>
+                    <div className="shrink-0 self-stretch w-px bg-[#e0e3e1]" />
+                    <input
+                      type="tel"
+                      value={form.phone}
+                      onChange={(e) => set("phone")(sanitizeContactInput(e.target.value))}
+                      placeholder="00000 00000"
+                      className="flex-1 min-w-0 bg-transparent outline-none border-none text-[16px] leading-[24px] text-[#37493f] placeholder:text-[var(--gp-color-text-neutral-light)]"
+                      style={{ fontFamily: "var(--gp-font-text)", fontWeight: 400 }}
+                    />
+                  </div>
+                </div>
               <div className="flex-1 min-w-0">
                 <TextField
                   type="email"

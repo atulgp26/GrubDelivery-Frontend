@@ -765,9 +765,10 @@ const [sharedBoxesEmployee, setSharedBoxesEmployee] = useState<Employee | null>(
   };
 
   return (
-    <div className={cn("space-y-6", className)}>
-      <EmployeeListHeader onAddNew={onAddEmployee} onViewSuspended={onViewSuspended} />
-      <EmployeeToolbar
+    <div className={cn("flex flex-col h-full overflow-hidden", className)}>
+      <div className="flex-shrink-0 space-y-6">
+        <EmployeeListHeader onAddNew={onAddEmployee} onViewSuspended={onViewSuspended} />
+        <EmployeeToolbar
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             onSearchClear={clearSearch}
@@ -793,7 +794,9 @@ const [sharedBoxesEmployee, setSharedBoxesEmployee] = useState<Employee | null>(
             searchError={searchError}
             showAvailableDriversFilter={true}
           />
+        </div>
 
+        <div className="flex-1 overflow-y-auto min-h-0 space-y-6 pt-4">
           {displayLoading ? (
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
@@ -1084,6 +1087,7 @@ onViewRestaurantBoxes={(employee) => {
     }}
   />
 )}
+        </div>
     </div>
   );
 }

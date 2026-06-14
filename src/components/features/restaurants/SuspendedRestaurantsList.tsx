@@ -306,7 +306,7 @@ export default function SuspendedRestaurantsList({ className = "" }: SuspendedRe
         boxes: suspendedRestaurant.boxCount || 0,
         updated: suspendedRestaurant.added || "",
         suspendedOn: suspendedRestaurant.suspended,
-        status: "Suspended",
+        status: "suspended",
       };
       setSelectedRestaurant(restaurant as Restaurant);
       setShowDetailsModal(true);

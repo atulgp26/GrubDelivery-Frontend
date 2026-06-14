@@ -144,7 +144,7 @@ export default function AddOwnerDetailsModal({
                     <input
                       type="tel"
                       value={form.phone}
-                      onChange={(e) => set("phone")(sanitizeContactInput(e.target.value))}
+                      onChange={(e) => set("phone")(e.target.value.replace(/\D/g, ""))}
                       placeholder="00000 00000"
                       className="flex-1 min-w-0 bg-transparent outline-none border-none text-[16px] leading-[24px] text-[#37493f] placeholder:text-[var(--gp-color-text-neutral-light)]"
                       style={{ fontFamily: "var(--gp-font-text)", fontWeight: 400 }}

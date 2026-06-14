@@ -49,7 +49,7 @@ export default function NotificationList({
         </span>
       </div>
       <div className="divide-y divide-[var(--stroke\/neutral---secondary,#e0e3e1)] cursor-pointer">
-        {filtered.map((notification) => (
+        {filtered.map((notification, index) => (
           <NotificationItem
             key={notification.id}
             notification={notification}
@@ -63,6 +63,7 @@ export default function NotificationList({
             }
             onDismiss={onDismiss}
             getNotificationIcon={getNotificationIcon}
+            isLast={index === filtered.length - 1}
             tone="neutral"
           />
         ))}

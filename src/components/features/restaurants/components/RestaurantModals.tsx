@@ -124,10 +124,6 @@ export default function RestaurantModals({
             }
             onCloseAssignManager();
           }}
-          onSearchManagers={onSearchManagers}
-          totalManagers={assignManagerTotalCount}
-          managers={assignManagerManagers}
-          loading={assignManagerLoading}
           restaurantName={modalState.restaurantForManager.name}
         />
       )}

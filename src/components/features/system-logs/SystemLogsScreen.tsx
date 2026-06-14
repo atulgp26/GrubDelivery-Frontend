@@ -62,6 +62,11 @@ function optionFromKey(key: string): string {
   return key.slice(separatorIndex + OPTION_KEY_SEPARATOR.length);
 }
 
+/** Removes ULID (26-char uppercase alphanumeric) after a comma inside brackets from log descriptions */
+function cleanDescription(value: string): string {
+  return value.replace(/\[([^\]]+?), [A-Z0-9]{26}\]/g, (_match, name) => name.trim());
+}
+
 function formatLogTimestamp(value: string | undefined): string {
   if (!value) return "-";
   const parsed = parseISO(value);
@@ -214,8 +219,10 @@ export default function SystemLogsScreen() {
   );
 
   const availableGroups = useMemo(
-    () => advancedFilterGroups.filter((group) => selectedCategorySet.has(group.categoryId)),
-    [advancedFilterGroups, selectedCategorySet],
+    () => selectedCategories.length === 0
+      ? advancedFilterGroups
+      : advancedFilterGroups.filter((group) => selectedCategorySet.has(group.categoryId)),
+    [advancedFilterGroups, selectedCategorySet, selectedCategories.length],
   );
 
   const availableOptionSet = useMemo(
@@ -450,7 +457,7 @@ const selectedCategoryFilters = useMemo(() => {
       timestamp: formatLogTimestamp(item.createdAt ?? item.created_at),
       type: item.category,
       subtype: item.type,
-      action: item.description,
+      action: item.description ? cleanDescription(item.description) : "",
       category: item.category,
     }));
   }, [logs]);
@@ -735,7 +742,7 @@ const hasDraftAdvancedFilters = draftOptions.length > 0;
             {isAdvancedOpen ? (
               <div className="absolute right-0 top-full z-40 mt-2 w-[600px] max-w-[calc(100vw-48px)] overflow-hidden rounded-xl border border-[#E0E3E1] bg-white shadow-[0_0_4px_rgba(0,0,0,0.10),4px_4px_8px_rgba(0,0,0,0.12)]">
                 <div className="max-h-[440px] overflow-y-auto">
-              {advancedFilterGroups.map((group, index) => {
+              {availableGroups.map((group, index) => {
   const allChecked = group.options.every((item) =>
     draftOptions.includes(toOptionKey(group.id, item)),
   );

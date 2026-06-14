@@ -1110,7 +1110,7 @@ export default function GrubPacsListScreen() {
           latitude: data.latitude?.trim() || undefined,
           longitude: data.longitude?.trim() || undefined,
           status: data.status,
-          google_place_id: data.google_place_id?.trim(),
+           google_place_id: data.google_place_id?.trim() || "",
         });
 
         if (!response.success) {

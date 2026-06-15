@@ -138,10 +138,10 @@ export default function LockBoxModal({
       noBlur={noBlur}
       hideClose
     >
-      <form
-        className="max-w-[400px] w-full mx-auto pt-6 flex flex-col gap-2"
-        onSubmit={handleSubmit}
-      >
+     <form
+  className="max-w-[340px] w-full pt-3 mx-auto flex flex-col gap-2"
+  onSubmit={handleSubmit}
+>
         <div className="font-semibold text-lg text-[var(--color-neutral-primary)]">
           Ready to lock the box?
         </div>
@@ -192,28 +192,28 @@ export default function LockBoxModal({
 
         {error && <div className="text-red-500 text-xs mb-2">{error}</div>}
 
-        <div className="flex flex-col items-center justify-end gap-2 mt-2">
-          <Button
-            variant="primary"
-            appearance="outlined"
-            state="press"
-            className="w-full h-[40px] hover:underline"
-            type="submit"
-            disabled={!isValid || isSubmitting}
-          >
-            {isSubmitting ? "SAVING..." : mode === "edit" ? "SAVE" : "SAVE AND LOCK"}
-          </Button>
-          <Button
-            variant="neutral"
-            appearance="ghost"
-            state="press"
-            className="w-full h-[40px] hover:underline"
-            type="button"
-            onClick={onClose}
-          >
-            CANCEL
-          </Button>
-        </div>
+     <div className="flex flex-row items-center justify-center gap-2 mt-2">
+  <Button
+    variant="primary"
+    appearance="outlined"
+    state="press"
+    className="flex-1 h-[40px] text-xs"
+    type="submit"
+    disabled={!isValid || isSubmitting}
+  >
+    {isSubmitting ? "SAVING..." : mode === "edit" ? "SAVE" : "SAVE AND LOCK"}
+  </Button>
+  <Button
+    variant="neutral"
+    appearance="ghost"
+    state="press"
+    className="flex-1 h-[40px] text-xs"
+    type="button"
+    onClick={onClose}
+  >
+    CANCEL
+  </Button>
+</div>
       </form>
     </Modal>
   );

@@ -394,7 +394,7 @@ function renderCell(
 								/>
 							</div>
 						</TooltipTrigger>
-						<CustomTooltipContent side="bottom" sideOffset={-4} align="start">
+						<CustomTooltipContent side="left" sideOffset={8} align="center">
 							<TooltipText title={globalStatusTooltip.title} subtitle={globalStatusTooltip.subtitle} />
 						</CustomTooltipContent>
 					</Tooltip>
@@ -505,7 +505,7 @@ function renderCell(
 								/>
 							</div>
 						</TooltipTrigger>
-						<CustomTooltipContent side="bottom" sideOffset={-4} align="end">
+						<CustomTooltipContent side="left" sideOffset={8} align="center">
 							<TooltipText
 								title={handlerTooltip.title}
 								subtitle={handlerTooltip.subtitle}

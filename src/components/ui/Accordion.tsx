@@ -49,7 +49,7 @@ function renderHelpAnswer(answer: string) {
   }
 
   return (
-    <div className="flex flex-col gap-4 text-[#5D6C63] text-[16px] text-base leading-[var(--gp-text-line-height-md)]">
+    <div className="flex flex-col gap-4 text-[#5D6C63] text-[16px] text-base leading-[var(--gp-text-line-height-md)] break-words">
       {elements}
     </div>
   );
@@ -105,7 +105,7 @@ export default function Accordion({
             :
             <>
           {open === i && (
-            <div className={helpaccordian ? "pl-12 pr-6 pb-6 text-[var(--color-neutral-primary)]" : "px-2 pb-6 text-sm text-gray-700 whitespace-pre-line"}>
+            <div className={helpaccordian ? "pl-12 pr-6 pb-6 text-[var(--color-neutral-primary)] break-words" : "px-2 pb-6 text-sm text-gray-700 whitespace-pre-line break-words"}>
               {helpaccordian ? (typeof item.answer === "string" ? renderHelpAnswer(item.answer) : item.answer) : item.answer}
               {renderAttachments(item.attachments)}
             </div>

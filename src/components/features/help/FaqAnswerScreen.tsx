@@ -28,9 +28,9 @@ export default function FaqAnswerScreen({ faqId }: FaqAnswerScreenProps) {
   }, [faqId]);
 
   return (
-    <div>
+    <div className="flex flex-col h-full overflow-hidden">
       {/* Header row */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
           {isLoading ? (
             <>
@@ -75,13 +75,13 @@ export default function FaqAnswerScreen({ faqId }: FaqAnswerScreenProps) {
 
       {/* Answer content */}
       {isLoading ? (
-        <div className="border-t border-[var(--color-stroke-neutral)] pt-4 space-y-3">
+        <div className="border-t border-[var(--color-stroke-neutral)] pt-4 space-y-3 flex-1 overflow-y-auto min-h-0">
           <Skeleton variant="text" width="80%" height={18} />
           <Skeleton variant="text" width="65%" height={18} />
           <Skeleton variant="text" width="70%" height={18} />
         </div>
       ) : data ? (
-        <div className="border-t border-[var(--color-stroke-neutral)] pt-4">
+        <div className="border-t border-[var(--color-stroke-neutral)] pt-4 flex-1 overflow-y-auto min-h-0">
           <p className="text-[var(--color-neutral-primary)] text-base leading-relaxed whitespace-pre-line">
             {data.answer}
           </p>
@@ -107,7 +107,7 @@ export default function FaqAnswerScreen({ faqId }: FaqAnswerScreenProps) {
           )}
         </div>
       ) : (
-        <div className="py-8 text-center text-[var(--color-neutral-secondary)] text-sm">
+        <div className="py-8 text-center text-[var(--color-neutral-secondary)] text-sm flex-1 overflow-y-auto min-h-0">
           Could not load the answer. Please try again.
         </div>
       )}

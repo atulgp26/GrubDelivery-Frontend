@@ -17,5 +17,6 @@ export function mapFaqToItem(faq: FaqItem): HelpFaqItem {
     icon: DEFAULT_ICON,
     question: faq.question,
     answer: faq.answer,
+    attachments: faq.attachments,
   };
 }

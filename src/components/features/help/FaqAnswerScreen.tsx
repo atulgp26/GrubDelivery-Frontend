@@ -85,6 +85,26 @@ export default function FaqAnswerScreen({ faqId }: FaqAnswerScreenProps) {
           <p className="text-[var(--color-neutral-primary)] text-base leading-relaxed whitespace-pre-line">
             {data.answer}
           </p>
+          {data.attachments && data.attachments.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-3">
+              {data.attachments.map((file) => {
+                const filename = file.split("/").pop() || file;
+                return (
+                  <button
+                    key={file}
+                    type="button"
+                    onClick={() => supportService.downloadAttachment(file, filename)}
+                    className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-stroke-neutral)] bg-white px-4 py-2 text-sm text-[var(--color-brand-default)] hover:bg-[var(--color-neutral-secondary-bg)] transition-colors cursor-pointer"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M14 10v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2M8 1v10M5 7l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    {filename}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       ) : (
         <div className="py-8 text-center text-[var(--color-neutral-secondary)] text-sm">

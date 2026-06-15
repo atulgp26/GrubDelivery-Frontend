@@ -1,6 +1,6 @@
 "use client";
 
-import Button from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 import CheckBoxDisable from "@/components/ui/CheckBoxDisable";
 import DetailsCollapse from "@/components/ui/DetailsCollapse";
 import Modal from "@/components/ui/Modal";
@@ -117,8 +117,9 @@ const ExportListModal = ({
 
         <div className={`${description ? "hidden" : ""} flex-shrink-0 mb-4 sm:mb-6`}>
           <Button
-            variant="skip"
-            size="mdLg"
+            variant="neutral"
+            appearance="ghost"
+            size="md"
             className="flex items-center gap-2 group"
             onClick={onClose}
           >
@@ -166,7 +167,7 @@ const ExportListModal = ({
                 }
                 open={openCollapse === group.group}
                 onClick={() => setOpenCollapse(openCollapse === group.group ? "" : group.group)}
-                exportModal={isPermissionsMode}
+                exportModal={!!isPermissionsMode}
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2">
                   {group.items.map((opt, index) => {
@@ -182,7 +183,7 @@ const ExportListModal = ({
                           <Radio
                             checked={scope === opt.id}
                             onChange={() => setScope(opt.id)}
-                            variant={opt.variant || "default"}
+                            variant={(opt.variant || "default") as "default" | "gray"}
                           />
                         ) : (
                           <CheckBoxDisable checked={checked[opt.id] || false} disabled onChange={() => {}} />
@@ -211,8 +212,9 @@ const ExportListModal = ({
                 onClose();
               }
             }}
-            variant="outline"
-            size="mdLg"
+            variant="primary"
+            appearance="outlined"
+            size="lg"
             className="w-full sm:w-auto sm:min-w-[180px] border border-[#FE5720] text-[#FE5720] py-3 rounded-lg lg:w-1/2 flex-shrink-0"
           >
             {isPermissionsMode ? "CLOSE" : "EXPORT NOW"}

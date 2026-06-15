@@ -150,6 +150,7 @@ export default function SuspendedRestaurantsList({ className = "" }: SuspendedRe
           manager: getManagerName(r.manager),
           managerCount: r._count?.managers || 0,
           driverCount: r._count?.drivers || 0,
+          employeeCount: r._count?.employees || 0,
           boxCount: (r._count?.boxes || 0) + (r._count?.suspended_boxes || 0),
           updated: formatDate(r.updated_at),
           suspended: formatDate(r.updated_at),
@@ -241,7 +242,7 @@ export default function SuspendedRestaurantsList({ className = "" }: SuspendedRe
     : selectedRestaurants.reduce(
     (acc, restaurant) => ({
       boxes: acc.boxes + (restaurant.boxCount || 0),
-      drivers: acc.drivers + (restaurant.driverCount || 0),
+      drivers: acc.drivers + (restaurant.driverCount || 0) + ((restaurant as any).employeeCount || 0),
       managers: acc.managers + (restaurant.manager ? 1 : 0),
     }),
     { boxes: 0, drivers: 0, managers: 0 }
@@ -414,10 +415,15 @@ const response = await foodService.reactivateRestaurants({
         setSelectedIds(new Set());
         setTimeout(() => fetchSuspendedRestaurants(), 500);
       } else {
-        throw new Error(response.error || "Failed to delete");
+        throw response;
       }
     } catch (error: any) {
-      showError(`Failed to delete: ${error.message}`);
+      if (error.status === 409) {
+        setShowDeleteModal(false);
+        setShowManageResourcesModal(true);
+        return;
+      }
+      showError(`Failed to delete: ${error.message || error.error || "Unknown error"}`);
     } finally {
       setDeleteLoading(false);
     }
@@ -573,7 +579,7 @@ const response = await foodService.reactivateRestaurants({
     void fetchReassignRestaurants(query, page);
   }, [fetchReassignRestaurants]);
   const deletingRestaurantNames = deletingRestaurants.map(r => r.name);
-  const hasAssignedResources = deletingRestaurants.some(r => r.boxCount > 0 || r.driverCount > 0 || !!r.manager);
+  const hasAssignedResources = deletingRestaurants.some(r => r.boxCount > 0 || r.driverCount > 0 || (r as any).employeeCount > 0 || !!r.manager);
 
 const _boxesCount = (selectedRestaurant as any)?._count?.boxes ?? selectedRestaurant?.boxes ?? 0;
   const _employeesCount = (selectedRestaurant as any)?._count?.employees ?? selectedRestaurant?.drivers ?? (selectedRestaurant as any)?._count?.drivers ?? 0;

@@ -381,10 +381,15 @@ export default function RestaurantListContent({
         setSelectedIds(new Set());
         onRefresh?.();
       } else {
-        throw new Error(response.error || "Failed to delete");
+        throw response;
       }
     } catch (error: any) {
-      showError(`Failed to delete: ${error.message}`);
+      if (error.status === 409) {
+        setShowDeleteModal(false);
+        setShowManageResourcesDeleteModal(true);
+        return;
+      }
+      showError(`Failed to delete: ${error.message || error.error || "Unknown error"}`);
     } finally {
       setDeleteLoading(false);
     }

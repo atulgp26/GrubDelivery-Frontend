@@ -55,12 +55,6 @@ export default function SuspendedGrubPacsList({ className = "" }: SuspendedGrubP
     const [activeFilters, setActiveFilters] = useState<SuspendedFilterState>(defaultSuspendedFilters);
     const [totalEntries, setTotalEntries] = useState(0);
     const [isActivateAll, setIsActivateAll] = useState(false);
-    const [suspendedSummary, setSuspendedSummary] = useState<{ 
-        boxes: number; 
-        first_box_name: string; 
-        has_restaurant_assignments: boolean; 
-    } | null>(null);
-    const [isSummaryLoading, setIsSummaryLoading] = useState(false);
     // Track restaurant per grubpac id for grouping and hasRestaurantAssignment check
     const [restaurantById, setRestaurantById] = useState<Record<string, string>>({});
 
@@ -267,22 +261,10 @@ export default function SuspendedGrubPacsList({ className = "" }: SuspendedGrubP
         router.back();
     };
 
-    const handleActivateAll = async () => {
-        setIsSummaryLoading(true);
-        try {
-            const res = await grubpacService.getSuspendedSummary();
-            if (res.success && res.data) {
-                setSuspendedSummary(res.data);
-                setIsActivateAll(true);
-                setModalTargetIds(new Set());
-                setShowActivateModal(true);
-            }
-        } catch (err) {
-            console.error("[SuspendedGrubPacsList] summary fetch error:", err);
-            showError("Failed to fetch suspended summary.");
-        } finally {
-            setIsSummaryLoading(false);
-        }
+    const handleActivateAll = () => {
+        setIsActivateAll(true);
+        setModalTargetIds(new Set(filteredGrubPacs.map((g) => g.id)));
+        setShowActivateModal(true);
     };
 
     const handleActivateGrubPac = (row: SuspendedBoxRow) => {
@@ -322,12 +304,10 @@ export default function SuspendedGrubPacsList({ className = "" }: SuspendedGrubP
     const handleConfirmActivate = async () => {
         const ids = Array.from(modalTargetIds);
         try {
-            const hasAssignment = isActivateAll ? !!suspendedSummary?.has_restaurant_assignments : hasRestaurantAssignment;
-            // If the user clicked "Activate" (onActivate), it means "NO, ACTIVATE THEM AS UNASSIGNED" 
-            // if they had assignments. If they had no assignments, it's just a regular activation.
+            const hasAssignment = isActivateAll ? filteredGrubPacs.some(g => restaurantById[g.id] && restaurantById[g.id] !== "Unassigned") : hasRestaurantAssignment;
             const res = await grubpacService.reactivate(
-                isActivateAll ? undefined : ids, 
-                isActivateAll, 
+                ids.length > 0 ? ids : undefined,
+                isActivateAll,
                 hasAssignment ? false : undefined
             );
             if (!res.success) {
@@ -360,9 +340,9 @@ export default function SuspendedGrubPacsList({ className = "" }: SuspendedGrubP
         const ids = Array.from(modalTargetIds);
         try {
             const res = await grubpacService.reactivate(
-                isActivateAll ? undefined : ids, 
-                isActivateAll, 
-                true // Explicitly reassign
+                ids.length > 0 ? ids : undefined,
+                isActivateAll,
+                true
             );
             if (!res.success) {
                 showError(res.error ?? "Failed to activate and reassign selected GrubPacs.");
@@ -422,16 +402,18 @@ export default function SuspendedGrubPacsList({ className = "" }: SuspendedGrubP
                             Suspended GrubPacs
                         </h1>
                     </div>
-                    <Button
-                        variant="primary"
-                        appearance="solid"
-                        state="press"
-                        size="md"
-                        onClick={handleActivateAll}
-                        className="text-white font-medium"
-                    >
-                        <span>ACTIVATE ALL</span>
-                    </Button>
+                    {hasData && (
+                        <Button
+                            variant="primary"
+                            appearance="solid"
+                            state="press"
+                            size="md"
+                            onClick={handleActivateAll}
+                            className="text-white font-medium"
+                        >
+                            <span>ACTIVATE ALL</span>
+                        </Button>
+                    )}
                 </div>
 
                 <div className="flex items-center justify-between px-[var(--gp-space-xl)] py-[var(--gp-space-l)] border-b border-[var(--gp-color-border-neutral-secondary)]">
@@ -637,11 +619,11 @@ export default function SuspendedGrubPacsList({ className = "" }: SuspendedGrubP
                     const grubpac = grubpacs.find(g => g.id === id);
                     return grubpac?.name || id;
                 })}
-                hasRestaurantAssignment={isActivateAll ? (suspendedSummary?.has_restaurant_assignments ?? false) : hasRestaurantAssignment}
-                loading={isSummaryLoading}
+                hasRestaurantAssignment={isActivateAll ? filteredGrubPacs.some(g => restaurantById[g.id] && restaurantById[g.id] !== "Unassigned") : hasRestaurantAssignment}
+                loading={false}
                 isActivateAll={isActivateAll}
-                totalCount={suspendedSummary?.boxes ?? 0}
-                firstBoxName={suspendedSummary?.first_box_name ?? ""}
+                totalCount={filteredGrubPacs.length}
+                firstBoxName={filteredGrubPacs[0]?.name ?? ""}
             />
         </div>
     </div>

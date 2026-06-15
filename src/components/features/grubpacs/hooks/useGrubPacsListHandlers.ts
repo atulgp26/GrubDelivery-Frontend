@@ -246,7 +246,7 @@ export function useGrubPacsListHandlers({
     });
   }, [selected, openModal]);
 
-  const handleApplySettings = useCallback((): void => {
+  const handleApplySettings = useCallback(async (): Promise<void> => {
     const modalSelected = modalState.applySettings.selectedIds || [];
     const fallbackSelected = [
       ...(selected.poweredOn || []),
@@ -270,10 +270,25 @@ export function useGrubPacsListHandlers({
 
     const settingType = modalState.applySettings.settingType;
 
-    // Handle future feature: remove vehicle
     if (settingType === "REMOVE ANY ROOM ASSIGNED") {
       closeModal("applySettings");
-      showSuccess("Remove vehicle feature will be implemented in the future", "");
+      try {
+        const res = await grubpacService.action({ ids: uniqueIds, vehicle_number: null });
+        if (res.success) {
+          showSuccess(
+            uniqueIds.length > 1
+              ? `${uniqueIds.length} vehicles removed successfully.`
+              : "Vehicle removed successfully.",
+            "",
+          );
+          if (refetchGrubPacs) await refetchGrubPacs();
+        } else {
+          showError(res.error ?? "Could not remove vehicle. Please try again.");
+        }
+      } catch (err) {
+        console.error("[useGrubPacsListHandlers] remove vehicle error:", err);
+        showError("Could not remove vehicle. Please try again.");
+      }
       return;
     }
 

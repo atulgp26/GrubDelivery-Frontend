@@ -47,6 +47,7 @@ export interface AccordionItem {
   answer?: ReactNode;
   subject?: ReactNode;
   body?: ReactNode;
+  attachments?: string[];
 }
 
 export interface AccordionProps {

@@ -32,6 +32,7 @@ export default function FilterModalFooter({
           alt="Check"
           width={20}
           height={20}
+          
         />
         <span>FILTER BOXES</span>
       </Button>

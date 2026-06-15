@@ -62,9 +62,9 @@ function optionFromKey(key: string): string {
   return key.slice(separatorIndex + OPTION_KEY_SEPARATOR.length);
 }
 
-/** Removes ULID (26-char uppercase alphanumeric) after a comma inside brackets from log descriptions */
+/** Removes ID after a comma inside brackets from log descriptions, keeping only the name */
 function cleanDescription(value: string): string {
-  return value.replace(/\[([^\]]+?), [A-Z0-9]{26}\]/g, (_match, name) => name.trim());
+  return value.replace(/\[([^\]]+?), [^\]]+\]/g, (_match, name) => name.trim());
 }
 
 function formatLogTimestamp(value: string | undefined): string {

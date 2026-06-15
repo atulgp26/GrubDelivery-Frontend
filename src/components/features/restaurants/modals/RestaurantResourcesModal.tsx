@@ -406,7 +406,7 @@ export default function RestaurantResourcesModal({
       open={open}
       onClose={onClose}
       width="w-[90vw] max-w-[1200px]"
-      height="h-[86vh] max-h-[680px] min-h-[620px]"
+     height="h-auto max-h-[90vh]"
       noXPadding
       headerLeft={
         state.isEditMode ? (
@@ -425,7 +425,7 @@ export default function RestaurantResourcesModal({
     >
       <div
         ref={modalContentRef}
-        className="flex flex-col h-full relative"
+       className="flex flex-col h-full max-h-[90vh] overflow-y-auto relative"
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
         onMouseDownCapture={(e) => {
@@ -434,6 +434,7 @@ export default function RestaurantResourcesModal({
           setRoleDropdownCloseSignal((prev) => prev + 1);
         }}
       >
+        <div className="sticky top-0 bg-white z-10">
         <div className="px-6 pt-2 pb-4 relative">
           <div className="flex items-end justify-between -mb-px">
             <h2 className="text-2xl font-semibold text-[var(--color-neutral-primary)]">
@@ -478,6 +479,8 @@ export default function RestaurantResourcesModal({
             )}
           </div>
         </div>
+        </div>
+
 
         <div className="px-6 py-4">
           <div className="flex items-center justify-between mb-4">
@@ -587,7 +590,7 @@ export default function RestaurantResourcesModal({
 
         </div>
 
-        <div className="px-6 pb-4">
+       <div className="flex-1 overflow-y-auto px-6 pb-4">
           {state.activeTab === "grubpacs" ? (
             loading ? (
               <div className="h-[320px] space-y-3 py-2">
@@ -646,7 +649,7 @@ export default function RestaurantResourcesModal({
           )}
         </div>
 
-        <div className="px-6 pt-4 pb-0 border-t border-[var(--color-stroke-neutral)]">
+     <div className="px-6 pt-4 pb-6 border-t border-[var(--color-stroke-neutral)] sticky bottom-0 bg-white">
           {state.isEditMode ? (
             <div className="flex items-center justify-between">
               <div className="text-base text-[var(--color-neutral-secondary)]">

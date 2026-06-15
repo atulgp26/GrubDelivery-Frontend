@@ -435,7 +435,7 @@ const onFormSubmit = async (data: RestaurantFormData) => {
           z-index: 99999 !important;
         }
       `}</style>
-      <div className="flex flex-col h-full mx-auto pl-5 pr-12">
+      <div className="flex flex-col h-full mx-auto pl-5 pr-12 overflow-hidden">
         <div>
           <Button
             type="button"
@@ -451,7 +451,9 @@ const onFormSubmit = async (data: RestaurantFormData) => {
           </Button>
         </div>
 
-        <hr className="border-t border-[#E0E3E1] my-6 w-full" />
+      <hr className="border-t border-[#E0E3E1] my-6 w-full" />
+
+<div className="flex-1 flex flex-col min-h-0">
 
         <h2 className="text-2xl font-semibold text-[var(--color-neutral-primary)] mb-2 mt-8">
           Where&apos;s Your Business Operating?
@@ -462,13 +464,13 @@ const onFormSubmit = async (data: RestaurantFormData) => {
             : "Add your restaurant to start managing your Grubpacs efficiently."
           }
         </p>
-
-        <form
-          onSubmit={handleSubmit(onFormSubmit)}
-          className="flex flex-col gap-8 mt-8 mx-auto"
-        >
-          <div className="grid grid-cols-2 gap-8 h-[48px]">
-            <div className="space-y-6">
+<form
+  id="restaurant-form"
+  onSubmit={handleSubmit(onFormSubmit)}
+  className="flex gap-8 mt-8 flex-1 min-h-0 mx-auto max-w-[1300px]"
+>
+  <div className="flex gap-8 w-full min-h-0">
+            <div className="space-y-6 flex-1 overflow-y-auto pr-2 min-h-0 max-w-[750px]">
               <FormField
                 name="name"
                 label="Restaurant name"
@@ -588,7 +590,7 @@ const onFormSubmit = async (data: RestaurantFormData) => {
               </div>
             </div>
 
-            <div className="flex flex-col justify-start gap-4">
+            <div className="flex flex-col justify-start gap-4 shrink-0">
               <div ref={mapsRef} className="hidden" aria-hidden="true" />
               <div
                 className="relative shadow-lg"
@@ -701,24 +703,28 @@ const onFormSubmit = async (data: RestaurantFormData) => {
                   Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to enable location search and place capture.
                 </p>
               )}
-              <div className="max-w-[500px] flex justify-end w-full">
-                <Button
-                  type="submit"
-                  variant="primary"
-                  appearance="solid"
-                  state="press"
-                  disabled={loading}
-                  className="px-6 py-2 rounded-lg font-medium duration-200 !text-base flex items-center gap-2 h-[40px] group"
-                >
-                  <FiCheck className="w-5 h-5" />
-                  <span className="group-hover:underline uppercase">
-                    {isEditMode ? "SAVE CHANGES" : "SAVE DETAILS"}
-                  </span>
-                </Button>
-              </div>
+           
             </div>
+      
           </div>
         </form>
+              <div className="sticky bottom-0 bg-white pt-4 pb-2 border-t border-[#E0E3E1] flex justify-end">
+  <Button
+    type="submit"
+    form="restaurant-form"
+    variant="primary"
+    appearance="solid"
+    state="press"
+    disabled={loading}
+    className="px-6 py-2 rounded-lg font-medium duration-200 !text-base flex items-center gap-2 h-[40px] group"
+  >
+    <FiCheck className="w-5 h-5" />
+    <span className="group-hover:underline uppercase">
+      {isEditMode ? "SAVE CHANGES" : "SAVE DETAILS"}
+    </span>
+  </Button>
+</div>
+        </div>
       </div>
     </FullPageModal>
   );

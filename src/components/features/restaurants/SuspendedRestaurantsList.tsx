@@ -573,7 +573,7 @@ const response = await foodService.reactivateRestaurants({
     void fetchReassignRestaurants(query, page);
   }, [fetchReassignRestaurants]);
   const deletingRestaurantNames = deletingRestaurants.map(r => r.name);
-  const hasAssignedResources = deletingRestaurants.some(r => r.boxCount > 0 || r.driverCount > 0);
+  const hasAssignedResources = deletingRestaurants.some(r => r.boxCount > 0 || r.driverCount > 0 || !!r.manager);
 
 const _boxesCount = (selectedRestaurant as any)?._count?.boxes ?? selectedRestaurant?.boxes ?? 0;
   const _employeesCount = (selectedRestaurant as any)?._count?.employees ?? selectedRestaurant?.drivers ?? (selectedRestaurant as any)?._count?.drivers ?? 0;

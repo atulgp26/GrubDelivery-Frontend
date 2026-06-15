@@ -7,6 +7,7 @@ import { format, isValid, parseISO } from "date-fns";
 import { useDebounce } from "@/lib/hooks";
 import SearchInput from "@/components/ui/SearchInput";
 import Pagination from "@/components/ui/Pagination";
+import ExportListModal from "../restaurants/modals/EportModal";
 import {
   DataTable,
   DataTableBody,
@@ -181,6 +182,9 @@ export default function SystemLogsScreen() {
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
   const [startDate, endDate] = dateRange;
 
+const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+const [isExporting, setIsExporting] = useState(false);
+
   const [categoryOptions, setCategoryOptions] = useState<LogCategoryOption[]>([]);
   const [typeMapping, setTypeMapping] = useState<Record<string, string[]>>({});
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -204,6 +208,39 @@ export default function SystemLogsScreen() {
 
   const allCategoryIds = useMemo(() => categoryOptions.map((item) => item.id), [categoryOptions]);
 
+const handleExport = async () => {
+  setIsExporting(true);
+  const response = await logsService.getList({
+    ...queryParams,
+    limit: 10000,
+    page: 1,
+  });
+
+  setIsExporting(false);
+
+  if (!response.success || !response.data) return;
+
+  const allLogs: ApiSystemLog[] = response.data.logs ?? [];
+  const headers = ["Timestamp", "Category", "Type", "Action"];
+  const rows = allLogs.map((item) => [
+    formatLogTimestamp(item.createdAt ?? item.created_at),
+    item.category ?? "",
+    item.type ?? "",
+    item.description ? cleanDescription(item.description) : "",
+  ]);
+
+  const csvContent = [headers, ...rows]
+    .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `system-logs-${format(new Date(), "yyyy-MM-dd")}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
   const advancedFilterGroups = useMemo<AdvancedFilterGroup[]>(() => {
     return categoryOptions.map((item) => ({
       id: item.id,
@@ -535,12 +572,13 @@ const hasDraftAdvancedFilters = draftOptions.length > 0;
         <h1 className="h-10 font-[var(--gp-font-heading)] font-semibold text-[24px] leading-[36px] text-[#03130A]">
           System logs
         </h1>
-        {/* <button
-          type="button"
-          className="flex h-10 items-center justify-center px-4 py-2 font-[var(--gp-font-interactive)] text-[16px] font-medium uppercase leading-[20px] text-[#6B7971] cursor-pointer"
-        >
-          Export
-        </button> */}
+   <button
+  type="button"
+  onClick={() => setIsExportModalOpen(true)}
+  className="flex h-10 items-center justify-center px-4 py-2 font-[var(--gp-font-interactive)] text-[16px] font-medium uppercase leading-[20px] text-[#6B7971] cursor-pointer"
+>
+  Export
+</button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start flex-shrink-0">
@@ -839,6 +877,20 @@ const hasDraftAdvancedFilters = draftOptions.length > 0;
           />
         )}
       </div>
+   <ExportListModal
+  open={isExportModalOpen}
+  onClose={() => setIsExportModalOpen(false)}
+  title="Customise your export"
+  description="This will export all logs matching your current filters as a CSV file."
+  footer="Export will be provided in CSV format."
+  options={[]}
+  midLevelData={[]}
+  onConfirm={async () => {
+    setIsExporting(true);
+    await handleExport();
+    setIsExporting(false);
+  }}
+/>
     </div>
   );
 }

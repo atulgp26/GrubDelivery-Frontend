@@ -291,10 +291,10 @@ export default function RestaurantListContent({
           setIsSuspending(false);
         }
       } else if (reassignFlowType === "delete") {
-        // Handle delete with reassign
+        // Handle delete with reassign - use selectedIds for bulk, actionMenuRestaurant for single
         setDeleteLoading(true);
         try {
-          const idsToDelete = actionMenuRestaurant ? [actionMenuRestaurant.id] : ids;
+          const idsToDelete = actionMenuRestaurant ? [actionMenuRestaurant.id] : Array.from(selectedIds);
           const response = await foodService.deleteRestaurants({
             ids: idsToDelete,
             destination_restaurant_id: targetRestaurant.id
@@ -646,8 +646,8 @@ export default function RestaurantListContent({
             restaurantCount={actionMenuRestaurant ? 1 : selectedRestaurants.length}
             hasAssignedResources={
               actionMenuRestaurant 
-                ? ((actionMenuRestaurant.boxes || 0) > 0 || (actionMenuRestaurant.drivers || 0) > 0)
-                : selectedRestaurants.some(r => (r.boxes || 0) > 0 || (r.drivers || 0) > 0)
+                ? ((actionMenuRestaurant.boxes || 0) > 0 || (actionMenuRestaurant.suspended_boxes || 0) > 0 || (actionMenuRestaurant.drivers || 0) > 0 || !!actionMenuRestaurant.manager)
+                : selectedRestaurants.some(r => (r.boxes || 0) > 0 || (r.suspended_boxes || 0) > 0 || (r.drivers || 0) > 0 || !!r.manager)
             }
 
             isWithoutBoxesGroup={isActionMenuFromWithoutBoxes || isWithoutBoxesGroup}

@@ -50,13 +50,13 @@ export default function SuspendEmployeeModal({
     
     {/* Fixed title — stays put */}
     <div className="flex-shrink-0 pb-2">
-      <h2 className="font-[var(--gp-font-heading)] text-[24px] leading-[32px] font-semibold text-[var(--gp-color-text-neutral-primary)] break-words [overflow-wrap:anywhere]">
+      <h2 className="font-[var(--gp-font-heading)] text-center text-[24px] leading-[32px] font-semibold text-[var(--gp-color-text-neutral-primary)] break-words [overflow-wrap:anywhere]">
         {getTitle()}
       </h2>
     </div>
 
     {/* Scrollable body */}
-    <div className="flex flex-col gap-2 overflow-y-auto flex-1 min-h-0 pr-1">
+    <div className="flex flex-col text-center gap-2 overflow-y-auto flex-1 min-h-0 pr-1">
       <p className="font-[var(--gp-font-text)] text-[18px] leading-[28px] font-normal text-[var(--gp-color-text-neutral-secondary)]">
         This will temporarily deactivate their account. They will not be able to access the app or be assigned to any tasks until reactivated.
       </p>

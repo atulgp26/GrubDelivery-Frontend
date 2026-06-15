@@ -406,8 +406,8 @@ function renderCell(
 							<MessageSquareLinesIcon />
 						</div>
 					</TooltipTrigger>
-					<CustomTooltipContent align="end">
-						<div className="text-right">
+				<CustomTooltipContent side="left" sideOffset={8} align="center">
+						<div className="text-left">
 							{row.contactInfo?.email || row.contactInfo?.phone ? (
 								<>
 									{row.contactInfo.email && <>{row.contactInfo.email}<br /></>}
@@ -487,15 +487,12 @@ function renderCell(
 			);
 
 			let tooltipContent: React.ReactNode = null;
-let tooltipContentClickable = false;
 
 if (isManagerGroupRow) {
     tooltipContent = "View list";
-    tooltipContentClickable = true;
 } else if (!isConnected) {
     if (normalizedCount > 0) {
         tooltipContent = "View list";
-        tooltipContentClickable = true;
     } else {
         tooltipContent = "Ask handler to connect";
     }
@@ -511,22 +508,21 @@ if (isManagerGroupRow) {
     );
 } else {
     tooltipContent = connectedTooltipContent;
-    tooltipContentClickable = true;
 }
 
-const onTooltipClick = tooltipContentClickable
-    ? (event: React.MouseEvent<HTMLDivElement> | React.PointerEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-   callbacks.onViewRestaurantBoxes?.(row);  // ← was onOpenBoxSettings, now onAllBoxes
-    }
-    : undefined;
+const handleBoxClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    callbacks.onViewRestaurantBoxes?.(row);
+};
 			
 			return (
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<div
-							className="cursor-default"
+							className="cursor-pointer"
+							onClick={handleBoxClick}
+							onPointerDown={handleBoxClick}
 						>
 							<BoxBadgeCell
 								variant={boxVariant}
@@ -534,12 +530,8 @@ const onTooltipClick = tooltipContentClickable
 							/>
 						</div>
 					</TooltipTrigger>
-					<CustomTooltipContent align={isManagerGroupRow ? "end" : "end"}>
-						<div
-							className={tooltipContentClickable ? "cursor-pointer" : undefined}
-							onPointerDown={onTooltipClick}
-							onClick={onTooltipClick}
-						>
+					<CustomTooltipContent side="left" sideOffset={-30} align="center">
+						<div className="text-center">
 							{tooltipContent}
 						</div>
 					</CustomTooltipContent>

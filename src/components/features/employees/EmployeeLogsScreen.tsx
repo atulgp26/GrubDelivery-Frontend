@@ -1,15 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { DateRange } from "react-day-picker";
-import { endOfDay, format, isValid, parseISO, startOfDay } from "date-fns";
-import { formatDate } from "@/lib/utils/date";
-import { createPortal } from "react-dom";
+import { format, isValid, parseISO, endOfDay, startOfDay } from "date-fns";
 import { useDebounce } from "@/lib/hooks";
-import { Calendar } from "@/components/ui/calendar";
 import SearchInput from "@/components/ui/SearchInput";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { MdCalendarToday } from "react-icons/md";
+import { RxCross2 } from "react-icons/rx";
 import EmployeeBoxesModal from "@/components/features/employees/modals/EmployeeBoxesModal";
 import Pagination from "@/components/ui/Pagination";
 import {
@@ -27,7 +28,7 @@ import {
 	DataTableRow,
 } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TextField } from "@/components/ui/text-field";
+
 import { showError, showSuccess } from "@/components/ui/toast";
 import { getContextualErrorMessage } from "@/lib/errors";
 import { COUNTRIES } from "@/components/ui/phone-dropdown";
@@ -99,15 +100,6 @@ function formatLogTimestamp(value: string | undefined): string {
 	return format(parsed, "dd MMM ''yy, HH:mm:ss");
 }
 
-function formatDateLabel(range?: DateRange): string {
-	if (!range?.from) return "Last 7 days";
-
-	const from = formatDate(range.from);
-	const to = range.to ? formatDate(range.to) : from;
-
-	return from === to ? from : `${from} - ${to}`;
-}
-
 function CheckboxOption({
 	checked,
 	onClick,
@@ -126,7 +118,7 @@ function CheckboxOption({
 			<span
 				className={`flex size-5 shrink-0 items-center justify-center rounded-[4px] border transition-colors ${
 					checked
-						? "border-[#7E8982] bg-[#7E8982]"
+						? "border-[#7E8982] bg-[#f6f8f6]"
 						: "border-[#A4ACA7] bg-white"
 				}`}
 			>
@@ -143,173 +135,6 @@ function CheckboxOption({
 				{label}
 			</span>
 		</button>
-	);
-}
-
-function DateRangePicker({
-	value,
-	onValueChange,
-}: {
-	value: DateRange | undefined;
-	onValueChange: (value: DateRange | undefined) => void;
-}) {
-	const maxSelectableDate = new Date();
-	const [isOpen, setIsOpen] = useState(false);
-	const containerRef = useRef<HTMLDivElement>(null);
-	const panelRef = useRef<HTMLDivElement>(null);
-	const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({
-		top: 0,
-		left: 0,
-	});
-
-	const updatePanelPosition = useCallback(() => {
-		if (!containerRef.current) return;
-
-		const rect = containerRef.current.getBoundingClientRect();
-		const panelWidth = rect.width;
-		const panelHeight = panelRef.current?.offsetHeight ?? 320;
-		const viewportWidth = window.innerWidth;
-		const viewportHeight = window.innerHeight;
-
-		const canOpenBelow =
-			rect.bottom + 8 + panelHeight <= viewportHeight - 12;
-		const top = canOpenBelow
-			? rect.bottom + 8
-			: Math.max(12, rect.top - panelHeight - 8);
-		const left = Math.min(
-			Math.max(12, rect.right - panelWidth),
-			viewportWidth - panelWidth - 12,
-		);
-
-		setPanelStyle({
-			top,
-			left,
-			width: panelWidth,
-		});
-	}, []);
-
-	useEffect(() => {
-		const handleOutsideClick = (event: MouseEvent) => {
-			const target = event.target as Node;
-
-			if (
-				!containerRef.current?.contains(target) &&
-				!panelRef.current?.contains(target)
-			) {
-				setIsOpen(false);
-			}
-		};
-
-		document.addEventListener("mousedown", handleOutsideClick);
-		return () =>
-			document.removeEventListener("mousedown", handleOutsideClick);
-	}, []);
-
-	useEffect(() => {
-		if (!isOpen) return;
-
-		updatePanelPosition();
-		const rafId = window.requestAnimationFrame(updatePanelPosition);
-		const handleReposition = () => updatePanelPosition();
-
-		window.addEventListener("resize", handleReposition);
-		window.addEventListener("scroll", handleReposition, true);
-
-		return () => {
-			window.cancelAnimationFrame(rafId);
-			window.removeEventListener("resize", handleReposition);
-			window.removeEventListener("scroll", handleReposition, true);
-		};
-	}, [isOpen, updatePanelPosition]);
-
-	const handleDateSelect = useCallback(
-		(nextRange: DateRange | undefined) => {
-			if (!nextRange) {
-				onValueChange(undefined);
-				return;
-			}
-
-			const maxDate = endOfDay(new Date());
-			const from =
-				nextRange.from && nextRange.from.getTime() > maxDate.getTime()
-					? maxDate
-					: nextRange.from;
-			const to =
-				nextRange.to && nextRange.to.getTime() > maxDate.getTime()
-					? maxDate
-					: nextRange.to;
-
-			onValueChange({ from, to });
-		},
-		[onValueChange],
-	);
-
-	const dateLabel = formatDateLabel(value);
-
-	return (
-		<div ref={containerRef} className="relative w-full sm:w-[160px]">
-			<TextField
-				id="employee-logs-date-range"
-				type="text"
-				readOnly
-				value={dateLabel}
-				placeholder="Last 7 days"
-				onClick={() => {
-					setIsOpen(true);
-					updatePanelPosition();
-				}}
-				onFocus={() => {
-					setIsOpen(true);
-					updatePanelPosition();
-				}}
-				className="cursor-pointer text-[14px] leading-[20px]"
-				inputContainerClassName={`!h-8 !rounded-lg !px-3 !py-0 !gap-2 ${
-					isOpen
-						? "!border-[#FE5720] bg-white text-[#37493F] shadow-[0_0_0_2px_rgba(254,87,32,0.4)]"
-						: "!border-[#E0E3E1] bg-white text-[#37493F]"
-				}`}
-				trailingIcon={
-					<Image
-						src="/Employee/Section filter/calendar-day.svg"
-						alt="Calendar"
-						width={20}
-						height={20}
-					/>
-				}
-				onTrailingIconClick={() => {
-					setIsOpen(true);
-					updatePanelPosition();
-				}}
-				trailingIconClassName="!hover:bg-transparent"
-				hasHoverEffect={false}
-				state="default"
-			/>
-
-			{isOpen
-				? createPortal(
-						<div
-							ref={panelRef}
-							className="fixed z-[120] rounded-xl border border-[#E0E3E1] bg-white p-3 shadow-[0_0_4px_rgba(0,0,0,0.10),4px_4px_8px_rgba(0,0,0,0.12)]"
-							style={panelStyle}
-						>
-							<Calendar
-								mode="range"
-								selected={value}
-								onSelect={handleDateSelect}
-								disabled={{ after: maxSelectableDate }}
-								numberOfMonths={1}
-								classNames={{
-									root: "w-full",
-									day_button:
-										"aria-selected:border-transparent data-[selected-single=true]:border-transparent data-[range-start=true]:border-transparent data-[range-end=true]:border-transparent group-data-[focused=true]/day:ring-0 group-data-[focused=true]/day:border-transparent focus-visible:ring-0",
-								}}
-								className="rounded-lg [--cell-size:2rem]"
-							/>
-						</div>,
-						document.body,
-					)
-				: null}
-		</div>
 	);
 }
 
@@ -408,7 +233,8 @@ export default function EmployeeLogsScreen() {
 		top: 0,
 		left: 0,
 	});
-	const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+	const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
+	const [startDate, endDate] = dateRange;
 
 	const [categoryOptions, setCategoryOptions] = useState<LogCategoryOption[]>(
 		[],
@@ -631,27 +457,21 @@ export default function EmployeeLogsScreen() {
 
 	const queryParams = useMemo<EmployeeLogsListRequest>(() => {
 		const searchQuery = debouncedSearch.trim();
-		const startDate = dateRange?.from
-			? startOfDay(dateRange.from).toISOString()
-			: undefined;
-		const endDate = dateRange?.to
-			? endOfDay(dateRange.to).toISOString()
-			: dateRange?.from
-				? endOfDay(dateRange.from).toISOString()
-				: undefined;
+		const startIso = startDate ? startOfDay(startDate).toISOString() : undefined;
+		const endIso = endDate ? endOfDay(endDate).toISOString() : startDate ? endOfDay(startDate).toISOString() : undefined;
 
 		return {
 			limit: PAGE_SIZE,
 			page,
 			filters: selectedCategoryFilters,
 			search: searchQuery || undefined,
-			start_date: startDate,
-			end_date: endDate,
+			start_date: startIso,
+			end_date: endIso,
 			subject_id: employeeIdFromQuery || undefined,
 		};
 	}, [
-		dateRange?.from,
-		dateRange?.to,
+		startDate,
+		endDate,
 		debouncedSearch,
 		employeeIdFromQuery,
 		page,
@@ -719,7 +539,7 @@ export default function EmployeeLogsScreen() {
 
 	useEffect(() => {
 		setPage(1);
-	}, [dateRange?.from, dateRange?.to, appliedOptions, debouncedSearch]);
+	}, [startDate, endDate, appliedOptions, debouncedSearch]);
 
 	useEffect(() => {
 		if (page > pageCount) setPage(pageCount);
@@ -731,7 +551,7 @@ export default function EmployeeLogsScreen() {
 			timestamp: formatLogTimestamp(item.createdAt ?? item.created_at),
 			type: item.category,
 			subtype: item.type,
-			action: item.description,
+			action: item.description?.replace(/\[([^\]]+?), [^\]]+\]/g, (_m, name) => name.trim()),
 			category: item.category,
 		}));
 	}, [logs]);
@@ -1243,10 +1063,26 @@ export default function EmployeeLogsScreen() {
 							)}
 						</div>
 
-						<DateRangePicker
-							value={dateRange}
-							onValueChange={setDateRange}
-						/>
+						<div className="relative">
+							<DatePicker
+								selectsRange
+								startDate={startDate}
+								endDate={endDate}
+								onChange={(update: [Date | null, Date | null]) => setDateRange(update)}
+								placeholderText="Date range"
+								className="pr-10 !w-44 !h-8 cursor-pointer !rounded-lg border border-[#A4ACA7] text-[#37493F] px-3 text-sm outline-none"
+								dateFormat="dd MMM yy"
+								maxDate={new Date()}
+							/>
+							{startDate ? (
+								<RxCross2
+									className="absolute cursor-pointer right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#FE5720]"
+									onClick={() => setDateRange([null, null])}
+								/>
+							) : (
+								<MdCalendarToday className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#FE5720] pointer-events-none" />
+							)}
+						</div>
 
 						<div ref={advancedRef} className="relative">
 							<button

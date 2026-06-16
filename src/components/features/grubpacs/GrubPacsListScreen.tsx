@@ -767,6 +767,16 @@ export default function GrubPacsListScreen() {
   const poweredOnPageSelectedIds = new Set(
     (selected.poweredOn || []).map(String).filter((id) => poweredOnPageIds.has(id)),
   );
+  const selectedPoweredOnIds = new Set((selected.poweredOn || []).map(String));
+  const poweredOnIoniserState = (() => {
+    const items = poweredOnItems.filter(i => selectedPoweredOnIds.has(String(i.id)));
+    if (items.length === 0) return undefined;
+    const hasOn = items.some(i => i.ioniser?.includes("ON"));
+    const hasOff = items.some(i => i.ioniser?.includes("OFF"));
+    if (hasOn && !hasOff) return "on" as const;
+    if (hasOff && !hasOn) return "off" as const;
+    return undefined;
+  })();
 
   const filteredPoweredOffItems = filterItems(poweredOffItems);
   const poweredOffPagination =
@@ -784,6 +794,16 @@ export default function GrubPacsListScreen() {
   const poweredOffPageSelectedIds = new Set(
     (selected.poweredOff || []).map(String).filter((id) => poweredOffPageIds.has(id)),
   );
+  const selectedPoweredOffIds = new Set((selected.poweredOff || []).map(String));
+  const poweredOffIoniserState = (() => {
+    const items = poweredOffItems.filter(i => selectedPoweredOffIds.has(String(i.id)));
+    if (items.length === 0) return undefined;
+    const hasOn = items.some(i => i.ioniser?.includes("ON"));
+    const hasOff = items.some(i => i.ioniser?.includes("OFF"));
+    if (hasOn && !hasOff) return "on" as const;
+    if (hasOff && !hasOn) return "off" as const;
+    return undefined;
+  })();
 
   const selectedGroup = modalState.groupModal.group;
 
@@ -1383,6 +1403,8 @@ export default function GrubPacsListScreen() {
                           selectedCount={selected.poweredOn?.length || 0}
                           isGrouped={true}
                           initialDualZone={inferInitialDualZone(selected.poweredOn || [])}
+                          currentPowerState="on"
+                          currentIoniserState={poweredOnIoniserState}
                           onClearSelection={() =>
                             setSelected((prev) => ({ ...prev, poweredOn: [] }))
                           }
@@ -1533,6 +1555,8 @@ export default function GrubPacsListScreen() {
                           selectedCount={selected.poweredOff?.length || 0}
                           isGrouped={true}
                           initialDualZone={inferInitialDualZone(selected.poweredOff || [])}
+                          currentPowerState="off"
+                          currentIoniserState={poweredOffIoniserState}
                           onClearSelection={() =>
                             setSelected((prev) => ({ ...prev, poweredOff: [] }))
                           }

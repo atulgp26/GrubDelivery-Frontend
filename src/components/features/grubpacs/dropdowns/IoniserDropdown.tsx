@@ -7,9 +7,10 @@ import Button from "@/components/ui/Button";
 interface IoniserDropdownProps {
   onConfirm: (action: "on" | "off") => void;
   onCancel: () => void;
+  disabledOption?: "on" | "off";
 }
 
-export default function IoniserDropdown({ onConfirm, onCancel }: IoniserDropdownProps) {
+export default function IoniserDropdown({ onConfirm, onCancel, disabledOption }: IoniserDropdownProps) {
   const [selectedAction, setSelectedAction] = useState<"on" | "off" | null>(null);
 
   const handleConfirm = () => {
@@ -29,8 +30,14 @@ export default function IoniserDropdown({ onConfirm, onCancel }: IoniserDropdown
 
       {/* Turn Ioniser OFF */}
       <button
-        onClick={() => setSelectedAction("off")}
-        className={`w-full border-t border-[var(--gp-color-stroke-neutral-secondary)] px-4 py-3 flex items-center transition-colors hover:bg-[var(--gp-color-bg-brand-tertiary)] ${
+        onClick={() => {
+          if (disabledOption !== "off") setSelectedAction("off");
+        }}
+        className={`w-full border-t border-[var(--gp-color-stroke-neutral-secondary)] px-4 py-3 flex items-center transition-colors ${
+          disabledOption === "off"
+            ? "opacity-40 cursor-not-allowed bg-gray-50"
+            : "hover:bg-[var(--gp-color-bg-brand-tertiary)]"
+        } ${
           selectedAction === "off" ? "bg-[var(--gp-color-bg-brand-tertiary)]" : "bg-white"
         }`}
       >
@@ -41,8 +48,14 @@ export default function IoniserDropdown({ onConfirm, onCancel }: IoniserDropdown
 
       {/* Turn Ioniser ON */}
       <button
-        onClick={() => setSelectedAction("on")}
-        className={`w-full border-t border-[var(--gp-color-stroke-neutral-secondary)] px-4 py-3 flex items-center transition-colors hover:bg-[var(--gp-color-bg-success-tertiary)] ${
+        onClick={() => {
+          if (disabledOption !== "on") setSelectedAction("on");
+        }}
+        className={`w-full border-t border-[var(--gp-color-stroke-neutral-secondary)] px-4 py-3 flex items-center transition-colors ${
+          disabledOption === "on"
+            ? "opacity-40 cursor-not-allowed bg-gray-50"
+            : "hover:bg-[var(--gp-color-bg-success-tertiary)]"
+        } ${
           selectedAction === "on" ? "bg-[var(--gp-color-bg-success-tertiary)]" : "bg-white"
         }`}
       >

@@ -9,4 +9,7 @@ export interface LogEntry {
   category: "System log" | "Action log";
   action: string;
   actionHighlight?: boolean;
+  actorName?: string;
+  actorRole?: string;
+  subjectName?: string;
 }

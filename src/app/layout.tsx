@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
-import MobileNotSupported from "@/components/ui/MobileNotSupported";
 import "@/styles/globals.css";
 import "@/app/globals.css";
 import MainProvider from "@/components/providers/MainProvider";
@@ -45,7 +44,6 @@ export default function RootLayout({
 				className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}
 			>
 				<MainProvider>
-					<MobileNotSupported />
 					{children}
 				</MainProvider>
 			</body>

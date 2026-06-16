@@ -680,6 +680,7 @@ export default function GrubPacsListScreen() {
                           }
                           onReassignRestaurant={() => handleFooterBulkReassign(Array.from(groupSelectedIds))}
                           onRemoveVehicle={handleRemoveRoom}
+                          hasSelectedVehicle={groupItems.some(i => groupSelectedIds.has(String(i.id)) && i.vehicleNumber)}
                           onDelete={() => handleRemoveBoxes(Array.from(groupSelectedIds), groupSelectedIds.size)}
                         />
                       )}
@@ -1456,6 +1457,7 @@ export default function GrubPacsListScreen() {
                           }
                           onReassignRestaurant={() => handleFooterBulkReassign(selected.poweredOn || [])}
                           onRemoveVehicle={handleRemoveRoom}
+                          hasSelectedVehicle={poweredOnItems.some(i => selected.poweredOn?.includes(String(i.id)) && i.vehicleNumber)}
                           onDelete={() =>
                             handleRemoveBoxes(
                               selected.poweredOn || [],
@@ -1608,6 +1610,7 @@ export default function GrubPacsListScreen() {
                           }
                           onReassignRestaurant={() => handleFooterBulkReassign(selected.poweredOff || [])}
                           onRemoveVehicle={handleRemoveRoom}
+                          hasSelectedVehicle={poweredOffItems.some(i => selected.poweredOff?.includes(String(i.id)) && i.vehicleNumber)}
                           onDelete={() =>
                             handleRemoveBoxes(
                               selected.poweredOff || [],

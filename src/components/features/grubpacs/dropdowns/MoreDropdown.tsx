@@ -1,17 +1,20 @@
 "use client";
 
 import Image from "next/image";
+import { showError } from "@/components/ui/toast";
 
 interface MoreDropdownProps {
   onSuspendBoxes?: () => void;
   onReassignRestaurant?: () => void;
   onRemoveVehicle?: () => void;
+  hasVehicle?: boolean;
 }
 
 export default function MoreDropdown({
   onSuspendBoxes,
   onReassignRestaurant,
   onRemoveVehicle,
+  hasVehicle = true,
 }: MoreDropdownProps) {
   return (
     <div className="bg-white border border-[var(--gp-color-stroke-neutral-secondary)] rounded-lg shadow-[0px_0px_4px_0px_rgba(0,0,0,0.1),4px_4px_8px_0px_rgba(0,0,0,0.12)] w-[240px] overflow-hidden">
@@ -53,8 +56,18 @@ export default function MoreDropdown({
 
       {/* Remove Vehicle */}
       <button
-        onClick={onRemoveVehicle}
-        className="w-full border-t border-[var(--gp-color-stroke-neutral-secondary)] px-4 py-3 flex items-center gap-3 transition-colors hover:bg-[var(--gp-color-bg-neutral-tertiary)] bg-white"
+        onClick={() => {
+          if (!hasVehicle) {
+            showError("No vehicle assigned to this box.");
+            return;
+          }
+          onRemoveVehicle?.();
+        }}
+        className={`w-full border-t border-[var(--gp-color-stroke-neutral-secondary)] px-4 py-3 flex items-center gap-3 transition-colors bg-white ${
+          hasVehicle
+            ? "hover:bg-[var(--gp-color-bg-neutral-tertiary)]"
+            : "opacity-40 cursor-not-allowed"
+        }`}
       >
         <div className="flex-shrink-0 size-5 relative flex items-center justify-center">
           <Image

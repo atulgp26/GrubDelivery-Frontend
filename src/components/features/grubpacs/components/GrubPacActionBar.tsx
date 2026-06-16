@@ -23,6 +23,7 @@ export interface GrubPacActionBarProps {
   onRemoveVehicle?: () => void;
   onDelete?: () => void;
   onActivateBoxes?: () => void;
+  hasSelectedVehicle?: boolean;
 }
 
 export default function GrubPacActionBar({
@@ -40,6 +41,7 @@ export default function GrubPacActionBar({
   onRemoveVehicle,
   onDelete,
   onActivateBoxes,
+  hasSelectedVehicle = true,
 }: GrubPacActionBarProps) {
   const [isPowerDropdownOpen, setIsPowerDropdownOpen] = useState(false);
   const powerButtonContainerRef = useRef<HTMLDivElement>(null);
@@ -217,6 +219,7 @@ export default function GrubPacActionBar({
             onSuspendBoxes={handleSuspendBoxes}
             onReassignRestaurant={handleReassignRestaurant}
             onRemoveVehicle={handleRemoveVehicle}
+            hasVehicle={hasSelectedVehicle}
           />
         </div>
       )}

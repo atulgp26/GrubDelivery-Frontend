@@ -1,7 +1,9 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import type { LogEntry } from "./types";
+import type { ApiSystemLog } from "@/types/domain/system-logs";
+import logsService from "@/services/logs";
 
 export const SYSTEM_LOG_TYPES = [
   "Box status", "Connection status", "Door status",
@@ -12,32 +14,6 @@ export const SYSTEM_LOG_TYPES = [
 export const ACTION_LOG_TYPES = [
   "Assignment", "Reassignment", "Suspension",
   "Activation", "Emergency unlock", "OTP",
-];
-
-const MOCK_LOGS: LogEntry[] = [
-  { id: 1,  timestamp: "06 Jun '25, 10:45:10", type: "Activation",        category: "Action log", action: "Box reactivated and marked as unassigned by [Name of the manager]" },
-  { id: 2,  timestamp: "06 Jun '25, 10:45:10", type: "Assignment",        category: "Action log", action: "Box assigned to Bombay Eats – Andheri by [Name of the manager]" },
-  { id: 3,  timestamp: "06 Jun '25, 10:45:10", type: "Box status",        category: "System log", action: "Box turned ON", actionHighlight: true },
-  { id: 4,  timestamp: "06 Jun '25, 10:45:10", type: "Ioniser status",    category: "System log", action: "Ioniser turned ON" },
-  { id: 5,  timestamp: "06 Jun '25, 10:45:10", type: "Connection status", category: "System log", action: "Box connected to [Name of the driver]" },
-  { id: 6,  timestamp: "06 Jun '25, 10:44:30", type: "GrubLock",          category: "System log", action: "GrubLock locked" },
-  { id: 7,  timestamp: "06 Jun '25, 10:44:30", type: "Temperature set",   category: "System log", action: "Temperature set to -8°C in Zone 1" },
-  { id: 8,  timestamp: "06 Jun '25, 10:43:15", type: "Reassignment",      category: "Action log", action: "Box reassigned to Bombay Eats – Bandra by [Name of the manager]" },
-  { id: 9,  timestamp: "06 Jun '25, 10:42:00", type: "Battery status",    category: "System log", action: "Battery level at 80%" },
-  { id: 10, timestamp: "06 Jun '25, 10:41:45", type: "Door status",       category: "System log", action: "Door opened" },
-  { id: 11, timestamp: "06 Jun '25, 10:40:00", type: "Suspension",        category: "Action log", action: "Box suspended by [Name of the manager]" },
-  { id: 12, timestamp: "06 Jun '25, 10:39:00", type: "OTP",               category: "Action log", action: "OTP generated for emergency access" },
-  { id: 13, timestamp: "06 Jun '25, 10:38:00", type: "Emergency unlock",  category: "Action log", action: "Emergency unlock triggered by [Name of the manager]" },
-  { id: 14, timestamp: "06 Jun '25, 10:37:00", type: "Battery self check",category: "System log", action: "Battery self check passed" },
-  { id: 15, timestamp: "06 Jun '25, 10:36:00", type: "Temp. self check",  category: "System log", action: "Temperature self check passed" },
-  { id: 16, timestamp: "06 Jun '25, 10:35:00", type: "Box status",        category: "System log", action: "Box turned OFF", actionHighlight: false },
-  { id: 17, timestamp: "06 Jun '25, 10:34:00", type: "GrubLock",          category: "System log", action: "GrubLock unlocked" },
-];
-
-const ALL_SUGGESTIONS = [
-  "Box turned off", "Box turned on", "Box suspended", "Box reactivated",
-  "GrubLock locked", "GrubLock unlocked", "Ioniser turned ON", "Ioniser turned OFF",
-  "Door opened", "Door closed", "Battery low", "Connection lost",
 ];
 
 const LOG_TYPE_ICON: Record<string, string> = {
@@ -84,7 +60,33 @@ function FilterCheckbox({ checked, onChange, label, isAll = false }: {
   );
 }
 
-export function LogsView() {
+function formatTimestamp(isoString?: string): string {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = d.toLocaleString("en", { month: "short" });
+  const year = String(d.getFullYear()).slice(-2);
+  const hours = String(d.getHours()).padStart(2, "0");
+  const mins = String(d.getMinutes()).padStart(2, "0");
+  const secs = String(d.getSeconds()).padStart(2, "0");
+  return `${day} ${month} '${year}, ${hours}:${mins}:${secs}`;
+}
+
+function mapApiLogToEntry(log: ApiSystemLog): LogEntry {
+  const type = log.type ?? "";
+  const isSystem = SYSTEM_LOG_TYPES.includes(type);
+  const description = log.description ?? "";
+  return {
+    id: parseInt(log.id, 16) || 0,
+    timestamp: formatTimestamp(log.createdAt ?? log.created_at),
+    type,
+    category: isSystem ? "System log" : "Action log",
+    action: description,
+    actionHighlight: type === "Box status" ? description.includes("ON") : undefined,
+  };
+}
+
+export function LogsView({ boxId }: { boxId?: string }) {
   const [search, setSearch] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
@@ -93,20 +95,51 @@ export function LogsView() {
   const [actionFilters, setActionFilters] = useState<Set<string>>(new Set(ACTION_LOG_TYPES));
   const [draftSystem, setDraftSystem] = useState<Set<string>>(new Set(SYSTEM_LOG_TYPES));
   const [draftAction, setDraftAction] = useState<Set<string>>(new Set(ACTION_LOG_TYPES));
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+
+  useEffect(() => {
+    if (!boxId) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const res = await logsService.getList({
+        subject_id: boxId,
+        category: "GrubPac",
+        limit: 100,
+      });
+      if (cancelled) return;
+      if (res.success && res.data) {
+        const mapped = (res.data.logs ?? []).map(mapApiLogToEntry);
+        setLogs(mapped);
+        setTotalCount(res.data.total ?? mapped.length);
+      } else {
+        setLogs([]);
+        setTotalCount(0);
+      }
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [boxId]);
 
   const allSystemChecked = draftSystem.size === SYSTEM_LOG_TYPES.length;
   const allActionChecked = draftAction.size === ACTION_LOG_TYPES.length;
 
-  const filteredLogs = MOCK_LOGS.filter((log) => {
+  const filteredLogs = useMemo(() => logs.filter((log) => {
     const q = search.toLowerCase();
     const matchesSearch = !search || log.action.toLowerCase().includes(q) || log.type.toLowerCase().includes(q);
     const matchesFilter = log.category === "System log" ? systemFilters.has(log.type) : actionFilters.has(log.type);
     return matchesSearch && matchesFilter;
-  });
+  }), [logs, search, systemFilters, actionFilters]);
 
-  const suggestions = search.length > 0
-    ? ALL_SUGGESTIONS.filter((s) => s.toLowerCase().includes(search.toLowerCase())).slice(0, 6)
-    : [];
+  const suggestions = useMemo(() => {
+    if (!search) return [];
+    const q = search.toLowerCase();
+    return Array.from(new Set(filteredLogs.map(l => l.action)))
+      .filter(a => a.toLowerCase().includes(q))
+      .slice(0, 6);
+  }, [filteredLogs, search]);
 
   const PER_PAGE = 50;
   const totalPages = Math.max(1, Math.ceil(filteredLogs.length / PER_PAGE));
@@ -186,7 +219,7 @@ export function LogsView() {
         <div className="flex-1" />
 
         {/* Entry count */}
-        <span className="text-sm text-[#6b7971] whitespace-nowrap">{MOCK_LOGS.length} entries</span>
+        <span className="text-sm text-[#6b7971] whitespace-nowrap">{loading ? "Loading..." : `${totalCount} entries`}</span>
 
         {/* Date range chip */}
         <div className="flex items-center gap-2 h-9 px-3 border border-[#e0e3e1] rounded-lg bg-white text-sm text-[#37493f] cursor-pointer hover:bg-[#f7f8f7] transition-colors whitespace-nowrap">

@@ -662,7 +662,7 @@ setStatusAlert({
                 onFeedFullscreenChange={setFeedFullscreen}
               />
             ) : activeTab === "logs" ? (
-              <LogsView />
+              <LogsView boxId={String(selectedBox.id)} />
             ) : isOnline ? (
               <OnlineSettingsView
                 settings={settingsData}

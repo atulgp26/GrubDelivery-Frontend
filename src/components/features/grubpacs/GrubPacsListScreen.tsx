@@ -1784,7 +1784,7 @@ export default function GrubPacsListScreen() {
         grubpacId={editingGrubPac ? String(editingGrubPac.id) : ""}
         initialName={editingGrubPac?.name ?? ""}
         initialBoxId={editingGrubPac?.boxId ?? ""}
-        initialVehicleNumber={editingGrubPac?.code ?? ""}
+        initialVehicleNumber={editingGrubPac?.vehicleNumber ?? ""}
         initialRestaurantIds={editingGrubPac?.restaurantIds ?? []}
         initialAccessMode={editingGrubPac?.accessMode}
         initialBlockedEmployeeIds={editingGrubPac?.blockedEmployeeIds ?? []}

@@ -533,7 +533,7 @@ export default function EditDetails({
         name: name.trim(),
         access_mode: accessModeValue,
         blocked_employee_ids: validBlockedEmployeeIds,
-        ...(vehicleNumber.trim() ? { vehicle_number: vehicleNumber.trim() } : {}),
+        vehicle_number: vehicleNumber.trim() || null,
         ...(validRestaurantIds.length > 0
           ? { restaurant_ids: validRestaurantIds }
           : {}),

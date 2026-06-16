@@ -1,6 +1,8 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import type { LogEntry } from "./types";
 import type { ApiSystemLog } from "@/types/domain/system-logs";
 import logsService from "@/services/logs";
@@ -72,17 +74,32 @@ function formatTimestamp(isoString?: string): string {
   return `${day} ${month} '${year}, ${hours}:${mins}:${secs}`;
 }
 
+function sanitizeDescription(description: string, log: ApiSystemLog): string {
+  let text = description;
+  if (log.subject?.name) {
+    text = text.replaceAll(log.subject.id, log.subject.name);
+  }
+  if (log.actor?.name) {
+    text = text.replaceAll(log.actor.id, log.actor.name);
+  }
+  return text;
+}
+
 function mapApiLogToEntry(log: ApiSystemLog): LogEntry {
   const type = log.type ?? "";
   const isSystem = SYSTEM_LOG_TYPES.includes(type);
   const description = log.description ?? "";
+  const sanitized = sanitizeDescription(description, log);
   return {
     id: parseInt(log.id, 16) || 0,
     timestamp: formatTimestamp(log.createdAt ?? log.created_at),
     type,
     category: isSystem ? "System log" : "Action log",
-    action: description,
-    actionHighlight: type === "Box status" ? description.includes("ON") : undefined,
+    action: sanitized,
+    actionHighlight: type === "Box status" ? sanitized.includes("ON") : undefined,
+    actorName: log.actor?.name,
+    actorRole: log.actor?.role,
+    subjectName: log.subject?.name,
   };
 }
 
@@ -98,6 +115,8 @@ export function LogsView({ boxId }: { boxId?: string }) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
+  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
+  const [startDate, endDate] = dateRange;
 
   useEffect(() => {
     if (!boxId) return;
@@ -108,6 +127,8 @@ export function LogsView({ boxId }: { boxId?: string }) {
         subject_id: boxId,
         category: "GrubPac",
         limit: 100,
+        start_date: startDate ? startDate.toISOString() : undefined,
+        end_date: endDate ? endDate.toISOString() : undefined,
       });
       if (cancelled) return;
       if (res.success && res.data) {
@@ -121,7 +142,7 @@ export function LogsView({ boxId }: { boxId?: string }) {
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [boxId]);
+  }, [boxId, startDate, endDate]);
 
   const allSystemChecked = draftSystem.size === SYSTEM_LOG_TYPES.length;
   const allActionChecked = draftAction.size === ACTION_LOG_TYPES.length;
@@ -221,16 +242,42 @@ export function LogsView({ boxId }: { boxId?: string }) {
         {/* Entry count */}
         <span className="text-sm text-[#6b7971] whitespace-nowrap">{loading ? "Loading..." : `${totalCount} entries`}</span>
 
-        {/* Date range chip */}
-        <div className="flex items-center gap-2 h-9 px-3 border border-[#e0e3e1] rounded-lg bg-white text-sm text-[#37493f] cursor-pointer hover:bg-[#f7f8f7] transition-colors whitespace-nowrap">
-          Last 7 days
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <rect x="2" y="3" width="12" height="11" rx="2" stroke="#cb3301" strokeWidth="1.5"/>
-            <path d="M5 1.5V4M11 1.5V4" stroke="#cb3301" strokeWidth="1.5" strokeLinecap="round"/>
-            <path d="M2 7h12" stroke="#cb3301" strokeWidth="1.5"/>
-            <rect x="4.5" y="9" width="2" height="2" rx="0.5" fill="#cb3301"/>
-            <rect x="9" y="9" width="2" height="2" rx="0.5" fill="#cb3301"/>
-          </svg>
+        {/* Date range picker */}
+        <div className="relative">
+          <DatePicker
+            selectsRange
+            startDate={startDate}
+            endDate={endDate}
+            onChange={(update: [Date | null, Date | null]) => {
+              setDateRange(update);
+              setPage(1);
+            }}
+            placeholderText="Date range"
+            className="pr-10 !w-44 !h-9 cursor-pointer !rounded-lg border border-[#e0e3e1] bg-white text-sm text-[#37493f] px-3 outline-none"
+            dateFormat="dd MMM yy"
+            maxDate={new Date()}
+          />
+          {startDate ? (
+            <button
+              onClick={() => setDateRange([null, null])}
+              className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M3 3L11 11M11 3L3 11" stroke="#cb3301" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </button>
+          ) : (
+            <svg
+              width="16" height="16" viewBox="0 0 16 16" fill="none"
+              className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+            >
+              <rect x="2" y="3" width="12" height="11" rx="2" stroke="#cb3301" strokeWidth="1.5"/>
+              <path d="M5 1.5V4M11 1.5V4" stroke="#cb3301" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M2 7h12" stroke="#cb3301" strokeWidth="1.5"/>
+              <rect x="4.5" y="9" width="2" height="2" rx="0.5" fill="#cb3301"/>
+              <rect x="9" y="9" width="2" height="2" rx="0.5" fill="#cb3301"/>
+            </svg>
+          )}
         </div>
 
         {/* Filter button + dropdown */}
@@ -340,13 +387,18 @@ export function LogsView({ boxId }: { boxId?: string }) {
             <div className="flex items-start gap-2.5">
               <span className="mt-0.5 shrink-0"><LogTypeIcon type={log.type} /></span>
               <div>
-                <p className="text-sm font-semibold text-[#03130a]">{log.type}</p>
-                <p className="text-xs text-[#6b7971]">({log.category})</p>
+                <p className="text-sm font-semibold text-[#03130a]">{log.subjectName ?? log.type}</p>
+                <p className="text-xs text-[#6b7971]">{log.type} ({log.category})</p>
               </div>
             </div>
-            <span className={`text-sm ${log.actionHighlight ? "font-semibold text-[#f0a433]" : "text-[#37493f]"}`}>
-              {log.action}
-            </span>
+            <div className="flex flex-col gap-0.5">
+              <span className={`text-sm ${log.actionHighlight ? "font-semibold text-[#f0a433]" : "text-[#37493f]"}`}>
+                {log.action}
+              </span>
+              {log.actorName && (
+                <span className="text-xs text-[#6b7971]">by {log.actorName}{log.actorRole ? ` (${log.actorRole})` : ""}</span>
+              )}
+            </div>
           </div>
         ))}
         {pageLogs.length === 0 && (

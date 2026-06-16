@@ -3,7 +3,7 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/text-field";
-import { PhoneDropdown } from "@/components/ui/phone-dropdown";
+
 import Modal from "@/components/ui/Modal";
 import { getContextualErrorMessage } from "@/lib/errors";
 
@@ -138,10 +138,10 @@ export default function LockBoxModal({
       noBlur={noBlur}
       hideClose
     >
-      <form
-        className="max-w-[400px] w-full mx-auto pt-6 flex flex-col gap-2"
-        onSubmit={handleSubmit}
-      >
+     <form
+  className="max-w-[340px] w-full pt-3 mx-auto flex flex-col gap-2"
+  onSubmit={handleSubmit}
+>
         <div className="font-semibold text-lg text-[var(--color-neutral-primary)]">
           Ready to lock the box?
         </div>
@@ -171,51 +171,49 @@ export default function LockBoxModal({
           />
 
           <div>
-            <PhoneDropdown
-              value={countryCode}
-              phoneNumber={phone}
-              leadingIcon={
-                <img
-                  src="/Settings/phone.svg"
-                  alt="Phone"
-                  className="w-5 h-5"
-                />
-              }
-              onCountryChange={(country) => setCountryCode(country.code)}
-              onPhoneNumberChange={(value) => {
-                setPhone(sanitizeContactInput(value));
-                if (error) setError("");
-              }}
-              placeholder="00000 00000"
-              width="100%"
-            />
+            <div className="flex items-center gap-3 rounded-lg border border-[var(--gp-color-border-neutral)] bg-white h-12 px-4 w-full">
+              <img src="/Settings/phone.svg" alt="Phone" className="w-5 h-5 shrink-0" />
+              <span className="text-sm font-medium text-[var(--gp-color-text-neutral-primary)] whitespace-nowrap">+91</span>
+              <div className="shrink-0 self-stretch w-px bg-[#e0e3e1]" />
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => {
+                  setPhone(sanitizeContactInput(e.target.value));
+                  if (error) setError("");
+                }}
+                placeholder="00000 00000"
+                className="flex-1 min-w-0 bg-transparent outline-none border-none text-[16px] leading-[24px] text-[#37493f] placeholder:text-[var(--gp-color-text-neutral-light)]"
+                style={{ fontFamily: "var(--gp-font-text)", fontWeight: 400 }}
+              />
+            </div>
           </div>
         </div>
 
         {error && <div className="text-red-500 text-xs mb-2">{error}</div>}
 
-        <div className="flex flex-col items-center justify-end gap-2 mt-2">
-          <Button
-            variant="primary"
-            appearance="outlined"
-            state="press"
-            className="w-full h-[40px] hover:underline"
-            type="submit"
-            disabled={!isValid || isSubmitting}
-          >
-            {isSubmitting ? "SAVING..." : mode === "edit" ? "SAVE" : "SAVE AND LOCK"}
-          </Button>
-          <Button
-            variant="neutral"
-            appearance="ghost"
-            state="press"
-            className="w-full h-[40px] hover:underline"
-            type="button"
-            onClick={onClose}
-          >
-            CANCEL
-          </Button>
-        </div>
+     <div className="flex flex-row items-center justify-center gap-2 mt-2">
+  <Button
+    variant="primary"
+    appearance="outlined"
+    state="press"
+    className="flex-1 h-[40px] text-xs"
+    type="submit"
+    disabled={!isValid || isSubmitting}
+  >
+    {isSubmitting ? "SAVING..." : mode === "edit" ? "SAVE" : "SAVE AND LOCK"}
+  </Button>
+  <Button
+    variant="neutral"
+    appearance="ghost"
+    state="press"
+    className="flex-1 h-[40px] text-xs"
+    type="button"
+    onClick={onClose}
+  >
+    CANCEL
+  </Button>
+</div>
       </form>
     </Modal>
   );

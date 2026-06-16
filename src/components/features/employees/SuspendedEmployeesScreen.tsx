@@ -144,7 +144,8 @@ export default function SuspendedEmployeesScreen() {
   };
 
   const handleReassign = async () => {
-    const result = await reactivateEmployees(selectedEmployeeIds, true, isAllSelected);
+    const ids = isAllSelected ? employees.map((e) => e.id) : selectedEmployeeIds;
+    const result = await reactivateEmployees(ids, true, isAllSelected);
     if (result.success) {
       setStatusAlert({
         variant: "success",
@@ -169,7 +170,8 @@ export default function SuspendedEmployeesScreen() {
   };
 
   const handleActivateDirect = async () => {
-    const result = await reactivateEmployees(selectedEmployeeIds, false, isAllSelected);
+    const ids = isAllSelected ? employees.map((e) => e.id) : selectedEmployeeIds;
+    const result = await reactivateEmployees(ids, false, isAllSelected);
     if (result.success) {
       setStatusAlert({
         variant: "success",
@@ -225,7 +227,7 @@ export default function SuspendedEmployeesScreen() {
   };
 
   return (
-    <>
+    <div className="h-full">
       {statusAlert && (
         <div className="fixed top-2 left-2 right-2 z-[9999]">
           <Alert
@@ -278,7 +280,7 @@ export default function SuspendedEmployeesScreen() {
         employeeCount={getEmployeeCount()}
         loading={false}
       />
-    </>
+    </div>
   );
 }
 

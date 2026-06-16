@@ -1,6 +1,7 @@
 import type { ApiGrubPac } from "@/types/domain/grubpacs";
 import type { GrubLockBox, GrubLockGroup } from "@/types/domain/grublock";
 import { normalizeGlobalStatus, normalizeHandlerStatus, normalizePowerStatus } from "@/lib/utils/grubpacStatus";
+import { formatDate } from "@/lib/utils/date";
 
 export function apiGrubLockToBox(box: ApiGrubPac): GrubLockBox {
   const nestedBox = (box as unknown as { box?: Partial<ApiGrubPac> }).box;
@@ -151,13 +152,7 @@ export function apiGrubLockToBox(box: ApiGrubPac): GrubLockBox {
         .filter((part): part is string => typeof part === "string" && part.trim().length > 0)
         .join(", ")
     : undefined;
-  const restaurantCreatedOn = primaryRestaurant?.created_at
-    ? new Date(primaryRestaurant.created_at).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "2-digit",
-      })
-    : undefined;
+  const restaurantCreatedOn = formatDate(primaryRestaurant?.created_at) || undefined;
 
   return {
     id: box.id,

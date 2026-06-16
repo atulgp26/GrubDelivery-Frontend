@@ -173,6 +173,7 @@ export function GroupDataTable({
 		onViewDetails,
 		onDeleteGroup,
 		onActivateGroup,
+		onRowClick,
 		onSuspendRestaurant,
 		onReassignResources,
 		onAddManager,
@@ -238,10 +239,9 @@ export function GroupDataTable({
 			<DataTableBody>
 				{data.map((row, index) => (
 					<DataTableRow
-						key={row.id}
-						className={`${openDropdownRowId === row.id ? "bg-[#EFF1F0]" : ""} ${onRowClick ? "cursor-pointer hover:bg-[#F7F8F7]" : ""}`}
-						onClick={(e) => handleRowClick(row, e)}
-					>
+  key={row.id}
+  className={`${openDropdownRowId === row.id ? "bg-[#EFF1F0]" : ""}`}
+>
 						{colDefs.map((col, idx) => (
 							<DataTableCell
 								key={col.id}
@@ -282,6 +282,7 @@ interface CellCallbacks {
 	onActivateGroup?: (row: GroupRow) => void;
 	onSuspendRestaurant?: (row: GroupRow) => void;
 	onReassignResources?: (row: GroupRow) => void;
+	 onRowClick?: (row: GroupRow) => void;
 	onAddManager?: (row: GroupRow) => void;
 	onViewManagerDetail?: (row: GroupRow) => void;
 	onAssignDrivers?: (row: GroupRow) => void;
@@ -336,24 +337,32 @@ function renderCell(
 	callbacks: RenderCellCallbacks
 ): React.ReactNode {
 	switch (columnId) {
-		case "name":
-			const isSuspendedRow = row.status === "suspended";
-			return (
-				<div className="flex items-start gap-[20px] min-w-0 w-full">
-					<CheckboxCell
-						checked={callbacks.selectedIds.has(row.id)}
-						onChange={() => callbacks.toggleRow(row.id)}
-						className="mt-0.5 shrink-0"
-					/>
-					<NameCell 
-						name={row.name} 
-						subtitle={row.description || ""} 
-						className="min-w-0 w-full" 
-						nameClassName={isSuspendedRow ? "block w-full whitespace-normal break-all" : "truncate block w-full"}
-						subtitleClassName={isSuspendedRow ? "block w-full whitespace-normal break-all" : "truncate block w-full"}
-					/>
-				</div>
-			);
+	case "name":
+  const isSuspendedRow = row.status === "suspended";
+  return (
+    <div className="flex items-start gap-[20px] min-w-0 w-full">
+      <CheckboxCell
+        checked={callbacks.selectedIds.has(row.id)}
+        onChange={() => callbacks.toggleRow(row.id)}
+        className="mt-0.5 shrink-0"
+      />
+      <div
+        className="min-w-0 w-full cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation();
+          callbacks.onRowClick?.(row);
+        }}
+      >
+        <NameCell
+          name={row.name}
+          subtitle={row.description || ""}
+          className="min-w-0 w-full"
+          nameClassName={isSuspendedRow ? "block w-full whitespace-normal break-all" : "truncate block w-full"}
+          subtitleClassName={isSuspendedRow ? "block w-full whitespace-normal break-all" : "truncate block w-full"}
+        />
+      </div>
+    </div>
+  );
 
 		case "address":
 			return (
@@ -431,26 +440,18 @@ function renderCell(
 								</span>
 							</div>
 						</TooltipTrigger>
-						<CustomTooltipContent 
-							sideOffset={0} 
-							align="start" 
-							alignOffset={isHovered ? 10 : 12} 
-							horizontalOffset={isHovered ? -7 : -10}
-							onClick={(e) => {
-								e.stopPropagation();
-								if (hasManager) {
-									callbacks.onViewManagerDetail?.(row);
-									return;
-								}
-								callbacks.onAddManager?.(row);
-							}}
-						>
-							{hasManager ? (
-								<span className="hover:underline cursor-pointer">View details</span>
-							) : (
-								<span>Assign Manager</span>
-							)}
-						</CustomTooltipContent>
+					<CustomTooltipContent 
+  sideOffset={0} 
+  align="start" 
+  alignOffset={isHovered ? 10 : 12} 
+  horizontalOffset={isHovered ? -7 : -10}
+>
+  {hasManager ? (
+    <span>View details</span>
+  ) : (
+    <span>Assign Manager</span>
+  )}
+</CustomTooltipContent>
 					</Tooltip>
 				</div>
 			);
@@ -505,29 +506,21 @@ function renderCell(
 								</span>
 							</div>
 						</TooltipTrigger>
-					<CustomTooltipContent 
-						sideOffset={0} 
-						align="start" 
-						alignOffset={10} 
-						horizontalOffset={-7}
-						onClick={(e) => {
-							e.stopPropagation();
-							if (row.driverCount > 0) {
-								callbacks.onViewDriversList?.(row);
-							} else {
-								callbacks.onAssignDrivers?.(row);
-							}
-						}}
-					>
-							{row.driverCount > 0 ? (
-								<span className="hover:underline cursor-pointer">View list</span>
-							) : (
-								<div className="flex flex-col gap-[2px]">
-									<span className="text-[14px] leading-[22px]">No assigned employees.</span>
-									<span className="text-[14px] font-medium leading-[18px] italic hover:underline cursor-pointer" style={{ color: '#FE5720' }}>Check list to assign &gt;&gt;</span>
-								</div>
-							)}
-						</CustomTooltipContent>
+				<CustomTooltipContent 
+  sideOffset={0} 
+  align="start" 
+  alignOffset={10} 
+  horizontalOffset={-7}
+>
+  {row.driverCount > 0 ? (
+    <span>View list</span>
+  ) : (
+    <div className="flex flex-col gap-[2px]">
+      <span className="text-[14px] leading-[22px]">No assigned employees.</span>
+      <span className="text-[14px] font-medium leading-[18px] italic" style={{ color: '#FE5720' }}>Check list to assign &gt;&gt;</span>
+    </div>
+  )}
+</CustomTooltipContent>
 					</Tooltip>
 				</div>
 			);
@@ -582,29 +575,21 @@ function renderCell(
 								</span>
 							</div>
 						</TooltipTrigger>
-					<CustomTooltipContent 
-						sideOffset={0} 
-						align="start" 
-						alignOffset={10} 
-						horizontalOffset={-7}
-						onClick={(e) => {
-							e.stopPropagation();
-							if (row.boxCount > 0) {
-								callbacks.onViewBoxesList?.(row);
-							} else {
-								callbacks.onAssignBoxes?.(row);
-							}
-						}}
-					>
-							{row.boxCount > 0 ? (
-								<span className="hover:underline cursor-pointer">View list</span>
-							) : (
-								<div className="flex flex-col gap-[2px]">
-									<span className="text-[14px] leading-[22px]">No assigned GrubPacs.</span>
-									<span className="text-[14px] font-medium leading-[18px] italic hover:underline cursor-pointer" style={{ color: '#FE5720' }}>Open GrubPacs to assign &gt;&gt;</span>
-								</div>
-							)}
-						</CustomTooltipContent>
+				<CustomTooltipContent 
+  sideOffset={0} 
+  align="start" 
+  alignOffset={10} 
+  horizontalOffset={-7}
+>
+  {row.boxCount > 0 ? (
+    <span>View list</span>
+  ) : (
+    <div className="flex flex-col gap-[2px]">
+      <span className="text-[14px] leading-[22px]">No assigned GrubPacs.</span>
+      <span className="text-[14px] font-medium leading-[18px] italic" style={{ color: '#FE5720' }}>Open GrubPacs to assign &gt;&gt;</span>
+    </div>
+  )}
+</CustomTooltipContent>
 					</Tooltip>
 				</div>
 			);

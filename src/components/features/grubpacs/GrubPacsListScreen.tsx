@@ -50,6 +50,7 @@ import { highlightMatch } from "@/lib/utils/highlightMatch";
 import { flattenWrappedGroupRecord, getWrappedGroupArray } from "@/lib/utils/groupedResponse";
 import { showError, showSuccess } from "@/components/ui/toast";
 import { getContextualErrorMessage } from "@/lib/errors";
+import { formatDate } from "@/lib/utils/date";
 
 export default function GrubPacsListScreen() {
   const {
@@ -479,11 +480,7 @@ export default function GrubPacsListScreen() {
             details: detailsParts.join(" | "),
             power: powerStatus === "on" ? "on" : powerStatus === "off" ? "off" : "warning",
             driver: undefined,
-            added: new Date(box.created_at).toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "short",
-              year: "2-digit",
-            }),
+            added: formatDate(box.created_at),
             isLocked: box.lock?.lock_status === "locked",
             isOffline: powerStatus === "off",
           };
@@ -770,6 +767,16 @@ export default function GrubPacsListScreen() {
   const poweredOnPageSelectedIds = new Set(
     (selected.poweredOn || []).map(String).filter((id) => poweredOnPageIds.has(id)),
   );
+  const selectedPoweredOnIds = new Set((selected.poweredOn || []).map(String));
+  const poweredOnIoniserState = (() => {
+    const items = poweredOnItems.filter(i => selectedPoweredOnIds.has(String(i.id)));
+    if (items.length === 0) return undefined;
+    const hasOn = items.some(i => i.ioniser?.includes("ON"));
+    const hasOff = items.some(i => i.ioniser?.includes("OFF"));
+    if (hasOn && !hasOff) return "on" as const;
+    if (hasOff && !hasOn) return "off" as const;
+    return undefined;
+  })();
 
   const filteredPoweredOffItems = filterItems(poweredOffItems);
   const poweredOffPagination =
@@ -787,6 +794,16 @@ export default function GrubPacsListScreen() {
   const poweredOffPageSelectedIds = new Set(
     (selected.poweredOff || []).map(String).filter((id) => poweredOffPageIds.has(id)),
   );
+  const selectedPoweredOffIds = new Set((selected.poweredOff || []).map(String));
+  const poweredOffIoniserState = (() => {
+    const items = poweredOffItems.filter(i => selectedPoweredOffIds.has(String(i.id)));
+    if (items.length === 0) return undefined;
+    const hasOn = items.some(i => i.ioniser?.includes("ON"));
+    const hasOff = items.some(i => i.ioniser?.includes("OFF"));
+    if (hasOn && !hasOff) return "on" as const;
+    if (hasOff && !hasOn) return "off" as const;
+    return undefined;
+  })();
 
   const selectedGroup = modalState.groupModal.group;
 
@@ -812,13 +829,7 @@ export default function GrubPacsListScreen() {
     drivers: restaurant._count?.employees ?? 0,
     boxes: restaurant._count?.boxes ?? 0,
     suspended_boxes: restaurant._count?.suspended_boxes ?? 0,
-    updated: restaurant.updated_at
-      ? new Date(restaurant.updated_at).toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "2-digit",
-        })
-      : "-",
+    updated: formatDate(restaurant.updated_at) || "-",
     status: restaurant.status === "suspended" ? "suspended" : "active",
     city: restaurant.city,
     state: restaurant.state,
@@ -1110,7 +1121,7 @@ export default function GrubPacsListScreen() {
           latitude: data.latitude?.trim() || undefined,
           longitude: data.longitude?.trim() || undefined,
           status: data.status,
-          google_place_id: data.google_place_id?.trim(),
+           google_place_id: data.google_place_id?.trim() || "",
         });
 
         if (!response.success) {
@@ -1241,7 +1252,8 @@ export default function GrubPacsListScreen() {
     : null;
 
   return (
-      <div className="space-y-6">
+      <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex-shrink-0 space-y-6">
         <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-[var(--color-neutral-primary)]">GrubPacs</h1>
           {headerActions}
@@ -1289,8 +1301,9 @@ export default function GrubPacsListScreen() {
           </div>
           {filterActions}
         </div>
+      </div>
 
-        <div>
+        <div className="flex-1 overflow-y-auto min-h-0 pt-4 space-y-6">
           {isLoading || isSwitching ? (
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
@@ -1390,6 +1403,8 @@ export default function GrubPacsListScreen() {
                           selectedCount={selected.poweredOn?.length || 0}
                           isGrouped={true}
                           initialDualZone={inferInitialDualZone(selected.poweredOn || [])}
+                          currentPowerState="on"
+                          currentIoniserState={poweredOnIoniserState}
                           onClearSelection={() =>
                             setSelected((prev) => ({ ...prev, poweredOn: [] }))
                           }
@@ -1540,6 +1555,8 @@ export default function GrubPacsListScreen() {
                           selectedCount={selected.poweredOff?.length || 0}
                           isGrouped={true}
                           initialDualZone={inferInitialDualZone(selected.poweredOff || [])}
+                          currentPowerState="off"
+                          currentIoniserState={poweredOffIoniserState}
                           onClearSelection={() =>
                             setSelected((prev) => ({ ...prev, poweredOff: [] }))
                           }
@@ -1608,7 +1625,6 @@ export default function GrubPacsListScreen() {
               </Collapse>
             </div>
           )}
-        </div>
 
         <SuspendBoxModal
           open={modalState.suspend.open}
@@ -1768,13 +1784,14 @@ export default function GrubPacsListScreen() {
         grubpacId={editingGrubPac ? String(editingGrubPac.id) : ""}
         initialName={editingGrubPac?.name ?? ""}
         initialBoxId={editingGrubPac?.boxId ?? ""}
-        initialVehicleNumber={editingGrubPac?.code ?? ""}
+        initialVehicleNumber={editingGrubPac?.vehicleNumber ?? ""}
         initialRestaurantIds={editingGrubPac?.restaurantIds ?? []}
         initialAccessMode={editingGrubPac?.accessMode}
         initialBlockedEmployeeIds={editingGrubPac?.blockedEmployeeIds ?? []}
         initialBlockedCount={editingGrubPac?.permissionsBlockedCount}
         onUpdatedAction={refetchGrubPacs}
       />
+      </div>
       </div>
   );
 }

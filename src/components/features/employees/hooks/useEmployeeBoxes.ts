@@ -12,6 +12,7 @@ import type {
   GrubPacListParams,
 } from "@/types/domain/grubpacs";
 import type { FilterState } from "@/components/features/shared/filter/BoxFilterModal";
+import { formatDate } from "@/lib/utils/date";
 import type { EmployeeBox } from "../types";
 
 interface UseEmployeeBoxesOptions {
@@ -37,11 +38,7 @@ interface UseEmployeeBoxesResult {
 
 function formatApiDate(isoDate: string): string {
   if (!isoDate) return "";
-  return new Date(isoDate).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "2-digit",
-  });
+  return formatDate(isoDate);
 }
 
 function flattenGroups(data: GrubPacListData | undefined): ApiGrubPac[] {

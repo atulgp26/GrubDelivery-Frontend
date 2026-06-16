@@ -28,6 +28,7 @@ const greeting = loading
         title="Dashboard"
         name={greeting}
         description="Ready to start your day? Head over to boxes section to check your GrubPacs."
+        image="/box.png"
         className="ml-2"
       >
         <Button asChild variant="primary" appearance="solid" state="press" size="md" className="w-[177px] h-[40px] hover:underline">

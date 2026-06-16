@@ -27,6 +27,16 @@ export default function Header({
   const [apiNotifications, setApiNotifications] = useState<HeaderNotificationItem[]>([]);
   const [hasFetched, setHasFetched] = useState(false);
 
+  const handleDismiss = (id: number | undefined) => {
+    if (id == null) return;
+    if (onDismissNotification) {
+      onDismissNotification(id);
+      return;
+    }
+    setApiNotifications((prev) => prev.filter((n) => n.id !== id));
+    notificationsService.dismissNotification(String(id)).catch(() => {});
+  };
+
   useEffect(() => {
     if (showDropdown && !hasFetched) {
       setNotificationsLoading(true);
@@ -219,7 +229,7 @@ export default function Header({
                           <button
                             type="button"
                             className="text-[var(--gp-color-text-brand)] text-sm font-medium uppercase leading-4 shrink-0 hover:underline"
-                            onClick={() => n.id != null && onDismissNotification?.(n.id)}
+                            onClick={() => handleDismiss(n.id)}
                           >
                             Dismiss
                           </button>

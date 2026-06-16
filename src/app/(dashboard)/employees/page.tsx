@@ -7,7 +7,7 @@ import AddEmployeeModal from "@/components/features/employees/modals/AddEmployee
 import { useEmployeeData } from "@/components/features/employees/hooks/useEmployeeData";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/Button";
-import { COUNTRIES } from "@/components/ui/phone-dropdown";
+
 import type { EmployeeFormData } from "@/components/features/employees/modals/AddEmployeeModal";
 
 const EMPLOYEE_NAME_MAX_LENGTH = 50;
@@ -49,8 +49,7 @@ export default function EmployeesPage() {
     if (isSubmittingRef.current) return;
     isSubmittingRef.current = true;
     setIsSubmitting(true);
-    const dialCode =
-      COUNTRIES.find((country) => country.code === data.countryCode)?.dialCode ?? data.countryCode;
+    const dialCode = "+91";
     const role =
       data.role === "Driver" ? "delivery" :
       data.role === "Manager" ? "manager" :

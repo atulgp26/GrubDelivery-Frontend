@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils/cn";
+import { formatDate } from "@/lib/utils/date";
 import GroupCollapseTable from "@/components/ui/GroupCollapseTable";
 import RestaurantGroupTable from "./components/RestaurantGroupTable";
 import RestaurantListHeader from "./components/RestaurantListHeader";
@@ -117,15 +118,7 @@ export default function RestaurantListContent({
     drivers: r._count?.drivers || 0,
     boxes: r._count?.boxes || 0,
     suspended_boxes: r._count?.suspended_boxes || 0,
-    updated: r.updated_at
-      ? new Date(r.updated_at)
-          .toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "short",
-            year: "2-digit",
-          })
-          .replace(/ (\d{2})$/, "'$1")
-      : "-",
+    updated: r.updated_at ? formatDate(r.updated_at) : "-",
     status: r.status === "suspended" ? "suspended" : "active",
     city: r.city,
     state: r.state,
@@ -298,10 +291,10 @@ export default function RestaurantListContent({
           setIsSuspending(false);
         }
       } else if (reassignFlowType === "delete") {
-        // Handle delete with reassign
+        // Handle delete with reassign - use selectedIds for bulk, actionMenuRestaurant for single
         setDeleteLoading(true);
         try {
-          const idsToDelete = actionMenuRestaurant ? [actionMenuRestaurant.id] : ids;
+          const idsToDelete = actionMenuRestaurant ? [actionMenuRestaurant.id] : Array.from(selectedIds);
           const response = await foodService.deleteRestaurants({
             ids: idsToDelete,
             destination_restaurant_id: targetRestaurant.id
@@ -388,10 +381,15 @@ export default function RestaurantListContent({
         setSelectedIds(new Set());
         onRefresh?.();
       } else {
-        throw new Error(response.error || "Failed to delete");
+        throw response;
       }
     } catch (error: any) {
-      showError(`Failed to delete: ${error.message}`);
+      if (error.status === 409) {
+        setShowDeleteModal(false);
+        setShowManageResourcesDeleteModal(true);
+        return;
+      }
+      showError(`Failed to delete: ${error.message || error.error || "Unknown error"}`);
     } finally {
       setDeleteLoading(false);
     }
@@ -589,9 +587,10 @@ export default function RestaurantListContent({
       );
 
   return (
-    <div className={cn("space-y-6", className)}>
+    <div className={cn("flex flex-col h-full overflow-hidden", className)}>
       {(forceListLayout || hasAnyRestaurants || searchTerm !== "" || isLoading || isSearching || selectedResources.length > 0) ? (
         <>
+          <div className="flex-shrink-0 space-y-6">
           <RestaurantListHeader onAddNew={onAddRestaurant} onViewSuspended={onViewSuspended} />
           <RestaurantListToolbar
             searchTerm={searchTerm}
@@ -605,6 +604,8 @@ export default function RestaurantListContent({
             isSearching={isSearching}
             searchError={searchError}
           />
+          </div>
+          <div className="flex-1 overflow-y-auto min-h-0 pt-4 space-y-6">
           <RestaurantFilterModal
             open={showFilterModal}
             onClose={() => {
@@ -650,8 +651,8 @@ export default function RestaurantListContent({
             restaurantCount={actionMenuRestaurant ? 1 : selectedRestaurants.length}
             hasAssignedResources={
               actionMenuRestaurant 
-                ? ((actionMenuRestaurant.boxes || 0) > 0 || (actionMenuRestaurant.drivers || 0) > 0)
-                : selectedRestaurants.some(r => (r.boxes || 0) > 0 || (r.drivers || 0) > 0)
+                ? ((actionMenuRestaurant.boxes || 0) > 0 || (actionMenuRestaurant.suspended_boxes || 0) > 0 || (actionMenuRestaurant.drivers || 0) > 0 || !!actionMenuRestaurant.manager)
+                : selectedRestaurants.some(r => (r.boxes || 0) > 0 || (r.suspended_boxes || 0) > 0 || (r.drivers || 0) > 0 || !!r.manager)
             }
 
             isWithoutBoxesGroup={isActionMenuFromWithoutBoxes || isWithoutBoxesGroup}
@@ -741,6 +742,7 @@ export default function RestaurantListContent({
             allowSuspend={true}
             allowDelete={true}
           />
+        </div>
         </>
       ) : (
         <RestaurantListEmptyState 

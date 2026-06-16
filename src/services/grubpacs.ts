@@ -187,8 +187,8 @@ function sanitizeUpdatePayload(data: UpdateGrubPacBody): UpdateGrubPacBody | nul
     ...(sanitizeOptionalString(data.box_id)
       ? { box_id: sanitizeOptionalString(data.box_id) }
       : {}),
-    ...(sanitizeOptionalString(data.vehicle_number)
-      ? { vehicle_number: sanitizeOptionalString(data.vehicle_number) }
+    ...(data.vehicle_number === null || sanitizeOptionalString(data.vehicle_number)
+      ? { vehicle_number: data.vehicle_number === null ? null : sanitizeOptionalString(data.vehicle_number) }
       : {}),
     ...(sanitizeStringArray(data.restaurant_ids)
       ? { restaurant_ids: sanitizeStringArray(data.restaurant_ids) }

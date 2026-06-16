@@ -12,6 +12,8 @@ export interface GrubPacActionBarProps {
   selectedCount: number;
   isGrouped?: boolean;
   initialDualZone?: boolean;
+  currentPowerState?: "on" | "off";
+  currentIoniserState?: "on" | "off";
   onClearSelection: () => void;
   onPower?: (action: "on" | "off") => void;
   onIoniser?: (action: "on" | "off") => void;
@@ -27,6 +29,8 @@ export default function GrubPacActionBar({
   selectedCount,
   isGrouped = false,
   initialDualZone = false,
+  currentPowerState,
+  currentIoniserState,
   onClearSelection,
   onPower,
   onIoniser,
@@ -156,6 +160,7 @@ export default function GrubPacActionBar({
           <PowerDropdown 
             onConfirm={handlePowerConfirm}
             onCancel={handlePowerCancel}
+            disabledOption={currentPowerState}
           />
         </div>
       )}
@@ -173,6 +178,7 @@ export default function GrubPacActionBar({
           <IoniserDropdown 
             onConfirm={handleIoniserConfirm}
             onCancel={handleIoniserCancel}
+            disabledOption={currentIoniserState}
           />
         </div>
       )}
@@ -187,11 +193,13 @@ export default function GrubPacActionBar({
               : '1rem',
           }}
         >
+         <div className="w-[350px]">
           <TemperatureDropdown 
             onConfirm={handleTemperatureConfirm}
             onCancel={handleTemperatureCancel}
             initialDualZone={initialDualZone}
           />
+          </div>
         </div>
       )}
 

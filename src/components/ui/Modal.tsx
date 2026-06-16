@@ -87,11 +87,11 @@ export default function Modal({
         ...positionStyles,
       }}
     >
-      <div
-        ref={modalRef}
-        className={`relative bg-white rounded-lg border border-[var(--color-stroke-neutral)] shadow-[4px_4px_8px_0px_var(--color-notif-shadow-soft),0px_0px_4px_0px_var(--color-notif-shadow-strong)] ${width} ${height} mx-4 p-0 flex flex-col justify-center ${modalClassName}`}
-        style={{ pointerEvents: "auto" }}
-      >
+    <div
+  ref={modalRef}
+  className={`relative bg-white rounded-lg border border-[var(--color-stroke-neutral)] shadow-[...] ${width} ${height} mx-4 p-0 flex flex-col max-h-[90vh] overflow-hidden ${modalClassName}`}
+  style={{ pointerEvents: "auto" }}
+>
         {(!hideClose || headerLeft || showLogo) && (
           <div className="flex items-center justify-between shrink-0 px-6 pt-6 pb-2">
             <div className="flex items-center">

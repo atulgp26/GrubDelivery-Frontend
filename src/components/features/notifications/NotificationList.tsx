@@ -63,8 +63,8 @@ export default function NotificationList({
             }
             onDismiss={onDismiss}
             getNotificationIcon={getNotificationIcon}
-            tone="neutral"
             isLast={index === filtered.length - 1}
+            tone="neutral"
           />
         ))}
       </div>

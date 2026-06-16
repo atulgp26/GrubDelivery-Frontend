@@ -21,6 +21,7 @@ import foodService from "@/services/food";
 import { showError, showSuccess } from "@/components/ui/toast";
 import { useRestaurantSearch } from "./hooks/useRestaurantSearch";
 import { highlightMatch } from "@/lib/utils/highlightMatch";
+import { formatDate } from "@/lib/utils/date";
 
 // Columns that match the Figma design: Name, Address, Added, Suspended, Actions
 const SUSPENDED_COLUMNS: GroupColumnId[] = [
@@ -149,22 +150,11 @@ export default function SuspendedRestaurantsList({ className = "" }: SuspendedRe
           manager: getManagerName(r.manager),
           managerCount: r._count?.managers || 0,
           driverCount: r._count?.drivers || 0,
+          employeeCount: r._count?.employees || 0,
           boxCount: (r._count?.boxes || 0) + (r._count?.suspended_boxes || 0),
-          updated: r.updated_at ? new Date(r.updated_at).toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: '2-digit'
-          }).replace(/ (\d{2})$/, "'$1") : "",
-          suspended: r.updated_at ? new Date(r.updated_at).toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: '2-digit'
-          }).replace(/ (\d{2})$/, "'$1") : "",
-          added: r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: '2-digit'
-          }).replace(/ (\d{2})$/, "'$1") : "",
+          updated: formatDate(r.updated_at),
+          suspended: formatDate(r.updated_at),
+          added: formatDate(r.created_at),
           status: "suspended" as const,
           description: `(and ${(r._count?.boxes || 0) + (r._count?.suspended_boxes || 0)} boxes, ${r._count?.drivers || 0} drivers, ${r._count?.managers || 0} manager)`,
           // Add these for the details/edit modals
@@ -252,7 +242,7 @@ export default function SuspendedRestaurantsList({ className = "" }: SuspendedRe
     : selectedRestaurants.reduce(
     (acc, restaurant) => ({
       boxes: acc.boxes + (restaurant.boxCount || 0),
-      drivers: acc.drivers + (restaurant.driverCount || 0),
+      drivers: acc.drivers + (restaurant.driverCount || 0) + ((restaurant as any).employeeCount || 0),
       managers: acc.managers + (restaurant.manager ? 1 : 0),
     }),
     { boxes: 0, drivers: 0, managers: 0 }
@@ -425,10 +415,15 @@ const response = await foodService.reactivateRestaurants({
         setSelectedIds(new Set());
         setTimeout(() => fetchSuspendedRestaurants(), 500);
       } else {
-        throw new Error(response.error || "Failed to delete");
+        throw response;
       }
     } catch (error: any) {
-      showError(`Failed to delete: ${error.message}`);
+      if (error.status === 409) {
+        setShowDeleteModal(false);
+        setShowManageResourcesModal(true);
+        return;
+      }
+      showError(`Failed to delete: ${error.message || error.error || "Unknown error"}`);
     } finally {
       setDeleteLoading(false);
     }
@@ -548,15 +543,7 @@ const response = await foodService.reactivateRestaurants({
           drivers: r._count?.drivers || 0,
           boxes: r._count?.boxes || 0,
           suspended_boxes: r._count?.suspended_boxes || 0,
-          updated: r.updated_at
-            ? new Date(r.updated_at)
-                .toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "2-digit",
-                })
-                .replace(/ (\d{2})$/, "'$1")
-            : "-",
+          updated: formatDate(r.updated_at) || "-",
           status: r.status === "suspended" ? "suspended" : "active",
           city: r.city,
           state: r.state,
@@ -592,97 +579,101 @@ const response = await foodService.reactivateRestaurants({
     void fetchReassignRestaurants(query, page);
   }, [fetchReassignRestaurants]);
   const deletingRestaurantNames = deletingRestaurants.map(r => r.name);
-  const hasAssignedResources = deletingRestaurants.some(r => r.boxCount > 0 || r.driverCount > 0);
+  const hasAssignedResources = deletingRestaurants.some(r => r.boxCount > 0 || r.driverCount > 0 || (r as any).employeeCount > 0 || !!r.manager);
 
 const _boxesCount = (selectedRestaurant as any)?._count?.boxes ?? selectedRestaurant?.boxes ?? 0;
   const _employeesCount = (selectedRestaurant as any)?._count?.employees ?? selectedRestaurant?.drivers ?? (selectedRestaurant as any)?._count?.drivers ?? 0;
 
   return (
-    <div className={`bg-white min-h-screen ${className}`}>
-      {/* Header Section */}
-      <div className="flex items-center justify-between px-[var(--gp-space-xl)] py-[var(--gp-space-m)]">
-        <div className="flex items-center gap-[8px]">
-          <button
-            onClick={handleGoBack}
-            className="flex items-center justify-center size-8 rounded-[var(--gp-radius-base)] hover:bg-[#EFF1F0] transition-colors"
+    <div className={`flex flex-col h-full min-h-0 overflow-hidden ${className}`}>
+      {/* Sticky Header */}
+      <div className="flex-shrink-0">
+        <div className="flex items-center justify-between px-[var(--gp-space-xl)] py-[var(--gp-space-m)]">
+          <div className="flex items-center gap-[8px]">
+            <button
+              onClick={handleGoBack}
+              className="flex items-center justify-center size-8 rounded-[var(--gp-radius-base)] hover:bg-[#EFF1F0] transition-colors"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M15 18L9 12L15 6" stroke="#37493f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <h1 className="font-[var(--gp-font-heading)] text-[24px] leading-[32px] font-semibold text-[var(--gp-color-text-neutral-secondary)]">
+              Suspended restaurants
+            </h1>
+          </div>
+          <Button
+            variant="primary"
+            appearance="solid"
+            state="press"
+            size="md"
+            onClick={handleActivateAll}
+            className="text-white font-medium uppercase"
+            disabled={restaurants.length === 0}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M15 18L9 12L15 6" stroke="#37493f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <h1 className="font-[var(--gp-font-heading)] text-[24px] leading-[32px] font-semibold text-[var(--gp-color-text-neutral-secondary)]">
-            Suspended restaurants
-          </h1>
+            <span>ACTIVATE ALL</span>
+          </Button>
         </div>
-        <Button
-          variant="primary"
-          appearance="solid"
-          state="press"
-          size="md"
-          onClick={handleActivateAll}
-          className="text-white font-medium uppercase"
-          disabled={restaurants.length === 0}
-        >
-          <span>ACTIVATE ALL</span>
-        </Button>
-      </div>
 
-      {/* Search and Filter Section */}
-      <div className="flex items-center justify-between px-[var(--gp-space-xl)] py-[var(--gp-space-m)]">
-        <div className="flex items-center gap-[var(--gp-space-l)]">
-          <div className="relative w-[280px]">
-            <SearchInput
-              placeholder="Search restaurant"
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-              }}
-              onClear={() => setSearchTerm("")}
-              className="w-full"
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setTimeout(() => setIsFocused(false), 150)}
+        <div className="flex items-center justify-between px-[var(--gp-space-xl)] py-[var(--gp-space-m)]">
+          <div className="flex items-center gap-[var(--gp-space-l)]">
+            <div className="relative w-[280px]">
+              <SearchInput
+                placeholder="Search restaurant"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                }}
+                onClear={() => setSearchTerm("")}
+                className="w-full"
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setTimeout(() => setIsFocused(false), 150)}
+              />
+              {showDropdown && !isSearching && (
+                <div className="absolute left-0 right-0 mt-2 overflow-hidden rounded-lg border border-[var(--color-stroke-neutral)] bg-white shadow-lg z-50">
+                  {searchError ? (
+                    <div className="px-4 py-3 text-sm text-red-500">
+                      Search failed. Please try again.
+                    </div>
+                  ) : searchSuggestions.length === 0 ? (
+                    <div className="px-4 py-3 text-sm text-[var(--color-neutral-secondary)]">
+                      No restaurants found
+                    </div>
+                  ) : (
+                    searchSuggestions.slice(0, 6).map((res) => (
+                      <button
+                        key={res.id}
+                        type="button"
+                        className="w-full px-4 py-2.5 flex items-center text-left hover:bg-[var(--color-neutral-secondary-bg)] focus:bg-[var(--color-neutral-secondary-bg)] focus:outline-none border-b border-b-[var(--color-stroke-neutral)] last:border-b-0 transition-colors"
+                        onMouseDown={() => {
+                          setSearchTerm(res.name);
+                          setIsFocused(false);
+                        }}
+                      >
+                        <div className="w-full text-base font-medium text-[#37493F]">
+                          {highlightMatch(res.name, searchTerm)}
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-[var(--gp-space-l)]">
+            <span className="font-[var(--gp-font-text)] text-[14px] leading-[22px] text-[var(--gp-color-text-neutral-tertiary)] w-max">
+              {totalEntries} entries
+            </span>
+            <FilterButton
+              open={showFilterModal}
+              handleFilterClick={() => setShowFilterModal(true)}
             />
-            {showDropdown && !isSearching && (
-              <div className="absolute left-0 right-0 mt-2 overflow-hidden rounded-lg border border-[var(--color-stroke-neutral)] bg-white shadow-lg z-50">
-                {searchError ? (
-                  <div className="px-4 py-3 text-sm text-red-500">
-                    Search failed. Please try again.
-                  </div>
-                ) : searchSuggestions.length === 0 ? (
-                  <div className="px-4 py-3 text-sm text-[var(--color-neutral-secondary)]">
-                    No restaurants found
-                  </div>
-                ) : (
-                  searchSuggestions.slice(0, 6).map((res) => (
-                    <button
-                      key={res.id}
-                      type="button"
-                      className="w-full px-4 py-2.5 flex items-center text-left hover:bg-[var(--color-neutral-secondary-bg)] focus:bg-[var(--color-neutral-secondary-bg)] focus:outline-none border-b border-b-[var(--color-stroke-neutral)] last:border-b-0 transition-colors"
-                      onMouseDown={() => {
-                        setSearchTerm(res.name);
-                        setIsFocused(false);
-                      }}
-                    >
-                      <div className="w-full text-base font-medium text-[#37493F]">
-                        {highlightMatch(res.name, searchTerm)}
-                      </div>
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
           </div>
         </div>
-        <div className="flex items-center gap-[var(--gp-space-l)]">
-          <span className="font-[var(--gp-font-text)] text-[14px] leading-[22px] text-[var(--gp-color-text-neutral-tertiary)] w-max">
-            {totalEntries} entries
-          </span>
-          <FilterButton
-            open={showFilterModal}
-            handleFilterClick={() => setShowFilterModal(true)}
-          />
-        </div>
       </div>
+
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto min-h-0 pt-4 space-y-6">
 
       {/* Filter Modal */}
       <RestaurantFilterModal
@@ -854,6 +845,7 @@ const _boxesCount = (selectedRestaurant as any)?._count?.boxes ?? selectedRestau
         onActivate={handleActivateFromDetails}
         onDelete={handleDeleteFromDetails}
       />
+      </div>
     </div>
   );
 }

@@ -27,6 +27,7 @@ import SuspendRestaurantModal, {
 } from "@/components/features/restaurants/modals/SuspendRestaurantModal";
 import ReassignResourcesModal from "@/components/features/restaurants/modals/ReassignResourcesModal";
 import { useEmployeeModals } from "../hooks/useEmployeeModals";
+import { formatDate } from "@/lib/utils/date";
 import { useEmployeeTableFilters } from "../hooks/useEmployeeTableFilters";
 import { useEmployeeTableState } from "../hooks/useEmployeeTableState";
 import { useEmployeeActions } from "../hooks/useEmployeeActions";
@@ -292,13 +293,7 @@ const [sharedBoxesEmployee, setSharedBoxesEmployee] = useState<Employee | null>(
     name: restaurant.name,
     address: restaurant.full_address,
     boxes: restaurant._count?.boxes ?? 0,
-    updated: restaurant.updated_at
-      ? new Date(restaurant.updated_at).toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "2-digit",
-        })
-      : "-",
+    updated: formatDate(restaurant.updated_at) || "-",
     added: "Today",
   }), []);
 
@@ -522,11 +517,7 @@ const [sharedBoxesEmployee, setSharedBoxesEmployee] = useState<Employee | null>(
           details: detailsParts.join(" | "),
           power: powerStatus === "on" ? "on" : powerStatus === "off" ? "off" : "warning",
           driver: undefined,
-          added: new Date(box.created_at).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "short",
-            year: "2-digit",
-          }),
+          added: formatDate(box.created_at),
           isLocked: box.lock?.lock_status === "locked",
           isOffline: powerStatus === "off",
         };
@@ -765,9 +756,10 @@ const [sharedBoxesEmployee, setSharedBoxesEmployee] = useState<Employee | null>(
   };
 
   return (
-    <div className={cn("space-y-6", className)}>
-      <EmployeeListHeader onAddNew={onAddEmployee} onViewSuspended={onViewSuspended} />
-      <EmployeeToolbar
+    <div className={cn("flex flex-col h-full overflow-hidden", className)}>
+      <div className="flex-shrink-0 space-y-6">
+        <EmployeeListHeader onAddNew={onAddEmployee} onViewSuspended={onViewSuspended} />
+        <EmployeeToolbar
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             onSearchClear={clearSearch}
@@ -793,7 +785,9 @@ const [sharedBoxesEmployee, setSharedBoxesEmployee] = useState<Employee | null>(
             searchError={searchError}
             showAvailableDriversFilter={true}
           />
+        </div>
 
+        <div className="flex-1 overflow-y-auto min-h-0 space-y-6 pt-4">
           {displayLoading ? (
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
@@ -1050,9 +1044,7 @@ onViewRestaurantBoxes={(employee) => {
           name: b.name,
           details: [b.displayId, b.vehicleNumber].filter(Boolean).join(" | "),
           power: b.powerStatus === "on" ? "on" : b.powerStatus === "off" ? "off" : "warning",
-          added: b.createdAt
-            ? new Date(b.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })
-            : "-",
+          added: formatDate(b.createdAt) || "-",
           isLocked: false,
           isOffline: b.powerStatus === "off",
         }))
@@ -1084,6 +1076,7 @@ onViewRestaurantBoxes={(employee) => {
     }}
   />
 )}
+        </div>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { format, isValid, parseISO } from "date-fns";
 import { useDebounce } from "@/lib/hooks";
 import SearchInput from "@/components/ui/SearchInput";
 import Pagination from "@/components/ui/Pagination";
+import ExportListModal from "../restaurants/modals/EportModal";
 import {
   DataTable,
   DataTableBody,
@@ -60,6 +61,11 @@ function optionFromKey(key: string): string {
   const separatorIndex = key.indexOf(OPTION_KEY_SEPARATOR);
   if (separatorIndex === -1) return key;
   return key.slice(separatorIndex + OPTION_KEY_SEPARATOR.length);
+}
+
+/** Removes ID after a comma inside brackets from log descriptions, keeping only the name */
+function cleanDescription(value: string): string {
+  return value.replace(/\[([^\]]+?), [^\]]+\]/g, (_match, name) => name.trim());
 }
 
 function formatLogTimestamp(value: string | undefined): string {
@@ -176,6 +182,9 @@ export default function SystemLogsScreen() {
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
   const [startDate, endDate] = dateRange;
 
+const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+const [isExporting, setIsExporting] = useState(false);
+
   const [categoryOptions, setCategoryOptions] = useState<LogCategoryOption[]>([]);
   const [typeMapping, setTypeMapping] = useState<Record<string, string[]>>({});
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -199,6 +208,39 @@ export default function SystemLogsScreen() {
 
   const allCategoryIds = useMemo(() => categoryOptions.map((item) => item.id), [categoryOptions]);
 
+const handleExport = async () => {
+  setIsExporting(true);
+  const response = await logsService.getList({
+    ...queryParams,
+    limit: 10000,
+    page: 1,
+  });
+
+  setIsExporting(false);
+
+  if (!response.success || !response.data) return;
+
+  const allLogs: ApiSystemLog[] = response.data.logs ?? [];
+  const headers = ["Timestamp", "Category", "Type", "Action"];
+  const rows = allLogs.map((item) => [
+    formatLogTimestamp(item.createdAt ?? item.created_at),
+    item.category ?? "",
+    item.type ?? "",
+    item.description ? cleanDescription(item.description) : "",
+  ]);
+
+  const csvContent = [headers, ...rows]
+    .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `system-logs-${format(new Date(), "yyyy-MM-dd")}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
   const advancedFilterGroups = useMemo<AdvancedFilterGroup[]>(() => {
     return categoryOptions.map((item) => ({
       id: item.id,
@@ -214,8 +256,10 @@ export default function SystemLogsScreen() {
   );
 
   const availableGroups = useMemo(
-    () => advancedFilterGroups.filter((group) => selectedCategorySet.has(group.categoryId)),
-    [advancedFilterGroups, selectedCategorySet],
+    () => selectedCategories.length === 0
+      ? advancedFilterGroups
+      : advancedFilterGroups.filter((group) => selectedCategorySet.has(group.categoryId)),
+    [advancedFilterGroups, selectedCategorySet, selectedCategories.length],
   );
 
   const availableOptionSet = useMemo(
@@ -450,7 +494,7 @@ const selectedCategoryFilters = useMemo(() => {
       timestamp: formatLogTimestamp(item.createdAt ?? item.created_at),
       type: item.category,
       subtype: item.type,
-      action: item.description,
+      action: item.description ? cleanDescription(item.description) : "",
       category: item.category,
     }));
   }, [logs]);
@@ -523,20 +567,21 @@ const applyAdvancedFilters = () => {
 const hasDraftAdvancedFilters = draftOptions.length > 0;
 
   return (
-    <div className="flex min-h-[calc(100vh-130px)] flex-col gap-6 px-4 pb-4">
-      <div className="flex items-start justify-between">
+    <div className="flex flex-col gap-6 px-4 h-full overflow-hidden">
+      <div className="flex items-start justify-between flex-shrink-0">
         <h1 className="h-10 font-[var(--gp-font-heading)] font-semibold text-[24px] leading-[36px] text-[#03130A]">
           System logs
         </h1>
-        {/* <button
-          type="button"
-          className="flex h-10 items-center justify-center px-4 py-2 font-[var(--gp-font-interactive)] text-[16px] font-medium uppercase leading-[20px] text-[#6B7971] cursor-pointer"
-        >
-          Export
-        </button> */}
+   <button
+  type="button"
+  onClick={() => setIsExportModalOpen(true)}
+  className="flex h-10 items-center justify-center px-4 py-2 font-[var(--gp-font-interactive)] text-[16px] font-medium uppercase leading-[20px] text-[#6B7971] cursor-pointer"
+>
+  Export
+</button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start flex-shrink-0">
         <SearchInput
           value={search}
           onChange={(event) => setSearch(event.target.value)}
@@ -735,7 +780,7 @@ const hasDraftAdvancedFilters = draftOptions.length > 0;
             {isAdvancedOpen ? (
               <div className="absolute right-0 top-full z-40 mt-2 w-[600px] max-w-[calc(100vw-48px)] overflow-hidden rounded-xl border border-[#E0E3E1] bg-white shadow-[0_0_4px_rgba(0,0,0,0.10),4px_4px_8px_rgba(0,0,0,0.12)]">
                 <div className="max-h-[440px] overflow-y-auto">
-              {advancedFilterGroups.map((group, index) => {
+              {availableGroups.map((group, index) => {
   const allChecked = group.options.every((item) =>
     draftOptions.includes(toOptionKey(group.id, item)),
   );
@@ -806,28 +851,46 @@ const hasDraftAdvancedFilters = draftOptions.length > 0;
         </div>
       </div>
 
-      {isLoading ? (
-        <SystemLogsPaginationSkeleton />
-      ) : (
-        <Pagination
-          currentPage={page}
-          pageSize={PAGE_SIZE}
-          totalItems={totalCount}
-          onPrev={() => setPage((prev) => Math.max(1, prev - 1))}
-          onNext={() => setPage((prev) => Math.min(pageCount, prev + 1))}
-          className="w-full"
-        />
-      )}
+      <div className="flex-shrink-0">
+        {isLoading ? (
+          <SystemLogsPaginationSkeleton />
+        ) : (
+          <Pagination
+            currentPage={page}
+            pageSize={PAGE_SIZE}
+            totalItems={totalCount}
+            onPrev={() => setPage((prev) => Math.max(1, prev - 1))}
+            onNext={() => setPage((prev) => Math.min(pageCount, prev + 1))}
+            className="w-full"
+          />
+        )}
+      </div>
 
-      {isLoading ? (
-        <SystemLogsTableSkeleton />
-      ) : (
-        <SystemLogsTable
-          data={advancedFilteredRows}
-          columns={["timestamp", "type", "action"]}
-          emptyStateText={loadError ?? "No logs match the selected filters."}
-        />
-      )}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        {isLoading ? (
+          <SystemLogsTableSkeleton />
+        ) : (
+          <SystemLogsTable
+            data={advancedFilteredRows}
+            columns={["timestamp", "type", "action"]}
+            emptyStateText={loadError ?? "No logs match the selected filters."}
+          />
+        )}
+      </div>
+   <ExportListModal
+  open={isExportModalOpen}
+  onClose={() => setIsExportModalOpen(false)}
+  title="Customise your export"
+  description="This will export all logs matching your current filters as a CSV file."
+  footer="Export will be provided in CSV format."
+  options={[]}
+  midLevelData={[]}
+  onConfirm={async () => {
+    setIsExporting(true);
+    await handleExport();
+    setIsExporting(false);
+  }}
+/>
     </div>
   );
 }

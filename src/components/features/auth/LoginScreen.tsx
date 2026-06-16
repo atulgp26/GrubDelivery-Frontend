@@ -264,7 +264,9 @@ export default function LoginScreen() {
 					</div>
 
 					<div className="hidden md:flex flex-col items-center justify-center w-[820px] px-12 py-12 h-[640px] ml-6 bg-[var(--gp-color-bg-neutral-secondary)] rounded-lg">
-						<div className="w-full h-full bg-white mb-6 flex items-center justify-center" />
+						<div className="w-full h-full bg-white mb-6 flex items-center justify-center">
+								<img src="/box.png" alt="Box" className="w-full h-[390px] object-contain p-8" />
+							</div>
 						<div className="text-center">
 							<div className="font-[var(--gp-font-weight-heading)] text-[var(--gp-color-text-neutral-primary)] mb-1 text-heading-large font-family-heading">
 								{carouselData[carouselIndex].title}

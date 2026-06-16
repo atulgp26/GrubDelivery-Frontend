@@ -21,6 +21,7 @@ export interface HelpFaqItem {
   icon: ReactNode;
   question: string;
   answer: string;
+  attachments?: string[];
 }
 
 // API types
@@ -74,7 +75,7 @@ export interface FaqItem {
   answer: string;
   publishing_status: string;
   status: string;
-  attachments: unknown[];
+  attachments: string[];
   created_at: string;
   updated_at: string;
   categories: FaqItemCategory[];
@@ -100,7 +101,7 @@ export interface FaqAnswerData {
   answer: string;
   publishing_status: string;
   status: string;
-  attachments: unknown[];
+  attachments: string[];
   faq: {
     id: string;
     question: string;

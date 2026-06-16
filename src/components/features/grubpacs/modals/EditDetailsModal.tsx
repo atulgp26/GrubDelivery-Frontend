@@ -22,6 +22,7 @@ import type {
   GrubPacListGroupedResponse,
   GrubPacListData,
 } from "@/types/domain/grubpacs";
+import { formatDate } from "@/lib/utils/date";
 
 type RestaurantOption = {
   value: string;
@@ -77,24 +78,14 @@ function formatRelativeUpdatedDate(value?: string): string {
   if (diffInDays === 0) return "Today";
   if (diffInDays === 1) return "Yesterday";
 
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "2-digit",
-  });
+  return formatDate(date);
 }
 
 function formatJoinedDate(value?: string): string {
   if (!value) return "-";
-
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
-
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "2-digit",
-  });
+  return formatDate(date);
 }
 
 const ULID_REGEX = /^[0-9A-HJKMNP-TV-Z]{26}$/i;
@@ -542,7 +533,7 @@ export default function EditDetails({
         name: name.trim(),
         access_mode: accessModeValue,
         blocked_employee_ids: validBlockedEmployeeIds,
-        ...(vehicleNumber.trim() ? { vehicle_number: vehicleNumber.trim() } : {}),
+        vehicle_number: vehicleNumber.trim() || null,
         ...(validRestaurantIds.length > 0
           ? { restaurant_ids: validRestaurantIds }
           : {}),

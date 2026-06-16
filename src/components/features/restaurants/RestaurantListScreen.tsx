@@ -130,7 +130,7 @@ export default function RestaurantListScreen() {
   };
 
   return (
-    <div className="space-y-6 ml-4">
+    <div className="space-y-6 ml-4 h-full">
       <RestaurantListContent
         groups={groups}
         onAddRestaurant={handleAddRestaurant}

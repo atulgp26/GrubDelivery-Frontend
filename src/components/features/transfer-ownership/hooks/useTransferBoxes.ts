@@ -7,6 +7,7 @@ import accountService, {
   type AccountMyGrubPac,
   type AccountMyGrubPacsData,
 } from "@/services/account";
+import { formatDate } from "@/lib/utils/date";
 import type { GrubPacBoxRow } from "../table/transfer-ownership-table";
 
 interface UseTransferBoxesOptions {
@@ -25,15 +26,9 @@ interface UseTransferBoxesResult {
 
 function formatAddedDate(isoDate?: string | null): string {
   if (!isoDate) return "-";
-
   const date = new Date(isoDate);
   if (Number.isNaN(date.getTime())) return "-";
-
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "2-digit",
-  });
+  return formatDate(date);
 }
 
 function mapBoxToRow(box: AccountMyGrubPac): GrubPacBoxRow {

@@ -225,7 +225,7 @@ export interface UpdateGrubPacBody {
   id: string;
   name: string;
   box_id?: string;
-  vehicle_number?: string;
+  vehicle_number?: string | null;
   restaurant_ids?: string[];
   blocked_employee_ids?: string[];
   access_mode?: "public" | "all_employees" | "restaurant_employees";

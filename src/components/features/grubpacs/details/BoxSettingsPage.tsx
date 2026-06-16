@@ -203,6 +203,14 @@ export default function BoxSettingsPage({ boxId, pinSelectedOnLoad = false, back
 
   const defaultSettings = getDefaultSettings(selectedBox.id);
 
+  const ioniserStatus = selectedBox.ioniser?.includes("ON")
+    ? "ON"
+    : selectedBox.ioniser?.includes("OFF")
+    ? "OFF"
+    : defaultSettings.hardware.ioniser.status;
+
+  const dualZoneStatus = String(selectedBox.dualZoneStatus ?? "").toUpperCase() === "ON" ? "ON" : "OFF";
+
   const settingsData: BoxSettingsData = {
     ...defaultSettings,
     boxId: selectedBox.id,
@@ -210,13 +218,20 @@ export default function BoxSettingsPage({ boxId, pinSelectedOnLoad = false, back
       ...defaultSettings.hardware,
       power: {
         status:
-          String(selectedBox.power ?? selectedBox.powerStatus ?? "").toUpperCase() === "ON"
+          String(selectedBox.power ?? selectedBox.powerStatus ?? "").toUpperCase() === "ON" ||
+          String(selectedBox.status ?? "").toUpperCase() === "ONLINE"
             ? "ON"
             : "OFF",
         connected: String(selectedBox.status ?? "").toUpperCase() === "ONLINE",
       },
       grublock: {
         status: selectedBox.locked ? "LOCKED" : "UNLOCKED",
+      },
+      ioniser: {
+        status: ioniserStatus,
+      },
+      dualZone: {
+        status: dualZoneStatus,
       },
       extThermostat: {
         temp: selectedBox.extThermostatTemp

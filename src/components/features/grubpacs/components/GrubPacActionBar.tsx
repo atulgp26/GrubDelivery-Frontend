@@ -187,11 +187,13 @@ export default function GrubPacActionBar({
               : '1rem',
           }}
         >
+         <div className="w-[350px]">
           <TemperatureDropdown 
             onConfirm={handleTemperatureConfirm}
             onCancel={handleTemperatureCancel}
             initialDualZone={initialDualZone}
           />
+          </div>
         </div>
       )}
 

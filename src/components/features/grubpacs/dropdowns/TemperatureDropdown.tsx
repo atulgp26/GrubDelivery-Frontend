@@ -14,7 +14,6 @@ export interface TemperatureSettings {
 interface TemperatureDropdownProps {
   onConfirm: (settings: TemperatureSettings) => void;
   onCancel: () => void;
-  /** Initial dual-zone state: true = on (mixed), false = off */
   initialDualZone?: boolean;
 }
 
@@ -27,6 +26,23 @@ export default function TemperatureDropdown({
   const [zone1, setZone1] = useState("");
   const [zone2, setZone2] = useState("");
 
+  const clampValue = (val: string): string => {
+    const num = Number(val);
+    if (val === "" || val === "-") return val;
+    if (!Number.isFinite(num)) return "";
+    if (num > 30) return "30";
+    if (num < -20) return "-20";
+    return val;
+  };
+
+  const handleZone1Change = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setZone1(clampValue(e.target.value));
+  };
+
+  const handleZone2Change = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setZone2(clampValue(e.target.value));
+  };
+
   const canConfirm = zone1.trim() !== "";
 
   const handleConfirm = () => {
@@ -36,7 +52,7 @@ export default function TemperatureDropdown({
   };
 
   return (
-    <div className="bg-white border border-[var(--gp-color-stroke-neutral-secondary)] rounded-lg shadow-[0px_0px_4px_0px_rgba(0,0,0,0.1),4px_4px_8px_0px_rgba(0,0,0,0.12)] p-4 w-[520px]">
+    <div className="bg-white border border-[var(--gp-color-stroke-neutral-secondary)] rounded-lg shadow-[0px_0px_4px_0px_rgba(0,0,0,0.1),4px_4px_8px_0px_rgba(0,0,0,0.12)] p-4 w-full min-w-0">
       {/* Header */}
       <p className="text-[14px] text-[var(--gp-color-text-neutral-secondary)] mb-3">
         Take action on selected boxes :
@@ -47,23 +63,20 @@ export default function TemperatureDropdown({
         onClick={() => setDualZone((prev) => !prev)}
         className="flex items-center gap-2 mb-3 w-full text-left"
       >
-        {/* Toggle indicator */}
         {dualZone ? (
-          /* ON / mixed state: filled gray-green square with "−" */
-          <span className="inline-flex items-center justify-center w-4 h-4 rounded-sm bg-[#59786A] text-white text-xs font-bold leading-none flex-shrink-0">
+          <span className="inline-flex items-center justify-center w-4 h-4 flex-shrink-0 rounded-sm bg-[#59786A] text-white text-xs font-bold leading-none">
             −
           </span>
         ) : (
-          /* OFF state: empty checkbox */
-          <span className="inline-flex items-center justify-center w-4 h-4 rounded-sm border border-[var(--gp-color-stroke-neutral-secondary)] bg-white flex-shrink-0" />
+          <span className="inline-flex items-center justify-center w-4 h-4 flex-shrink-0 rounded-sm border border-[var(--gp-color-stroke-neutral-secondary)] bg-white" />
         )}
 
-        <span className="text-[18px] font-medium text-[#44544B]">
+        <span className="text-[16px] font-medium text-[#44544B] whitespace-nowrap">
           Dual zone on
         </span>
 
         {dualZone && (
-          <span className="text-[18px] text-[var(--gp-color-text-neutral-secondary)]">
+          <span className="text-[14px] text-[var(--gp-color-text-neutral-secondary)] whitespace-nowrap">
             (Mixed settings)
           </span>
         )}
@@ -72,49 +85,62 @@ export default function TemperatureDropdown({
       {/* Divider */}
       <div className="border-t border-[var(--gp-color-stroke-neutral-secondary)] mb-3" />
 
-      {/* Zone Inputs */}
-      <div className="flex gap-3 mb-4">
+      {/* Zone Inputs — always side by side, stack only on very small screens */}
+      <div className="grid grid-cols-2 gap-3 mb-2">
         {/* Zone 1 */}
-        <div className="flex-1">
+        <div className="min-w-0">
+          <p className="text-[12px] font-medium text-[var(--gp-color-text-neutral-secondary)] mb-1 whitespace-nowrap">
+            Zone 1 (Primary)
+          </p>
           <TextField
-            label="Zone 1 (Primary)"
             size="sm"
             type="number"
             value={zone1}
-            onChange={(e) => setZone1(e.target.value)}
-            placeholder="Set temperature"
-            trailingIcon={<span className="text-[16px]">(°C)</span>}
-            className="text-right pl-2 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            onChange={handleZone1Change}
+            placeholder="Set temp"
+            max={30}
+            min={-20}
+            trailingIcon={<span className="text-[13px]">(°C)</span>}
+            className="text-right w-full [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
         </div>
 
         {/* Zone 2 */}
-        <div className="flex-1">
+        <div className="min-w-0">
+          <p className={`text-[12px] font-medium mb-1 whitespace-nowrap ${!dualZone ? "text-[var(--gp-color-text-neutral-tertiary)]" : "text-[var(--gp-color-text-neutral-secondary)]"}`}>
+            Zone 2 (Secondary)
+          </p>
           <TextField
-            label="Zone 2 (Secondary)"
             type="number"
             size="sm"
             value={dualZone ? zone2 : ""}
-            onChange={(e) => dualZone && setZone2(e.target.value)}
+            onChange={handleZone2Change}
             disabled={!dualZone}
-            placeholder={dualZone ? "Set temperature" : "-"}
-            trailingIcon={<span className="text-[16px]">(°C)</span>}
-            className="text-right [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            max={30}
+            min={-20}
+            placeholder={dualZone ? "Set temp" : "-"}
+            trailingIcon={<span className="text-[13px]">(°C)</span>}
+            className="text-right w-full [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             containerClassName={!dualZone ? "opacity-50" : ""}
           />
         </div>
       </div>
 
+      {/* Range hint */}
+      <p className="text-[11px] text-[var(--gp-color-text-neutral-tertiary)] text-center mb-2">
+        Range: -20°C to 30°C
+      </p>
+
       {/* Divider */}
       <div className="border-t border-[var(--gp-color-stroke-neutral-secondary)] my-3" />
 
       {/* Footer Buttons */}
-      <div className="border-t border-[var(--gp-color-stroke-neutral-secondary)] pt-3 flex items-center justify-between">
+      <div className="pt-1 flex items-center justify-between gap-2">
         <Button
           variant="neutral"
           appearance="ghost"
           onClick={onCancel}
-          className="text-[14px] font-medium leading-[16px] uppercase"
+          className="text-[13px] font-medium leading-[16px] uppercase"
         >
           <span>Cancel</span>
         </Button>
@@ -123,10 +149,14 @@ export default function TemperatureDropdown({
           appearance="ghost"
           onClick={handleConfirm}
           disabled={!canConfirm}
-          className="flex items-center gap-1 text-[14px] font-medium leading-[16px] uppercase"
+          className="flex items-center gap-1 text-[13px] font-medium leading-[16px] uppercase"
         >
           <Image
-            src={canConfirm ? "/Employee/Multiselect/check.svg" : "/GrubPac/GrubPac/Multiselect/Multiselect/dropdown/check.svg"}
+            src={
+              canConfirm
+                ? "/Employee/Multiselect/check.svg"
+                : "/GrubPac/GrubPac/Multiselect/Multiselect/dropdown/check.svg"
+            }
             alt=""
             width={16}
             height={16}

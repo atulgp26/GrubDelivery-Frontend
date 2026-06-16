@@ -20,7 +20,7 @@ import { LogsView } from "./LogsView";
 import { TrackView } from "./TrackView";
 import EditDetails from "../modals/EditDetailsModal";
 import SuspendBoxModal from "../modals/SuspendBoxModal";
-import DeleteBoxModal from "../modals/DeleteBoxModal";
+import BoxRemovalModal from "../modals/BoxRemovalModal";
 import PermissionModal from "../modals/PermissionModal";
 import SettingsApplyConfirmModal from "../modals/SettingsApplyConfirmModal";
 import GrubLockModals from "@/components/features/grublock/components/GrubLockModals";
@@ -426,6 +426,26 @@ export default function BoxSettingsPage({ boxId, pinSelectedOnLoad = false, back
     });
   };
 
+  const handleSuspendBox = async () => {
+    try {
+      const response = await grubpacService.suspend([String(selectedBox.id)]);
+      if (!response.success) {
+        showError(response.error ?? "Failed to suspend box.");
+        return;
+      }
+      setSuspendOpen(false);
+      setDeleteOpen(false);
+      setStatusAlert({
+        variant: "success",
+        title: "Box suspended successfully!",
+        description: "Box has been temporarily deactivated.",
+      });
+      await refetch();
+    } catch (err) {
+      showError("Failed to suspend box. Please try again.");
+    }
+  };
+
   const handleStartSettingsEdit = () => {
     if (!isOnline || isSettingsEditMode) return;
 
@@ -705,12 +725,14 @@ setStatusAlert({
       <SuspendBoxModal
         open={suspendOpen}
         onClose={() => setSuspendOpen(false)}
+        onSuspend={handleSuspendBox}
         boxName={selectedBox.code ?? selectedBox.name ?? "BOX-2456"}
       />
-      <DeleteBoxModal
+      <BoxRemovalModal
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
-        boxName={selectedBox.code ?? selectedBox.name ?? "BOX-2456"}
+        selectedCount={1}
+        handleRemoveBoxes={handleSuspendBox}
       />
       <PermissionModal
         open={permissionOpen}

@@ -303,6 +303,14 @@ export default function GrubPacsListScreen() {
   }, [allItems, poweredOnItems, searchParams, setIsGrouped, setOpenSection, setSearchTerm, setSelected]);
 
   useEffect(() => {
+    const groupedParam = searchParams.get("grouped")?.toLowerCase();
+    if (groupedParam === "true" && !isGrouped) {
+      setIsGrouped(true);
+      return;
+    }
+  }, [searchParams, isGrouped, setIsGrouped]);
+
+  useEffect(() => {
     const expandGroup = searchParams.get("expandGroup")?.toLowerCase();
     if (expandGroup !== "unassigned") return;
 
@@ -509,7 +517,7 @@ export default function GrubPacsListScreen() {
           const groupSelectedIds = new Set(
             (selected.poweredOn || []).map(String).filter((id) => groupItemIds.has(id)),
           );
-          const visibleItems = filterItems(groupItems);
+          const visibleItems = groupName.toLowerCase() === "unassigned" ? groupItems : filterItems(groupItems);
           const totalItems = group.pagination?.totalItems ?? visibleItems.length;
           const totalPages = group.pagination?.totalPages ?? Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
           const currentPage = group.pagination?.currentPage ?? Math.min(groupPages[groupKey] ?? 1, totalPages);

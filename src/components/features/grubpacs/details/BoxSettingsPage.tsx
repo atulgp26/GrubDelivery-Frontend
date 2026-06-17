@@ -35,6 +35,7 @@ interface BoxSettingsPageProps {
   boxId?: string;
   pinSelectedOnLoad?: boolean;
   backPath?: string;
+  initialTab?: Tab;
 }
 
 const SIDEBAR_SWITCH_SKELETON_MIN_MS = 200;
@@ -117,10 +118,10 @@ function BoxDetailsPanelSkeleton() {
   );
 }
 
-export default function BoxSettingsPage({ boxId, pinSelectedOnLoad = false, backPath }: BoxSettingsPageProps) {
+export default function BoxSettingsPage({ boxId, pinSelectedOnLoad = false, backPath, initialTab }: BoxSettingsPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<Tab>("settings");
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab ?? "settings");
   const [mapFullscreen, setMapFullscreen] = useState(false);
   const [camFullscreen, setCamFullscreen] = useState(false);
   const [feedFullscreen, setFeedFullscreen] = useState(false);

@@ -362,7 +362,7 @@ export default function GrubLockListContent({
         title: "Box locked successfully!",
         description:
           "An OTP will be sent to the recipient when the delivery person initiates the drop-off.",
-        viewDetailsHref: `/grubpacs/details?id=${selectedBoxId}&pinSelected=1&from=%2Fgrublock%2Flist`,
+        viewDetailsHref: `/grubpacs/details?id=${selectedBoxId}&pinSelected=1&tab=logs&from=%2Fgrublock%2Flist`,
       });
       await refetch();
       clearStatusOverrides(targetIds);
@@ -461,7 +461,7 @@ export default function GrubLockListContent({
         title: "Unlock Request Sent!",
         description:
           "Your emergency unlock request has been sent to the selected box. Please check the boxes to confirm.",
-        viewDetailsHref: "/grublock/details",
+        viewDetailsHref: `/grubpacs/details?id=${emergencyUnlockIds[0]}&pinSelected=1&tab=logs&from=%2Fgrublock%2Flist`,
       });
       setSelectedIds(new Set());
       await refetch();

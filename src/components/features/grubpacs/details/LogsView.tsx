@@ -91,7 +91,7 @@ function mapApiLogToEntry(log: ApiSystemLog): LogEntry {
   const description = log.description ?? "";
   const sanitized = sanitizeDescription(description, log);
   return {
-    id: parseInt(log.id, 16) || 0,
+    id: log.id,
     timestamp: formatTimestamp(log.createdAt ?? log.created_at),
     type,
     category: isSystem ? "System log" : "Action log",

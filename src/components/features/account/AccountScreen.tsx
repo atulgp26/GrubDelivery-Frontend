@@ -1,6 +1,7 @@
 import type React from "react";
 import { useRouter } from "next/navigation";
 import { useAccount } from "@/components/features/account/hooks/useAccount";
+import LoadingDetails from "@/components/ui/LoadingDetails";
 import { Button } from "@/components/ui/Button";
 import ProfileSection from "@/components/features/account/components/ProfileSection";
 import DetailsSection from "@/components/features/account/components/DetailsSection";
@@ -34,13 +35,7 @@ function AccountScreenContent(): React.ReactElement {
 	} = useAccount();
 
 	if (isLoading) {
-		return (
-			<div className="flex justify-center items-center min-h-[60vh]">
-				<div className="text-lg text-[var(--color-neutral-secondary)]">
-					Loading profile...
-				</div>
-			</div>
-		);
+		return <LoadingDetails entity="profile" />;
 	}
 
 	if (!userData) {

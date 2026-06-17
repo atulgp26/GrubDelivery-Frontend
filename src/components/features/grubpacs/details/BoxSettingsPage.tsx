@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import LoadingDetails from "@/components/ui/LoadingDetails";
 import { showError } from "@/components/ui/toast";
 import { getContextualErrorMessage } from "@/lib/errors";
 import type { BoxSettingsData } from "@/components/features/grubpacs/data/mockBoxSettingsData";
@@ -576,7 +577,7 @@ setStatusAlert({
   };
 
   if (showFullPageSkeleton) {
-    return <BoxSettingsPageSkeleton />;
+    return <LoadingDetails entity="box" />;
   }
 
   if (!hasSelectedBox) {

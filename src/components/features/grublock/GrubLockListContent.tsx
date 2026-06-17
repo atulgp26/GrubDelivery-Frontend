@@ -6,7 +6,7 @@ import GroupCollapseTable from "@/components/ui/GroupCollapseTable";
 import GrubLockListHeader from "./components/GrubLockListHeader";
 import GrubLockListToolbar from "./components/GrubLockListToolbar";
 import { GrubLockGroupTable } from "./table/grublock-group-table";
-import GrubLockListSkeleton from "./components/GrubLockListSkeleton";
+import LoadingDetails from "@/components/ui/LoadingDetails";
 import SelectionActionBar from "./components/SelectionActionBar";
 import GrubLockModals from "./components/GrubLockModals";
 import { useGrubLockModals } from "./hooks/useGrubLockModals";
@@ -578,7 +578,7 @@ export default function GrubLockListContent({
 
         <div className="flex-1 overflow-y-auto min-h-0 pt-4 space-y-6">
         {shouldShowSkeleton ? (
-          <GrubLockListSkeleton />
+          <LoadingDetails entity="boxes" />
         ) : (
           <>
             {shouldShowGroupedEmpty ? (

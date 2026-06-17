@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import type { GroupCollapseTableGroup } from "@/types/ui";
 import EmployeeActionBar from "./EmployeeActionBar";
 import GroupCollapseTable from "@/components/ui/GroupCollapseTable";
+import LoadingDetails from "@/components/ui/LoadingDetails";
 import EmployeeGroupTable from "./EmployeeGroupTable";
 import EmployeeToolbar from "./EmployeeToolbar";
 import {
@@ -260,11 +261,7 @@ export default function SuspendedEmployeesContent({
         <div className="flex-1 overflow-y-auto min-h-0 pt-4 space-y-6">
           <div className="px-[var(--gp-space-xl)] py-[var(--gp-space-l)]">
             {isLoading ? (
-              <div className="space-y-3">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="h-14 bg-gray-100 rounded animate-pulse" />
-                ))}
-              </div>
+              <LoadingDetails entity="suspended employees" />
             ) : allData.length === 0 ? (
               <div className="px-4 pb-4">
                 <p className="text-[var(--color-neutral-light)] text-sm">
@@ -383,11 +380,7 @@ export default function SuspendedEmployeesContent({
 
       <div className="px-[var(--gp-space-xl)] py-[var(--gp-space-l)]">
         {isLoading ? (
-          <div className="space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-14 bg-gray-100 rounded animate-pulse" />
-            ))}
-          </div>
+          <LoadingDetails entity="suspended employees" />
         ) : (
           <GroupCollapseTable
             groups={filteredGroups}

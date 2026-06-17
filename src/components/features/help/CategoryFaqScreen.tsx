@@ -8,6 +8,7 @@ import FeedbackModal from "./modals/FeedbackModal";
 import { Button } from "@/components/ui/Button";
 import HelpSearchBar from "@/components/ui/HelpSearchBar";
 import { Skeleton } from "@/components/ui/skeleton";
+import LoadingDetails from "@/components/ui/LoadingDetails";
 import { highlightMatch } from "@/lib/utils/highlightMatch";
 import { useCategoryFaqs } from "./hooks/useHelpHooks";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -35,6 +36,10 @@ export default function CategoryFaqScreen({ categoryId, categoryName, openFaqId 
     searchError,
     setSearchError,
   } = useCategoryFaqs(categoryId, categoryName, openFaqId);
+
+  if (isLoading) {
+    return <LoadingDetails entity="help articles" />;
+  }
 
   return (
     <div className="flex flex-col h-full overflow-hidden">

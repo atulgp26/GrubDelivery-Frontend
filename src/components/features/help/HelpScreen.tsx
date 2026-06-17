@@ -7,6 +7,7 @@ import HelpWriteToUs from "./components/HelpWriteToUs";
 import HelpSearchInput from "./components/HelpSearchInput";
 import FeedbackModal from "./modals/FeedbackModal";
 import { Skeleton } from "@/components/ui/skeleton";
+import LoadingDetails from "@/components/ui/LoadingDetails";
 import { getIconUrl } from "./utils/getIconUrl";
 import { useHelpCategories, useHelpSearch } from "./hooks/useHelpHooks";
 import type { HelpSearchSuggestion } from "@/types";
@@ -31,6 +32,10 @@ export default function HelpScreen() {
     }
     if (item.href) router.push(item.href);
   };
+
+  if (isLoading) {
+    return <LoadingDetails entity="help articles" />;
+  }
 
   return (
     <div className="flex flex-col px-6 h-full overflow-hidden">

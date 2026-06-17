@@ -114,11 +114,18 @@ export const useGrubPacsData = (apiParams?: GrubPacListParams): UseGrubPacsDataR
 
   const groups = useMemo(() => {
     if (serverGroups && serverGroups.length > 0) {
+      if (apiParams?.group_by === "restaurants") {
+        return groupByRestaurant(data);
+      }
       return serverGroups;
     }
 
+    return groupByRestaurant(data);
+  }, [data, serverGroups, apiParams?.group_by]);
+
+  function groupByRestaurant(items: GrubPacItem[]): Array<{ name: string; items: GrubPacItem[] }> {
     const groupMap = new Map<string, GrubPacItem[]>();
-    for (const item of data) {
+    for (const item of items) {
       const key = item.restaurantName ?? "Unassigned";
       if (!groupMap.has(key)) groupMap.set(key, []);
       groupMap.get(key)!.push(item);
@@ -129,7 +136,7 @@ export const useGrubPacsData = (apiParams?: GrubPacListParams): UseGrubPacsDataR
       return a.localeCompare(b);
     });
     return sorted.map(([name, items]) => ({ name, items }));
-  }, [data, serverGroups]);
+  }
 
   const refetchGroup = useCallback(async (group: { name: string; groupTableKey?: string }, page: number) => {
     setIsPageLoading(true);

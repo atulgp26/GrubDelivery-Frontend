@@ -139,7 +139,7 @@ function RestaurantsContent() {
         `${data.name} created successfully!`,
         "You can now assign GrubPacs to this restaurant to get started.",
         false,
-        "/grubpacs/list?expandGroup=unassigned",
+        "/grubpacs/list?grouped=true&expandGroup=unassigned",
         "VIEW GRUBPACS"
       );
 

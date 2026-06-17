@@ -515,10 +515,9 @@ function renderCell(
   {row.driverCount > 0 ? (
     <span>View list</span>
   ) : (
-    <div className="flex flex-col gap-[2px]">
-      <span className="text-[14px] leading-[22px]">No assigned employees.</span>
-      <span className="text-[14px] font-medium leading-[18px] italic" style={{ color: '#FE5720' }}>Check list to assign &gt;&gt;</span>
-    </div>
+    <span className="text-[var(--color-stroke-brand)] text-sm font-normal hover:underline cursor-pointer">
+      Assign Driver
+    </span>
   )}
 </CustomTooltipContent>
 					</Tooltip>

@@ -361,6 +361,7 @@ export interface AssignManagerModalProps {
   onConfirm: (manager: Manager | null) => void;
   restaurantName?: string;
   pageSize?: number;
+  role?: "manager" | "delivery";
 }
 
 interface ModalState {
@@ -380,7 +381,11 @@ const initialState: ModalState = {
 };
 
 const MIN_SKELETON_DISPLAY_MS = 500;
-const API_BASE = "/api/proxy/delivery/employee";
+
+const ROLE_LABELS: Record<string, { label: string; labelPlural: string; groupKey: string; roleFilter: string }> = {
+  manager: { label: "Manager", labelPlural: "managers", groupKey: "managers", roleFilter: "manager" },
+  delivery: { label: "Driver", labelPlural: "drivers", groupKey: "drivers", roleFilter: "delivery" },
+};
 
 export default function AssignManagerModal({
   open,
@@ -388,6 +393,7 @@ export default function AssignManagerModal({
   onConfirm,
   restaurantName,
   pageSize = 50,
+  role = "manager",
 }: AssignManagerModalProps) {
   const [state, setState] = useState<ModalState>(initialState);
   const [managers, setManagers] = useState<Manager[]>([]);
@@ -399,7 +405,8 @@ export default function AssignManagerModal({
   const previousDebouncedSearchRef = useRef<string | null>(null);
   const debouncedSearchTerm = useDebounce(state.searchTerm, 300);
 
-  // ─── Fetch managers from API ───────────────────────────────────────────────
+  // ─── Fetch employees from API ────────────────────────────────────────────
+const roleConfig = ROLE_LABELS[role];
 const fetchManagers = useCallback(async (query: string, page: number) => {
   setLoading(true);
   try {
@@ -408,6 +415,7 @@ const fetchManagers = useCallback(async (query: string, page: number) => {
       limit: String(pageSize),
       page: String(page),
       group_by: "boxes",
+      role: role === "delivery" ? "delivery" : "manager",
       ...(query ? { search: query } : {}),
     });
 
@@ -429,10 +437,26 @@ const fetchManagers = useCallback(async (query: string, page: number) => {
 
     const json = await res.json();
 
-    const managerArray = json?.data?.groups?.managers?.array ?? [];
-    const total = json?.data?.groups?.managers?.pagination?.total_count ?? 0;
+    let employeeArray: any[] = [];
+    let total = 0;
 
-    const mapped: Manager[] = managerArray.map((emp: {
+    if (role === "delivery") {
+      const connected = json?.data?.groups?.connected?.array ?? [];
+      const disconnected = json?.data?.groups?.disconnected?.array ?? [];
+      const allDrivers = [...connected, ...disconnected];
+      const seen = new Set<string>();
+      employeeArray = allDrivers.filter((emp: { id: string; role?: string }) => {
+        if (seen.has(emp.id)) return false;
+        seen.add(emp.id);
+        return emp.role === "delivery";
+      });
+      total = json?.data?.groups?.disconnected?.pagination?.total_count ?? employeeArray.length;
+    } else {
+      employeeArray = json?.data?.groups?.managers?.array ?? [];
+      total = json?.data?.groups?.managers?.pagination?.total_count ?? 0;
+    }
+
+    const mapped: Manager[] = employeeArray.map((emp: {
       id: string;
       first_name: string;
       last_name: string;
@@ -442,6 +466,7 @@ const fetchManagers = useCallback(async (query: string, page: number) => {
       mobile_number: string;
       email: string;
       created_at: string;
+      role?: string;
     }) => ({
       id: emp.id,
       name: `${emp.first_name} ${emp.last_name}`,
@@ -455,13 +480,13 @@ const fetchManagers = useCallback(async (query: string, page: number) => {
     setManagers(mapped);
     setTotalManagers(total);
   } catch (err) {
-    console.error("Failed to fetch managers:", err);
+    console.error("Failed to fetch employees:", err);
     setManagers([]);
     setTotalManagers(0);
   } finally {
     setLoading(false);
   }
-}, [pageSize]);
+}, [pageSize, role, roleConfig]);
 
   // ─── Reset + initial fetch when modal opens ────────────────────────────────
   useEffect(() => {
@@ -602,10 +627,10 @@ const fetchManagers = useCallback(async (query: string, page: number) => {
       >
         <div className="mb-4">
           <h2 className="text-2xl font-semibold text-[var(--color-neutral-primary)] mb-2">
-            Ready to assign a manager to your restaurant?
+            Ready to assign a {roleConfig.label.toLowerCase()} to your restaurant?
           </h2>
           <p className="text-[var(--color-neutral-secondary)] font-normal text-lg">
-            Select a manager from the list. Managers suspended or already assigned to a restaurant aren&apos;t visible here.
+            Select a {roleConfig.label.toLowerCase()} from the list. {roleConfig.labelPlural.charAt(0).toUpperCase() + roleConfig.labelPlural.slice(1)} suspended or already assigned to a restaurant aren&apos;t visible here.
           </p>
         </div>
 
@@ -616,7 +641,7 @@ const fetchManagers = useCallback(async (query: string, page: number) => {
               onChange={(e) => {
                 setState((prev) => ({ ...prev, searchTerm: e.target.value, currentPage: 1 }));
               }}
-              placeholder="Search manager"
+              placeholder={`Search ${roleConfig.label.toLowerCase()}`}
               clearable={true}
               onClear={() => setState((prev) => ({ ...prev, searchTerm: "", currentPage: 1 }))}
             />
@@ -667,7 +692,7 @@ const fetchManagers = useCallback(async (query: string, page: number) => {
               </div>
             ) : tableData.length === 0 ? (
               <div className="flex items-center justify-center py-12">
-                <div className="text-[var(--color-neutral-secondary)]">No managers found.</div>
+                <div className="text-[var(--color-neutral-secondary)]">No {roleConfig.labelPlural} found.</div>
               </div>
             ) : (
               <AddManagerTable
@@ -690,7 +715,7 @@ const fetchManagers = useCallback(async (query: string, page: number) => {
                 selected.
               </span>
             ) : (
-              <span>No manager selected yet!</span>
+              <span>No {roleConfig.label.toLowerCase()} selected yet!</span>
             )}
           </div>
           <Button

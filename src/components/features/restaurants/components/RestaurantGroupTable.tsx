@@ -88,6 +88,8 @@ export default function RestaurantGroupTable({
     closeDetailsModal,
     openAssignManagerModal,
     closeAssignManagerModal,
+    openAssignDriverModal,
+    closeAssignDriverModal,
     openResourcesModal,
     closeResourcesModal,
     closeAllModals,
@@ -564,6 +566,38 @@ console.log("[fetchResourceEmployees] params:", {
     }
   };
 
+  const handleAssignDriverConfirm = async (driver: Manager, restaurant: Restaurant) => {
+    try {
+      const response = await foodService.assignEmployees({
+        id: restaurant.id,
+        employee_ids: [driver.id],
+        role: "driver"
+      });
+      if (response.success) {
+        showSuccess("Assigned", `Driver ${driver.name} assigned to ${restaurant.name} successfully.`);
+        if (onRefresh) {
+          await onRefresh();
+        }
+      } else {
+        showError(
+          getContextualErrorMessage(
+            "assignment.driver",
+            response,
+            "Could not assign driver. Please try again.",
+          ),
+        );
+      }
+    } catch (error) {
+      showError(
+        getContextualErrorMessage(
+          "assignment.driver",
+          error,
+          "Could not assign driver. Please try again.",
+        ),
+      );
+    }
+  };
+
   const handleRemoveEmployees = useCallback(async (employeeIds: string[]) => {
   const restaurantId = modalState.selectedRestaurant?.id;
   const restaurantName = modalState.selectedRestaurant?.name ?? "restaurant";
@@ -632,8 +666,7 @@ const handleViewManagerDetail = (row: GroupRow) => {
  const handleAssignDrivers = (row: GroupRow) => {
   const restaurant = group.items?.find(item => item.id === row.id);
   if (restaurant) {
-    openResourcesModal(restaurant, "employees", ["driver"], true);
-    void fetchResourceEmployees(restaurant.id, "", 1, true, true, ["driver"]); 
+    openAssignDriverModal(restaurant);
   }
 };
 
@@ -686,6 +719,7 @@ const handleViewManagerDetail = (row: GroupRow) => {
         modalState={modalState}
         onCloseDetails={closeDetailsModal}
         onCloseAssignManager={closeAssignManagerModal}
+        onCloseAssignDriver={closeAssignDriverModal}
         onCloseResources={closeResourcesModal}
         onFetchResourceEmployees={handleFetchResourceEmployees}
         onFetchResourceGrubPacs={handleFetchResourceGrubPacs}
@@ -701,6 +735,7 @@ const handleViewManagerDetail = (row: GroupRow) => {
         onViewGrubPacs={handleViewGrubPacs}
         onViewEmployees={handleViewEmployees}
         onAssignManager={handleAssignManagerConfirm}
+        onAssignDriver={handleAssignDriverConfirm}
         onReassignBoxes={() => {
           if (modalState.selectedRestaurant && onReassignResources) {
             onReassignResources(modalState.selectedRestaurant);

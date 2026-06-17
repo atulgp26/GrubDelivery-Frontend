@@ -16,6 +16,7 @@ interface RestaurantModalsProps {
   modalState: ReturnType<typeof useRestaurantModals>["modalState"];
   onCloseDetails: () => void;
   onCloseAssignManager: () => void;
+  onCloseAssignDriver: () => void;
   onCloseResources: () => void;
   onFetchResourceEmployees?: (query: string, page: number, availableDriversOnly?: boolean) => void;
   onFetchResourceGrubPacs?: (params: {
@@ -38,12 +39,14 @@ interface RestaurantModalsProps {
   onViewGrubPacs?: () => void;
   onViewEmployees?: () => void;
   onAssignManager?: (manager: Manager, restaurant: Restaurant) => void;
+  onAssignDriver?: (driver: Manager, restaurant: Restaurant) => void;
 }
 
 export default function RestaurantModals({
   modalState,
   onCloseDetails,
   onCloseAssignManager,
+  onCloseAssignDriver,
   onCloseResources,
   onFetchResourceEmployees,
   onFetchResourceGrubPacs,
@@ -61,6 +64,7 @@ export default function RestaurantModals({
   onViewGrubPacs,
   onViewEmployees,
   onAssignManager,
+  onAssignDriver,
 }: RestaurantModalsProps) {
   const boxesCount = modalState.selectedRestaurant
     ? ((modalState.selectedRestaurant as any)?._count?.boxes ?? modalState.selectedRestaurant.boxes ?? 0)
@@ -117,6 +121,21 @@ export default function RestaurantModals({
             onCloseAssignManager();
           }}
           restaurantName={modalState.restaurantForManager.name}
+        />
+      )}
+
+      {modalState.restaurantForDriver && (
+        <AssignManagerModal
+          open={modalState.isAssignDriverModalOpen}
+          onClose={onCloseAssignDriver}
+          onConfirm={(driver: Manager | null) => {
+            if (driver && onAssignDriver && modalState.restaurantForDriver) {
+              onAssignDriver(driver, modalState.restaurantForDriver);
+            }
+            onCloseAssignDriver();
+          }}
+          restaurantName={modalState.restaurantForDriver.name}
+          role="delivery"
         />
       )}
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { flattenWrappedGroupRecord, getWrappedGroupArray } from "@/lib/utils/groupedResponse";
 import GroupCollapseTable from "@/components/ui/GroupCollapseTable";
+import LoadingDetails from "@/components/ui/LoadingDetails";
 import EmployeeGroupTable from "./EmployeeGroupTable";
 import EmployeeListHeader from "./EmployeeListHeader";
 import EmployeeToolbar from "./EmployeeToolbar";
@@ -789,11 +790,7 @@ const [sharedBoxesEmployee, setSharedBoxesEmployee] = useState<Employee | null>(
 
         <div className="flex-1 overflow-y-auto min-h-0 space-y-6 pt-4">
           {displayLoading ? (
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-14 bg-gray-100 rounded animate-pulse" />
-              ))}
-            </div>
+            <LoadingDetails entity="employees" />
           ) : <GroupCollapseTable
             groups={displayGroups}
             openIndex={openIndex}

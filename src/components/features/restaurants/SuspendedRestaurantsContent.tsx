@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
+import LoadingDetails from "@/components/ui/LoadingDetails";
 import { FiArrowLeft, FiTrash2 } from "react-icons/fi";
 import { Button } from "@/components/ui/Button";
 import SearchInput from "@/components/ui/SearchInput";
@@ -187,10 +188,7 @@ export default function SuspendedRestaurantsContent({
 
       <div className={cn("overflow-x-auto relative min-h-[400px]", isLoading && "opacity-60")}>
         {!restaurants.length && isLoading ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-white/20 backdrop-blur-[2px] z-10">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--gp-color-brand-primary)]"></div>
-            <p className="text-[var(--gp-color-neutral-secondary)] font-medium animate-pulse">Loading suspended restaurants...</p>
-          </div>
+          <LoadingDetails entity="suspended restaurants" />
         ) : (
           <>
             <Table>

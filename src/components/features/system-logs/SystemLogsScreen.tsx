@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { format, isValid, parseISO } from "date-fns";
 import { useDebounce } from "@/lib/hooks";
 import SearchInput from "@/components/ui/SearchInput";
+import LoadingDetails from "@/components/ui/LoadingDetails";
 import Pagination from "@/components/ui/Pagination";
 import ExportListModal from "../restaurants/modals/EportModal";
 import {
@@ -565,6 +566,10 @@ const applyAdvancedFilters = () => {
   };
 
 const hasDraftAdvancedFilters = draftOptions.length > 0;
+
+  if (isLoading && logs.length === 0) {
+    return <LoadingDetails entity="system logs" />;
+  }
 
   return (
     <div className="flex flex-col gap-6 px-4 h-full overflow-hidden">

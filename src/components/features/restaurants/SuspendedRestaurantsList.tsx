@@ -6,6 +6,7 @@ import { GroupDataTable, type GroupRow, type GroupColumnId } from "@/components/
 import { Button } from "@/components/ui/Button";
 import SearchInput from "@/components/ui/SearchInput";
 import FilterButton from "@/components/ui/FilterButton";
+import LoadingDetails from "@/components/ui/LoadingDetails";
 import Pagination from "@/components/ui/Pagination";
 import RestaurantActionBar from "./components/RestaurantActionBar";
 import TableActionBar from "@/components/ui/TableActionBar";
@@ -705,11 +706,7 @@ const _boxesCount = (selectedRestaurant as any)?._count?.boxes ?? selectedRestau
       {/* Table Section */}
       <div>
         {isLoading ? (
-          <div className="space-y-3 p-2">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-14 bg-gray-100 rounded animate-pulse" />
-            ))}
-          </div>
+          <LoadingDetails entity="suspended restaurants" />
         ) : (
           <GroupDataTable
             data={paginatedRestaurants}

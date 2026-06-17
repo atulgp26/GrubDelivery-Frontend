@@ -5,6 +5,7 @@ import { useMemo, useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils/cn";
 import { formatDate } from "@/lib/utils/date";
 import GroupCollapseTable from "@/components/ui/GroupCollapseTable";
+import LoadingDetails from "@/components/ui/LoadingDetails";
 import RestaurantGroupTable from "./components/RestaurantGroupTable";
 import RestaurantListHeader from "./components/RestaurantListHeader";
 import RestaurantListToolbar from "./components/RestaurantListToolbar";
@@ -693,11 +694,7 @@ export default function RestaurantListContent({
 
           <div className={cn("relative min-h-[400px]")}>
             {isLoading ? (
-              <div className="space-y-3 p-2">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="h-14 bg-gray-100 rounded animate-pulse" />
-                ))}
-              </div>
+              <LoadingDetails entity="restaurants" />
             ) : (
               <>
                 <GroupCollapseTable

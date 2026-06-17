@@ -10,6 +10,7 @@ import FilterButton from "@/components/ui/FilterButton";
 import Pagination from "@/components/ui/Pagination";
 import CheckBox from "@/components/ui/CheckBox";
 import GroupCollapseTable from "@/components/ui/GroupCollapseTable";
+import LoadingDetails from "@/components/ui/LoadingDetails";
 import GrubPacActionBar from "@/components/features/grubpacs/components/GrubPacActionBar";
 import BoxRemovalModal from "@/components/features/grubpacs/modals/BoxRemovalModal";
 import ActivateBoxModal from "@/components/features/grubpacs/modals/ActivateBoxModal";
@@ -504,11 +505,7 @@ export default function SuspendedGrubPacsList({ className = "" }: SuspendedGrubP
             {/* Table Section */}
             <div className="px-[var(--gp-space-xl)] py-[var(--gp-space-l)]">
                 {isLoading || isSwitching ? (
-                    <div className="space-y-3">
-                        {[...Array(5)].map((_, i) => (
-                            <div key={i} className="h-14 bg-gray-100 rounded animate-pulse" />
-                        ))}
-                    </div>
+                    <LoadingDetails entity="suspended grubpacs" />
                 ) : !hasData ? (
                     <div className="px-4 pb-4">
                         <p className="text-[var(--color-neutral-light)] text-sm">

@@ -6,6 +6,7 @@ import FigIcon from "@/components/ui/FigIcon";
 import FeedbackModal from "./modals/FeedbackModal";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/skeleton";
+import LoadingDetails from "@/components/ui/LoadingDetails";
 import supportService from "@/services/support";
 import type { FaqAnswerData } from "@/types";
 
@@ -26,6 +27,10 @@ export default function FaqAnswerScreen({ faqId }: FaqAnswerScreenProps) {
       }
     }).finally(() => setIsLoading(false));
   }, [faqId]);
+
+  if (isLoading) {
+    return <LoadingDetails entity="help articles" />;
+  }
 
   return (
     <div className="flex flex-col h-full overflow-hidden">

@@ -10,6 +10,7 @@ import GrubPacsFilterModal from "@/components/features/shared/filter/BoxFilterMo
 import SearchInput from "@/components/ui/SearchInput";
 import SuspendBoxModal from "@/components/features/grubpacs/modals/SuspendBoxModal";
 import Collapse from "@/components/ui/Collapse";
+import LoadingDetails from "@/components/ui/LoadingDetails";
 import BoxRemovalModal from "@/components/features/grubpacs/modals/BoxRemovalModal";
 import ApplySettingsModal from "@/components/features/grubpacs/modals/ApplySettingsModal";
 import ReassignGroupModal from "@/components/features/grubpacs/modals/ReassignGroupModal";
@@ -1260,6 +1261,10 @@ export default function GrubPacsListScreen() {
       }
     : null;
 
+  if (isLoading && !hasData && !isSearching) {
+    return <LoadingDetails entity="grubpacs" />;
+  }
+
   return (
       <div className="flex flex-col h-full overflow-hidden">
         <div className="flex-shrink-0 space-y-6">
@@ -1313,7 +1318,7 @@ export default function GrubPacsListScreen() {
       </div>
 
         <div className="flex-1 overflow-y-auto min-h-0 pt-4 space-y-6">
-          {isLoading || isSwitching ? (
+          {isSwitching ? (
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
                 <div key={i} className="h-14 bg-gray-100 rounded animate-pulse" />

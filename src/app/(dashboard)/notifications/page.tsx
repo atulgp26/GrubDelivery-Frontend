@@ -8,6 +8,7 @@ import { useNotificationFilters } from "@/components/features/notifications/hook
 import { notificationsService } from "@/services/notifications";
 import type { NotificationTone, Notification, MultiSelectOption, NotificationGroupOption } from "@/types";
 import { Button } from "@/components/ui/Button";
+import LoadingDetails from "@/components/ui/LoadingDetails";
 
 export default function NotificationsPage() {
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -207,6 +208,10 @@ const handleDismiss = (notificationId: string) => { // was number
     },
     []
   );
+
+  if (isLoading) {
+    return <LoadingDetails entity="notifications" />;
+  }
 
   return (
     <>

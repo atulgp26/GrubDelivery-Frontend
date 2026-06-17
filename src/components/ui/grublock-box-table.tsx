@@ -339,7 +339,11 @@ function renderCell(
 
 		case "status": {
 			const globalStatusValue: GlobalStatusValue =
-				row.globalStatus ?? (row.powerStatus === "off" ? "power_off" : "unknown");
+				row.globalStatus && row.globalStatus !== "unknown"
+					? row.globalStatus
+					: row.powerStatus === "off"
+					? "power_off"
+					: "ready";
 			const globalStatusTooltip = getGlobalStatusTooltip(globalStatusValue);
 
 			const statusBadgeStyles: Record<GlobalStatusValue, { backgroundColor: string; borderColor: string }> = {

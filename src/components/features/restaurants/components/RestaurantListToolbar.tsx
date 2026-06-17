@@ -45,6 +45,13 @@ export default function RestaurantListToolbar({
           className="w-full"
           onFocus={() => setIsFocused(true)}
           onBlur={() => setTimeout(() => setIsFocused(false), 150)}
+          onKeyDown={(e: React.KeyboardEvent) => {
+            if (e.key === "Enter" && searchSuggestions.length > 0) {
+              const first = searchSuggestions[0];
+              onSearchChange(first.name);
+              setIsFocused(false);
+            }
+          }}
         />
   
         {showDropdown && !isSearching && (
@@ -62,23 +69,33 @@ export default function RestaurantListToolbar({
                 No restaurants found
               </div>
             ) : (
-              searchSuggestions.slice(0, 6).map((res) => (
-                <button
-                  key={res.id}
-                  type="button"
-                  className="w-full px-4 py-2.5 flex items-center text-left hover:bg-[var(--color-neutral-secondary-bg)] focus:bg-[var(--color-neutral-secondary-bg)] focus:outline-none border-b border-b-[var(--color-stroke-neutral)] last:border-b-0 transition-colors"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onSearchChange(res.name);
-                    setIsFocused(false);
-                  }}
-                >
-                  <div className="w-full text-base font-medium text-[#37493F]">
-                    {highlightMatch(res.name, searchTerm)}
-                  </div>
-                </button>
-              ))
+              searchSuggestions.slice(0, 6).map((res) => {
+                const managerName = res.manager
+                  ? [res.manager.first_name, res.manager.last_name].filter(Boolean).join(" ")
+                  : null;
+                return (
+                  <button
+                    key={res.id}
+                    type="button"
+                    className="w-full px-4 py-2.5 flex flex-col items-start text-left hover:bg-[var(--color-neutral-secondary-bg)] focus:bg-[var(--color-neutral-secondary-bg)] focus:outline-none border-b border-b-[var(--color-stroke-neutral)] last:border-b-0 transition-colors"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onSearchChange(res.name);
+                      setIsFocused(false);
+                    }}
+                  >
+                    <div className="w-full text-base font-medium text-[#37493F]">
+                      {highlightMatch(res.name, searchTerm)}
+                    </div>
+                    {managerName && (
+                      <div className="text-xs text-[#6b7971] mt-0.5">
+                        Manager: {managerName}
+                      </div>
+                    )}
+                  </button>
+                );
+              })
             )}
           </div>
         )}

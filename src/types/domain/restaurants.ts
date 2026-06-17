@@ -111,7 +111,7 @@ export interface AssignEmployeeRequest {
   id: string; // restaurant id  
   employee_ids: string[];
   // role: string;
-  role: "manager" | "delivery";
+  role: "manager" | "delivery" | "driver";
 }
 
 export interface ReassignResourceRequest {

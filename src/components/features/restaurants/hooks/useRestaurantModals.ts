@@ -8,6 +8,8 @@ interface ModalState {
   isDetailsModalOpen: boolean;
   isAssignManagerModalOpen: boolean;
   restaurantForManager: Restaurant | null;
+  isAssignDriverModalOpen: boolean;
+  restaurantForDriver: Restaurant | null;
   isResourcesModalOpen: boolean;
   resourcesModalTab: ResourceTabType;
   resourcesModalRoles?: string[];
@@ -19,6 +21,8 @@ const initialModalState: ModalState = {
   isDetailsModalOpen: false,
   isAssignManagerModalOpen: false,
   restaurantForManager: null,
+  isAssignDriverModalOpen: false,
+  restaurantForDriver: null,
   isResourcesModalOpen: false,
   resourcesModalTab: "grubpacs",
   resourcesModalRoles: undefined,
@@ -54,6 +58,18 @@ export function useRestaurantModals() {
     setModalState(initialModalState);
   };
 
+  const openAssignDriverModal = (restaurant: Restaurant) => {
+    setModalState({
+      ...initialModalState,
+      restaurantForDriver: restaurant,
+      isAssignDriverModalOpen: true,
+    });
+  };
+
+  const closeAssignDriverModal = () => {
+    setModalState(initialModalState);
+  };
+
   const openResourcesModal = (
     restaurant: Restaurant,
     tab: ResourceTabType = "grubpacs",
@@ -85,6 +101,8 @@ export function useRestaurantModals() {
     closeDetailsModal,
     openAssignManagerModal,
     closeAssignManagerModal,
+    openAssignDriverModal,
+    closeAssignDriverModal,
     openResourcesModal,
     closeResourcesModal,
     closeAllModals,

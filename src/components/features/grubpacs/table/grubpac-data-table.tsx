@@ -265,7 +265,9 @@ function renderCell(
 		row.globalStatus === "critical" ||
 		row.globalStatus === "attention"
 			? row.globalStatus
-			: "unknown";
+			: row.powerStatus === "off"
+			? "power_off"
+			: "ready";
 
 	const powerStatusValue: PowerStatusValue =
 		row.powerStatus === "on" || row.powerStatus === "off" ? row.powerStatus : "unknown";

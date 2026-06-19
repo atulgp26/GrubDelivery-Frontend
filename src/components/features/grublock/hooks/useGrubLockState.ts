@@ -12,7 +12,7 @@ interface GrubLockState {
   isGrouped: boolean;
   showUnlockedBoxes: boolean;
   showFilterModal: boolean;
-  openIndex: number | null;
+  openIndex: number | "all" | null;
 }
 
 interface GrubLockStateActions {
@@ -22,7 +22,7 @@ interface GrubLockStateActions {
   setIsGrouped: (grouped: boolean) => void;
   setShowUnlockedBoxes: (show: boolean) => void;
   setShowFilterModal: (show: boolean) => void;
-  setOpenIndex: (index: number | null) => void;
+  setOpenIndex: (index: number | "all" | null) => void;
   handleRowSelect: (id: string, selected: boolean) => void;
   handleSelectAll: (ids: string[], selected: boolean) => void;
   handleClearSelection: () => void;
@@ -36,7 +36,7 @@ export function useGrubLockState() {
   const [isGrouped, setIsGrouped] = useState(false);
   const [showUnlockedBoxes, setShowUnlockedBoxes] = useState(true);
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [openIndex, setOpenIndex] = useState<number | "all" | null>(null);
 
   const handleRowSelect = useCallback((id: string, selected: boolean) => {
     setSelectedIds((prev) => {

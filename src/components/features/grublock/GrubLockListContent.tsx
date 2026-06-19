@@ -50,6 +50,7 @@ export default function GrubLockListContent({
     viewDetailsHref?: string;
   } | null>(null);
   const [showLoadErrorAlert, setShowLoadErrorAlert] = useState(false);
+  const [viewAllKey, setViewAllKey] = useState(0);
 
   useEffect(() => {
     if (!actionAlert) return;
@@ -266,9 +267,9 @@ export default function GrubLockListContent({
   };
 
   const handleViewAllBoxes = () => {
-    setIsGrouped(false);
-    setShowUnlockedBoxes(true);
     setSearchTerm("");
+    setOpenIndex("all");
+    setViewAllKey((k) => k + 1);
   };
 
   const handleGroupedChange = (checked: boolean) => {
@@ -591,6 +592,7 @@ export default function GrubLockListContent({
                 openIndex={openIndex}
                 setOpenIndex={setOpenIndex}
                 isPageLoading={isPageLoading}
+                viewAllKey={viewAllKey}
                 renderTable={(group) => (
                   <GrubLockGroupTable
                     group={group}

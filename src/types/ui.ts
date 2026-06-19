@@ -416,8 +416,8 @@ export interface GroupCollapseTableGroup<TItem = unknown> {
 
 export interface GroupCollapseTableProps<TItem = unknown, TGroup extends GroupCollapseTableGroup<TItem> = GroupCollapseTableGroup<TItem>> {
   groups: TGroup[];
-  openIndex: number | null;
-  setOpenIndex: (index: number | null) => void;
+  openIndex: number | "all" | null;
+  setOpenIndex: (index: number | "all" | null) => void;
   renderTable: (group: TGroup, index: number) => ReactNode;
   noResultsMessage?: ReactNode;
   tableContainerClass?: string;
@@ -429,6 +429,7 @@ export interface GroupCollapseTableProps<TItem = unknown, TGroup extends GroupCo
   onPageChange?: (group: TGroup, page: number) => void;
   showPaginationPrev?: boolean;
   showPaginationNext?: boolean;
+  viewAllKey?: number;
 }
 
 export interface TableActionBarProps {

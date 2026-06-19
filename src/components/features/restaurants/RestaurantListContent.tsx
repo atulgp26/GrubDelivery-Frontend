@@ -68,7 +68,7 @@ export default function RestaurantListContent({
   onFilterChange,
   onPageChange,
 }: RestaurantListContentProps) {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [openIndex, setOpenIndex] = useState<number | "all" | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [draftSelectedResources, setDraftSelectedResources] = useState<ResourceFilterType[]>(selectedResources);

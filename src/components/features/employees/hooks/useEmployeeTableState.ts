@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import type { SuspendedEmployee } from "../types";
 
 interface EmployeeTableState {
-  openIndex: number | null;
+  openIndex: number | "all" | null;
   searchTerm: string;
   selectedIds: Set<string>;
   isGrouped: boolean;
@@ -11,7 +11,7 @@ interface EmployeeTableState {
 }
 
 interface EmployeeTableStateActions {
-  setOpenIndex: (index: number | null) => void;
+  setOpenIndex: (index: number | "all" | null) => void;
   setSearchTerm: (term: string) => void;
   clearSearch: () => void;
   handleRowSelect: (id: string, selected: boolean) => void;
@@ -39,7 +39,7 @@ const initialState: EmployeeTableState = {
 export function useEmployeeTableState(): EmployeeTableState & EmployeeTableStateActions {
   const [state, setState] = useState<EmployeeTableState>(initialState);
 
-  const setOpenIndex = useCallback((index: number | null) => {
+  const setOpenIndex = useCallback((index: number | "all" | null) => {
     setState((prev) => ({ ...prev, openIndex: index }));
   }, []);
 
@@ -94,7 +94,7 @@ export function useEmployeeTableState(): EmployeeTableState & EmployeeTableState
 export function useSuspendedEmployeeTableState(employees: SuspendedEmployee[]) {
   const [state, setState] = useState<EmployeeTableState>(initialState);
 
-  const setOpenIndex = useCallback((index: number | null) => {
+  const setOpenIndex = useCallback((index: number | "all" | null) => {
     setState((prev) => ({ ...prev, openIndex: index }));
   }, []);
 

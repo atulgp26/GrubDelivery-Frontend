@@ -166,8 +166,8 @@ function sanitizeCreatePayload(data: CreateGrubPacBody): CreateGrubPacBody | nul
     ...(sanitizeOptionalString(data.vehicle_number)
       ? { vehicle_number: sanitizeOptionalString(data.vehicle_number) }
       : {}),
-    ...(sanitizeStringArray(data.restaurant_ids)
-      ? { restaurant_ids: sanitizeStringArray(data.restaurant_ids) }
+    ...(data.restaurant_ids !== undefined
+      ? { restaurant_ids: sanitizeStringArray(data.restaurant_ids) ?? [] }
       : {}),
     ...(sanitizeStringArray(data.blocked_employee_ids)
       ? { blocked_employee_ids: sanitizeStringArray(data.blocked_employee_ids) }
@@ -190,8 +190,8 @@ function sanitizeUpdatePayload(data: UpdateGrubPacBody): UpdateGrubPacBody | nul
     ...(data.vehicle_number === null || sanitizeOptionalString(data.vehicle_number)
       ? { vehicle_number: data.vehicle_number === null ? null : sanitizeOptionalString(data.vehicle_number) }
       : {}),
-    ...(sanitizeStringArray(data.restaurant_ids)
-      ? { restaurant_ids: sanitizeStringArray(data.restaurant_ids) }
+    ...(data.restaurant_ids !== undefined
+      ? { restaurant_ids: sanitizeStringArray(data.restaurant_ids) ?? [] }
       : {}),
     ...(sanitizeStringArray(data.blocked_employee_ids)
       ? { blocked_employee_ids: sanitizeStringArray(data.blocked_employee_ids) }

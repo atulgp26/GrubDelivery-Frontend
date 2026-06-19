@@ -18,24 +18,29 @@ export default function GroupCollapseTable<TItem, TGroup extends GroupCollapseTa
   onPageChange,
   showPaginationPrev = true,
   showPaginationNext = true,
+  viewAllKey = 0,
 }: GroupCollapseTableProps<TItem, TGroup>) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [pages, setPages] = useState<Record<number, number>>({});
+  const [collapsedWhenAll, setCollapsedWhenAll] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    setCollapsedWhenAll(new Set());
+  }, [viewAllKey]);
+
+  useEffect(() => {
+    if (openIndex !== "all") {
+      setCollapsedWhenAll(new Set());
+    }
+  }, [openIndex]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (!containerRef.current) return;
-      if (openIndex === null) return;
+      if (openIndex === null || openIndex === "all") return;
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
       
-      // Don't close if clicking on:
-      // 1. Dropdown portals
-      // 2. Modals (any element with z-50 or higher, or inside a modal)
-      // 3. Search inputs or textareas (including .input-wrapper)
-      // 4. Form elements or buttons inside forms/modals
-      // 5. Tooltip portals (RadixUI tooltips)
-      // 6. Any portaled content
       if (
         target.closest('[data-portal-container="dropdown"]') ||
         target.closest('[data-radix-popper-content-wrapper]') ||
@@ -88,18 +93,39 @@ export default function GroupCollapseTable<TItem, TGroup extends GroupCollapseTa
     }
   };
 
+  const isGroupOpen = (index: number): boolean => {
+    if (openIndex === "all") return !collapsedWhenAll.has(index);
+    return openIndex === index;
+  };
+
+  const handleCollapseClick = (index: number) => {
+    if (openIndex === "all") {
+      setCollapsedWhenAll((prev) => {
+        const next = new Set(prev);
+        if (next.has(index)) {
+          next.delete(index);
+        } else {
+          next.add(index);
+        }
+        return next;
+      });
+    } else {
+      setOpenIndex(openIndex === index ? null : index);
+    }
+  };
+
   return (
     <div ref={containerRef}>
       {groups.map((group, index) => {
         const totalItems = group.pagination?.totalItems ?? group.items?.length ?? 0;
         const totalPages = group.pagination?.totalPages ?? Math.ceil(totalItems / pageSize);
         const currentPage = group.pagination?.currentPage ?? getPage(index);
+        const groupOpen = isGroupOpen(index);
         
-        const shouldPaginate = openIndex === index && totalItems > 0;
+        const shouldPaginate = groupOpen && totalItems > 0;
         const start = onPageChange ? 0 : (currentPage - 1) * pageSize;
         const end = onPageChange ? (group.items?.length ?? 0) : Math.min(start + pageSize, totalItems);
         
-        // If we are using backend pagination (onPageChange exists), we don't slice locally
         const visibleItems = onPageChange ? (group.items ?? []) : (group.items ?? []).slice(start, end);
 
         const pagination = (shouldPaginate && group.items && group.items.length > 0)
@@ -133,8 +159,8 @@ export default function GroupCollapseTable<TItem, TGroup extends GroupCollapseTa
           <Collapse
             key={index}
             title={group.name}
-            open={openIndex === index}
-            onClick={() => setOpenIndex(openIndex === index ? null : index)}
+            open={groupOpen}
+            onClick={() => handleCollapseClick(index)}
             onTitleClick={(e) => {
               if (onGroupClick) {
                 onGroupClick(group, index);
@@ -144,7 +170,7 @@ export default function GroupCollapseTable<TItem, TGroup extends GroupCollapseTa
             titleColor={titleColor}
             pagination={pagination}
           >
-            {openIndex === index && (
+            {groupOpen && (
               <div className={tableContainerClass}>
                 {isPageLoading ? (
                   <div className="space-y-3 p-2">
@@ -169,4 +195,3 @@ export default function GroupCollapseTable<TItem, TGroup extends GroupCollapseTa
     </div>
   );
 }
-

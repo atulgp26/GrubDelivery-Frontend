@@ -534,9 +534,7 @@ export default function EditDetails({
         access_mode: accessModeValue,
         blocked_employee_ids: validBlockedEmployeeIds,
         vehicle_number: vehicleNumber.trim() || null,
-        ...(validRestaurantIds.length > 0
-          ? { restaurant_ids: validRestaurantIds }
-          : {}),
+        restaurant_ids: validRestaurantIds,
       };
 
       const response = await grubpacService.update(payload);

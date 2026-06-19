@@ -565,7 +565,7 @@ const applyAdvancedFilters = () => {
     setIsAdvancedOpen(false);
   };
 
-const hasDraftAdvancedFilters = draftOptions.length > 0;
+const hasDraftAdvancedFilters = draftOptions.length > 0 || appliedOptions.length > 0;
 
   if (isLoading && logs.length === 0) {
     return <LoadingDetails entity="system logs" />;

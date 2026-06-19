@@ -40,7 +40,8 @@ interface EmployeeBoxesModalProps {
   onViewExcludedBoxes?: () => void;
   loading?: boolean;
   restaurantId?: string;
-  staticBoxes?: EmployeeBox[]; 
+  staticBoxes?: EmployeeBox[];
+  hideEditList?: boolean;
 }
 interface ModalState {
   view: ModalView;
@@ -100,10 +101,11 @@ export default function EmployeeBoxesModal({
   employeeName,
   onEditList,
   restaurantId,
-  staticBoxes,   // ← ADD
+  staticBoxes,
   onConfirmRemoval,
   onViewExcludedBoxes,
   loading: externalLoading = false,
+  hideEditList = false,
 }: EmployeeBoxesModalProps) {
   const [isRemoving, setIsRemoving] = useState(false);
   const modalContentRef = useRef<HTMLDivElement | null>(null);
@@ -438,7 +440,6 @@ const totalEntries = staticBoxes ? staticBoxes.length : totalCount;
             )}
           </div>
 
-          {/* ── Footer ── */}
           <div className="px-6 py-4 border-t border-[var(--color-stroke-neutral)]">
             {state.view === "editAssigned" || state.view === "editExcluded" ? (
               <div className="flex items-center justify-between">
@@ -458,7 +459,7 @@ const totalEntries = staticBoxes ? staticBoxes.length : totalCount;
                   <span>CONFIRM REMOVAL</span>
                 </Button>
               </div>
-            ) : (
+            ) : !hideEditList ? (
               <div className="flex items-center justify-end">
                 <Button
                   variant="primary"
@@ -476,7 +477,7 @@ const totalEntries = staticBoxes ? staticBoxes.length : totalCount;
                   <span>EDIT LIST</span>
                 </Button>
               </div>
-            )}
+            ) : null}
           </div>
 
           <BoxFilterModal

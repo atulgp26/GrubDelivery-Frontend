@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getContextualErrorMessage } from "@/lib/errors";
 import grubpacService from "@/services/grubpacs";
 import { flattenWrappedGroupRecord } from "@/lib/utils/groupedResponse";
@@ -148,9 +148,13 @@ export function useEmployeeBoxes({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
+  const resolveRefetchRef = useRef<(() => void) | null>(null);
 
   const refetch = useCallback(async () => {
-    setReloadToken((prev) => prev + 1);
+    return new Promise<void>((resolve) => {
+      resolveRefetchRef.current = resolve;
+      setReloadToken((prev) => prev + 1);
+    });
   }, []);
 
   useEffect(() => {
@@ -159,6 +163,8 @@ if (!enabled || (!employeeId && !restaurantId)) {
         setBoxes([]);
         setExcludedBoxes([]);
         setError(null);
+        resolveRefetchRef.current?.();
+        resolveRefetchRef.current = null;
         return;
       }
 
@@ -168,11 +174,10 @@ if (!enabled || (!employeeId && !restaurantId)) {
       try {
         const permissionStatus = fetchExcluded ? "blocked" : "shared";
         const apiFilterParams = mapFiltersToListParams(filters);
-  const fallbackPowerStatus = showOfflineBoxes ? "off" : "on";
+  const fallbackPowerStatus = restaurantId ? undefined : (showOfflineBoxes ? "off" : "on");
 const listRes = await grubpacService.getList({
-  ...(restaurantId 
-    ? { restaurant_id: restaurantId } 
-    : { employee_id: employeeId }),
+  ...(restaurantId ? { restaurant_id: restaurantId } : {}),
+  ...(employeeId ? { employee_id: employeeId } : {}),
           permission_status: restaurantId ? undefined : permissionStatus, 
           power_status: apiFilterParams.power_status ?? fallbackPowerStatus,
           connection_status: apiFilterParams.connection_status,
@@ -226,6 +231,8 @@ const listRes = await grubpacService.getList({
         setTotalCount(0);
       } finally {
         setIsLoading(false);
+        resolveRefetchRef.current?.();
+        resolveRefetchRef.current = null;
       }
     };
 

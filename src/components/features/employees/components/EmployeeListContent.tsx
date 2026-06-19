@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { flattenWrappedGroupRecord, getWrappedGroupArray } from "@/lib/utils/groupedResponse";
@@ -51,7 +51,7 @@ import type { RestaurantData } from "@/types/domain/restaurants";
 import type { EmployeeGroup } from "@/types";
 import type { Employee, DropdownRestaurant } from "@/types/domain/employees";
 import type { ActionResult } from "../hooks/useEmployeeData";
-import type { ReassignRestaurant } from "../types";
+import type { EmployeeBox, ReassignRestaurant } from "../types";
 
 interface EmployeeListContentProps {
   groups: EmployeeGroup[];
@@ -101,6 +101,7 @@ export default function EmployeeListContent({
   const [resourcesLoading, setResourcesLoading] = useState(false);
 const [showSharedBoxesModal, setShowSharedBoxesModal] = useState(false);
 const [sharedBoxesEmployee, setSharedBoxesEmployee] = useState<Employee | null>(null);
+const [mainModalBoxes, setMainModalBoxes] = useState<EmployeeBox[] | undefined>(undefined);
   const [showGroupedDeleteModal, setShowGroupedDeleteModal] = useState(false);
   const [showGroupedManageResourcesDeleteModal, setShowGroupedManageResourcesDeleteModal] = useState(false);
   const [showGroupedSuspendModal, setShowGroupedSuspendModal] = useState(false);
@@ -160,7 +161,24 @@ const [sharedBoxesEmployee, setSharedBoxesEmployee] = useState<Employee | null>(
     ],
     [],
   );
- 
+
+  useEffect(() => {
+    if (modalState.isResourcesModalOpen && modalState.selectedEmployee) {
+      const boxes = modalState.selectedEmployee.restaurantBoxes?.length
+        ? modalState.selectedEmployee.restaurantBoxes.map((rb) => ({
+            id: rb.id,
+            name: rb.name,
+            details: rb.name,
+            power: "on" as const,
+            added: "-",
+            isLocked: false,
+            isOffline: false,
+          }))
+        : undefined;
+      setMainModalBoxes(boxes);
+    }
+  }, [modalState.isResourcesModalOpen, modalState.selectedEmployee?.id]);
+
   const allEmployees = useMemo(() => {
     return groups.flatMap((g) => g.items ?? []);
   }, [groups]);
@@ -1018,9 +1036,16 @@ onViewRestaurantBoxes={(employee) => {
   open={modalState.isResourcesModalOpen && modalState.resourcesModalTab === "boxes"}
   onClose={closeResourcesModal}
   employeeId={boxesModalSource === "employee" ? modalState.selectedEmployee.id : undefined}
-  restaurantId={boxesModalSource === "restaurant" ? modalState.selectedEmployee.restaurantId : undefined}
+  restaurantId={modalState.selectedEmployee.restaurantId}
   employeeName={modalState.selectedEmployee.name}
+  staticBoxes={mainModalBoxes}
+  hideEditList
   onEditList={() => {}}
+  onConfirmRemoval={async (removedBoxIds) => {
+    setMainModalBoxes((prev) =>
+      prev?.filter((b) => !removedBoxIds.includes(b.id))
+    );
+  }}
 />
 )}
 
@@ -1047,6 +1072,7 @@ onViewRestaurantBoxes={(employee) => {
         }))
     }
     employeeName={sharedBoxesEmployee.name}
+    hideEditList
     onEditList={() => {}}
     onConfirmRemoval={async (removedBoxIds) => {
       // Update sharedBoxesEmployee state to remove the deleted boxes

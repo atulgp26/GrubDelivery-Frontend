@@ -44,6 +44,11 @@ export interface Employee {
   restaurantAddress?: string;
   restaurantUpdated?: string;
   restaurantAdded?: string;
+  restaurantBoxes?: Array<{
+    id: string;
+    name: string;
+    status: string;
+  }>;
   status?: EmployeeStatus;
   isAvailable?: boolean;
   connectedBoxesStatus?: boolean;
@@ -451,6 +456,15 @@ const boxCount =
       : undefined,
     restaurantAdded: e.restaurant?.created_at
       ? formatDate(e.restaurant.created_at)
+      : undefined,
+    restaurantBoxes: Array.isArray((e as any).restaurant?.restaurant_boxes)
+      ? (e as any).restaurant.restaurant_boxes
+          .filter((rb: any) => rb.status === "shared")
+          .map((rb: any) => ({
+            id: rb.box?.id ?? "",
+            name: rb.box?.name ?? "",
+            status: rb.status ?? "",
+          }))
       : undefined,
     status: e.status === "suspended" ? "Suspended" : "Active",
     connectedBoxesStatus:

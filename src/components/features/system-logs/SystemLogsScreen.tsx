@@ -95,13 +95,12 @@ function CheckboxOption({
   return (
     <button type="button" onClick={onClick} className="flex items-center gap-3 cursor-pointer">
       <span
-        className={`flex size-5 shrink-0 items-center justify-center rounded-[4px] border transition-colors ${
-          checked
+        className={`flex size-5 shrink-0 items-center justify-center rounded-[4px] border transition-colors ${checked
             ? orange
               ? "border-[#FE5720] bg-[#FE5720]"
               : "border-[#7E8982] bg-[#7E8982]"
             : "border-[#A4ACA7] bg-white"
-        }`}
+          }`}
       >
         {checked ? (
           <Image
@@ -232,7 +231,7 @@ export default function SystemLogsScreen() {
     const next = new Map<string, Set<string>>();
 
     appliedOptions.forEach((item) => {
-    
+
 
       const separatorIndex = item.indexOf(OPTION_KEY_SEPARATOR);
       if (separatorIndex === -1) return;
@@ -325,40 +324,40 @@ export default function SystemLogsScreen() {
     setSearch(employeeNameFromQuery);
   }, [employeeNameFromQuery]);
 
-const selectedCategoryFilters = useMemo(() => {
-  // Get all categories that have applied options
-  const categoriesFromAdvanced = Array.from(
-    new Set(
-      appliedOptions.map((item) => item.slice(0, item.indexOf(OPTION_KEY_SEPARATOR)))
-    )
-  ).filter(Boolean);
+  const selectedCategoryFilters = useMemo(() => {
+    // Get all categories that have applied options
+    const categoriesFromAdvanced = Array.from(
+      new Set(
+        appliedOptions.map((item) => item.slice(0, item.indexOf(OPTION_KEY_SEPARATOR)))
+      )
+    ).filter(Boolean);
 
-  // Merge selected categories + categories from advanced filter
-  const allCategories = Array.from(
-    new Set([...selectedCategories, ...categoriesFromAdvanced])
-  );
+    // Merge selected categories + categories from advanced filter
+    const allCategories = Array.from(
+      new Set([...selectedCategories, ...categoriesFromAdvanced])
+    );
 
-  if (allCategories.length === 0) return undefined;
+    if (allCategories.length === 0) return undefined;
 
-  return allCategories.map((category) => {
-    const selectedTypesForCategory = appliedTypesByCategory.get(category);
-    const allowedTypes = new Set(typeMapping[category] ?? []);
-    const mappedTypes = selectedTypesForCategory
-      ? [...selectedTypesForCategory].filter(
+    return allCategories.map((category) => {
+      const selectedTypesForCategory = appliedTypesByCategory.get(category);
+      const allowedTypes = new Set(typeMapping[category] ?? []);
+      const mappedTypes = selectedTypesForCategory
+        ? [...selectedTypesForCategory].filter(
           (item) => allowedTypes.size === 0 || allowedTypes.has(item),
         )
-      : [];
+        : [];
 
-    if (mappedTypes.length === 0) {
-      return { category };
-    }
+      if (mappedTypes.length === 0) {
+        return { category };
+      }
 
-    return {
-      category,
-      types: mappedTypes,
-    };
-  });
-}, [appliedTypesByCategory, selectedCategories, appliedOptions, typeMapping]);
+      return {
+        category,
+        types: mappedTypes,
+      };
+    });
+  }, [appliedTypesByCategory, selectedCategories, appliedOptions, typeMapping]);
 
   const queryParams = useMemo<SystemLogsListRequest>(() => {
     const searchQuery = debouncedSearch.trim();
@@ -510,17 +509,17 @@ const selectedCategoryFilters = useMemo(() => {
     });
   };
 
-const applyAdvancedFilters = () => {
-  setAppliedOptions(draftOptions);
-  setIsAdvancedOpen(false);
-};
-
-  const cancelAdvancedFilters = () => {
-   setDraftOptions(appliedOptions);
+  const applyAdvancedFilters = () => {
+    setAppliedOptions(draftOptions);
     setIsAdvancedOpen(false);
   };
 
-const hasDraftAdvancedFilters = draftOptions.length > 0;
+  const cancelAdvancedFilters = () => {
+    setDraftOptions(appliedOptions);
+    setIsAdvancedOpen(false);
+  };
+
+  const hasDraftAdvancedFilters = draftOptions.length > 0;
 
   return (
     <div className="flex min-h-[calc(100vh-130px)] flex-col gap-6 px-4 pb-4">
@@ -554,18 +553,18 @@ const hasDraftAdvancedFilters = draftOptions.length > 0;
             )}
           </div>
 
-          {/* Date Range Picker */}
+          {/* Date Range Picker */}git 
           <div className="relative">
-          <DatePicker
-  selectsRange
-  startDate={startDate}
-  endDate={endDate}
-  onChange={(update) => setDateRange(update as [Date | null, Date | null])}
-  placeholderText="Date range"
-  className="pr-10 !w-44 !h-8 cursor-pointer !rounded-lg border border-[#A4ACA7] text-[#37493F] px-3 text-sm outline-none"
-  dateFormat="dd MMM yy"
-  maxDate={new Date()}
-/>
+            <DatePicker
+              selectsRange
+              startDate={startDate}
+              endDate={endDate}
+              onChange={(update) => setDateRange(update as [Date | null, Date | null])}
+              placeholderText="Date range"
+              className="pr-10 !w-44 !h-8 cursor-pointer !rounded-lg border border-[#A4ACA7] text-[#37493F] px-3 text-sm outline-none"
+              dateFormat="dd MMM yy"
+              maxDate={new Date()}
+            />
             {startDate ? (
               <RxCross2
                 className="absolute cursor-pointer right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#FE5720]"
@@ -581,11 +580,10 @@ const hasDraftAdvancedFilters = draftOptions.length > 0;
             <button
               type="button"
               onClick={() => setIsCategoryOpen((prev) => !prev)}
-              className={`flex h-8 w-full items-center justify-between gap-3 rounded-lg border px-3 text-[14px] leading-[20px] cursor-pointer ${
-                isCategoryOpen
+              className={`flex h-8 w-full items-center justify-between gap-3 rounded-lg border px-3 text-[14px] leading-[20px] cursor-pointer ${isCategoryOpen
                   ? "border-[#FE5720] bg-white text-[#37493F] shadow-[0_0_0_2px_rgba(254,87,32,0.4)]"
                   : "border-[#A4ACA7] bg-white text-[#37493F]"
-              }`}
+                }`}
             >
               <span>{categoryLabel}</span>
               <Image
@@ -626,16 +624,14 @@ const hasDraftAdvancedFilters = draftOptions.length > 0;
                         key={item.id}
                         type="button"
                         onClick={() => toggleCategory(item.id)}
-                        className={`flex w-full items-center gap-3 border-t border-[#E0E3E1] px-4 py-3 text-left cursor-pointer ${
-                          checked ? "bg-[#FFECE6]" : "bg-white"
-                        }`}
+                        className={`flex w-full items-center gap-3 border-t border-[#E0E3E1] px-4 py-3 text-left cursor-pointer ${checked ? "bg-[#FFECE6]" : "bg-white"
+                          }`}
                       >
                         <span
-                          className={`flex size-4 shrink-0 items-center justify-center rounded-[4px] border p-[1px] ${
-                            checked
+                          className={`flex size-4 shrink-0 items-center justify-center rounded-[4px] border p-[1px] ${checked
                               ? "border-[#FE5720] bg-[#FE5720]"
                               : "border-[#A4ACA7] bg-white"
-                          }`}
+                            }`}
                         >
                           {checked ? (
                             <Image
@@ -660,11 +656,10 @@ const hasDraftAdvancedFilters = draftOptions.length > 0;
                   className="flex w-full items-center gap-2 border-t border-[#A4ACA7] bg-[#EFF1F0] px-4 py-2 text-[14px] leading-[22px] text-[#37493F] cursor-pointer"
                 >
                   <span
-                    className={`flex size-4 shrink-0 items-center justify-center rounded-[4px] border p-[1px] ${
-                      allCategoriesSelected || partiallySelectedCategories
+                    className={`flex size-4 shrink-0 items-center justify-center rounded-[4px] border p-[1px] ${allCategoriesSelected || partiallySelectedCategories
                         ? "border-[#7E8982] bg-[#7E8982]"
                         : "border-[#A4ACA7] bg-white"
-                    }`}
+                      }`}
                   >
                     {allCategoriesSelected ? (
                       <Image
@@ -690,55 +685,54 @@ const hasDraftAdvancedFilters = draftOptions.length > 0;
 
           {/* Advanced Filter */}
           <div ref={advancedRef} className="relative">
-        <div className="flex items-center gap-1">
-  <button
-    type="button"
-    onClick={() => {
-      setDraftOptions(appliedOptions);
-      setIsAdvancedOpen((prev) => !prev);
-    }}
-    className={`flex h-8 items-center gap-2 rounded-lg border px-3 text-[14px] font-medium uppercase leading-[16px] cursor-pointer ${
-      isAdvancedOpen || appliedOptions.length > 0
-        ? "border-[#FE5720] bg-white text-[#CB3301] shadow-[0_0_0_2px_rgba(254,87,32,0.4)]"
-        : "border-[#6B7971] bg-white text-[#6B7971]"
-    }`}
-  >
-    <Image
-      src={isAdvancedOpen || appliedOptions.length > 0 ? "/Logs/filter-brand.svg" : "/Logs/filter.svg"}
-      alt="Filter"
-      width={isAdvancedOpen || appliedOptions.length > 0 ? 16 : 14}
-      height={16}
-      className="shrink-0"
-    />
-    Advanced filter
-    {appliedOptions.length > 0 && (
-      <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#FE5720] text-white text-[10px] font-bold">
-        {appliedOptions.length}
-      </span>
-    )}
-  </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setDraftOptions(appliedOptions);
+                  setIsAdvancedOpen((prev) => !prev);
+                }}
+                className={`flex h-8 items-center gap-2 rounded-lg border px-3 text-[14px] font-medium uppercase leading-[16px] cursor-pointer ${isAdvancedOpen || appliedOptions.length > 0
+                    ? "border-[#FE5720] bg-white text-[#CB3301] shadow-[0_0_0_2px_rgba(254,87,32,0.4)]"
+                    : "border-[#6B7971] bg-white text-[#6B7971]"
+                  }`}
+              >
+                <Image
+                  src={isAdvancedOpen || appliedOptions.length > 0 ? "/Logs/filter-brand.svg" : "/Logs/filter.svg"}
+                  alt="Filter"
+                  width={isAdvancedOpen || appliedOptions.length > 0 ? 16 : 14}
+                  height={16}
+                  className="shrink-0"
+                />
+                Advanced filter
+                {appliedOptions.length > 0 && (
+                  <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#FE5720] text-white text-[10px] font-bold">
+                    {appliedOptions.length}
+                  </span>
+                )}
+              </button>
 
-  {appliedOptions.length > 0 && (
-    <button
-      type="button"
-      onClick={() => {
-        setAppliedOptions([]);
-        setDraftOptions([]);
-      }}
-      className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-[#FFECE6] cursor-pointer"
-    >
-      <RxCross2 className="w-4 h-4 text-[#FE5720]" />
-    </button>
-  )}
-</div>
+              {appliedOptions.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAppliedOptions([]);
+                    setDraftOptions([]);
+                  }}
+                  className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-[#FFECE6] cursor-pointer"
+                >
+                  <RxCross2 className="w-4 h-4 text-[#FE5720]" />
+                </button>
+              )}
+            </div>
 
             {isAdvancedOpen ? (
               <div className="absolute right-0 top-full z-40 mt-2 w-[600px] max-w-[calc(100vw-48px)] overflow-hidden rounded-xl border border-[#E0E3E1] bg-white shadow-[0_0_4px_rgba(0,0,0,0.10),4px_4px_8px_rgba(0,0,0,0.12)]">
                 <div className="max-h-[440px] overflow-y-auto">
-              {advancedFilterGroups.map((group, index) => {
-  const allChecked = group.options.every((item) =>
-    draftOptions.includes(toOptionKey(group.id, item)),
-  );
+                  {advancedFilterGroups.map((group, index) => {
+                    const allChecked = group.options.every((item) =>
+                      draftOptions.includes(toOptionKey(group.id, item)),
+                    );
 
                     return (
                       <div
@@ -782,11 +776,10 @@ const hasDraftAdvancedFilters = draftOptions.length > 0;
                     type="button"
                     onClick={applyAdvancedFilters}
                     disabled={!hasDraftAdvancedFilters}
-                    className={`flex h-10 items-center gap-2 rounded-[12px] border px-4 text-[14px] font-medium uppercase leading-4 ${
-                      hasDraftAdvancedFilters
+                    className={`flex h-10 items-center gap-2 rounded-[12px] border px-4 text-[14px] font-medium uppercase leading-4 ${hasDraftAdvancedFilters
                         ? "border-[#FE5720] text-[#FE5720] cursor-pointer"
                         : "border-[#C5CBC8] text-[#A4ACA7] cursor-not-allowed"
-                    }`}
+                      }`}
                   >
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
                       <path

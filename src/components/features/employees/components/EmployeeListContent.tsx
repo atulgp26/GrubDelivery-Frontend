@@ -52,6 +52,7 @@ import type { EmployeeGroup } from "@/types";
 import type { Employee, DropdownRestaurant } from "@/types/domain/employees";
 import type { ActionResult } from "../hooks/useEmployeeData";
 import type { EmployeeBox, ReassignRestaurant } from "../types";
+import { getDirectBoxes, getSharedBoxes, getAccessibleBoxes } from "@/lib/utils/boxSelectors";
 
 interface EmployeeListContentProps {
   groups: EmployeeGroup[];
@@ -164,11 +165,15 @@ const [mainModalBoxes, setMainModalBoxes] = useState<EmployeeBox[] | undefined>(
 
   useEffect(() => {
     if (modalState.isResourcesModalOpen && modalState.selectedEmployee) {
-      const boxes = modalState.selectedEmployee.restaurantBoxes?.length
-        ? modalState.selectedEmployee.restaurantBoxes.map((rb) => ({
-            id: rb.id,
-            name: rb.name,
-            details: rb.name,
+      const emp = modalState.selectedEmployee;
+      const direct = getDirectBoxes(emp);
+      const shared = getSharedBoxes(emp);
+      const allBoxes = [...direct, ...shared];
+      const boxes = allBoxes.length > 0
+        ? allBoxes.map((b) => ({
+            id: b.id,
+            name: b.name,
+            details: [b.displayId, b.vehicleNumber].filter(Boolean).join(" | "),
             power: "on" as const,
             added: "-",
             isLocked: false,
@@ -381,7 +386,7 @@ const [mainModalBoxes, setMainModalBoxes] = useState<EmployeeBox[] | undefined>(
     if (employee.email) qs.set("email", employee.email);
     if (employee.role) qs.set("role", employee.role);
     if (employee.restaurantName) qs.set("restaurantName", employee.restaurantName);
-    if (typeof employee.boxCount === "number") qs.set("boxCount", String(employee.boxCount));
+    if (typeof employee.totalBoxCount === "number") qs.set("boxCount", String(employee.totalBoxCount));
 
     router.push(`/employees/logs?${qs.toString()}`);
   };
@@ -1058,36 +1063,34 @@ onViewRestaurantBoxes={(employee) => {
     }}
     employeeId={sharedBoxesEmployee.id}
     restaurantId={undefined}
-    staticBoxes={
-      (sharedBoxesEmployee.sharedBoxes ?? [])
-        .filter((b) => b.powerStatus === "on")
-        .map((b) => ({
-          id: b.id,
-          name: b.name,
-          details: [b.displayId, b.vehicleNumber].filter(Boolean).join(" | "),
-          power: b.powerStatus === "on" ? "on" : b.powerStatus === "off" ? "off" : "warning",
-          added: formatDate(b.createdAt) || "-",
-          isLocked: false,
-          isOffline: b.powerStatus === "off",
-        }))
-    }
+    staticBoxes={(() => {
+      const direct = getDirectBoxes(sharedBoxesEmployee);
+      const shared = getSharedBoxes(sharedBoxesEmployee);
+      const allBoxes = [...direct, ...shared];
+      return allBoxes.map((b) => ({
+        id: b.id,
+        name: b.name,
+        details: [b.displayId, b.vehicleNumber].filter(Boolean).join(" | "),
+        power: b.powerStatus === "on" ? "on" : b.powerStatus === "off" ? "off" : "warning",
+        added: "-",
+        isLocked: false,
+        isOffline: b.powerStatus === "off",
+      }));
+    })()}
     employeeName={sharedBoxesEmployee.name}
     hideEditList
     onEditList={() => {}}
     onConfirmRemoval={async (removedBoxIds) => {
-      // Update sharedBoxesEmployee state to remove the deleted boxes
       setSharedBoxesEmployee((prev) => {
-    if (!prev) return null;
-    return {
-      ...prev,
-      sharedBoxes: (prev.sharedBoxes ?? []).filter(
-        (b) => !removedBoxIds.includes(b.id)
-      ),
-      boxCount: Math.max(0, (prev.boxCount ?? 0) - removedBoxIds.length), // ← update count
-    };
+        if (!prev) return null;
+        return {
+          ...prev,
+          sharedBoxes: (prev.sharedBoxes ?? []).filter(
+            (b) => !removedBoxIds.includes(b.id)
+          ),
+          totalBoxCount: Math.max(0, (prev.totalBoxCount ?? prev.boxCount ?? 0) - removedBoxIds.length),
+        };
       });
-
-      // Close modal if no boxes left
       setSharedBoxesEmployee((prev) => {
         if (!prev || (prev.sharedBoxes ?? []).length === 0) {
           setShowSharedBoxesModal(false);
@@ -1095,7 +1098,7 @@ onViewRestaurantBoxes={(employee) => {
         }
         return prev;
       });
-       onRefetch?.();
+      onRefetch?.();
     }}
   />
 )}

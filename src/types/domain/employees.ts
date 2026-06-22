@@ -15,6 +15,8 @@ export interface Employee {
   email: string;
   role: string;
   boxCount: number;
+  sharedBoxesCount?: number;
+  totalBoxCount?: number;
   boxDetails?: {
     boxId?: string;
     licenseNumber?: string;
@@ -400,18 +402,10 @@ export function apiEmployeeToEmployee(e: ApiEmployee): Employee {
     }
     return null;
   };
+const boxCount = parseCount(e.boxes_count) ?? parseCount(e.box_count) ?? parseCount(e.connected_boxes_count) ?? 0;
+const totalBoxCount = parseCount((e as any).all_boxes_count) ?? parseCount(e.shared_boxes_count) ?? boxCount;
+const sharedBoxesCount = totalBoxCount - boxCount;
 const connectedBoxesCount = parseCount(e.connected_boxes_count) ?? 0;
-const sharedBoxesCount = Array.isArray((e as any).shared_boxes)
-  ? (e as any).shared_boxes.filter((b: any) => b.power_status === "on").length
-  : parseCount(e.shared_boxes_count) ?? 0;
-const boxCount =
-  (connectedBoxesCount + sharedBoxesCount) > 0
-    ? connectedBoxesCount + sharedBoxesCount
-    : parseCount(e.box_count) ??
-      parseCount(e.boxes_count) ??
-      parseCount(e.grubpac_count) ??
-      parseCount(e.total_boxes) ??
-      0;
   const boxId =
     (typeof e.box_display_id === "string" && e.box_display_id.trim()) ||
     (typeof e.box_id === "string" && e.box_id.trim()) ||
@@ -438,6 +432,8 @@ const boxCount =
     email: e.email,
     role: e.role === "delivery" ? "Driver" : "Manager",
     boxCount,
+    sharedBoxesCount,
+    totalBoxCount,
     boxDetails: boxId || licenseNumber || settingsId ? { boxId, licenseNumber, settingsId } : undefined,
     added: e.created_at ? formatDate(e.created_at) : "-",
     restaurantName: e.restaurant?.name,
@@ -459,7 +455,6 @@ const boxCount =
       : undefined,
     restaurantBoxes: Array.isArray((e as any).restaurant?.restaurant_boxes)
       ? (e as any).restaurant.restaurant_boxes
-          .filter((rb: any) => rb.status === "shared")
           .map((rb: any) => ({
             id: rb.box?.id ?? "",
             name: rb.box?.name ?? "",

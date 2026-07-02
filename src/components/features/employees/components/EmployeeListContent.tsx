@@ -49,7 +49,8 @@ import type { RestaurantData } from "@/types/domain/restaurants";
 import type { EmployeeGroup } from "@/types";
 import type { Employee, DropdownRestaurant } from "@/types/domain/employees";
 import type { ActionResult } from "../hooks/useEmployeeData";
-import type { ReassignRestaurant } from "../types";
+import type { EmployeeBox, ReassignRestaurant } from "../types";
+import { getDirectBoxes, getSharedBoxes, getAccessibleBoxes } from "@/lib/utils/boxSelectors";
 
 interface EmployeeListContentProps {
   groups: EmployeeGroup[];
@@ -156,7 +157,28 @@ const [sharedBoxesEmployee, setSharedBoxesEmployee] = useState<Employee | null>(
     ],
     [],
   );
- 
+
+  useEffect(() => {
+    if (modalState.isResourcesModalOpen && modalState.selectedEmployee) {
+      const emp = modalState.selectedEmployee;
+      const direct = getDirectBoxes(emp);
+      const shared = getSharedBoxes(emp);
+      const allBoxes = [...direct, ...shared];
+      const boxes = allBoxes.length > 0
+        ? allBoxes.map((b) => ({
+            id: b.id,
+            name: b.name,
+            details: [b.displayId, b.vehicleNumber].filter(Boolean).join(" | "),
+            power: "on" as const,
+            added: "-",
+            isLocked: false,
+            isOffline: false,
+          }))
+        : undefined;
+      setMainModalBoxes(boxes);
+    }
+  }, [modalState.isResourcesModalOpen, modalState.selectedEmployee?.id]);
+
   const allEmployees = useMemo(() => {
     return groups.flatMap((g) => g.items ?? []);
   }, [groups]);
@@ -365,7 +387,7 @@ const [sharedBoxesEmployee, setSharedBoxesEmployee] = useState<Employee | null>(
     if (employee.email) qs.set("email", employee.email);
     if (employee.role) qs.set("role", employee.role);
     if (employee.restaurantName) qs.set("restaurantName", employee.restaurantName);
-    if (typeof employee.boxCount === "number") qs.set("boxCount", String(employee.boxCount));
+    if (typeof employee.totalBoxCount === "number") qs.set("boxCount", String(employee.totalBoxCount));
 
     router.push(`/employees/logs?${qs.toString()}`);
   };
@@ -1040,25 +1062,45 @@ onViewRestaurantBoxes={(employee) => {
     }}
     employeeId={undefined}
     restaurantId={undefined}
-    staticBoxes={
-      (sharedBoxesEmployee.sharedBoxes ?? [])
-      .filter((b) => b.powerStatus === "on")
-      .map((b) => ({
+    staticBoxes={(() => {
+      const direct = getDirectBoxes(sharedBoxesEmployee);
+      const shared = getSharedBoxes(sharedBoxesEmployee);
+      const allBoxes = [...direct, ...shared];
+      return allBoxes.map((b) => ({
         id: b.id,
         name: b.name,
         details: [b.displayId, b.vehicleNumber].filter(Boolean).join(" | "),
         power: b.powerStatus === "on" ? "on" : b.powerStatus === "off" ? "off" : "warning",
-        added: b.createdAt
-          ? new Date(b.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })
-          : "-",
+        added: "-",
         isLocked: false,
         isOffline: b.powerStatus === "off",
-      }))
-    }
+      }));
+    })()}
     employeeName={sharedBoxesEmployee.name}
     onEditList={() => {}}
+    onConfirmRemoval={async (removedBoxIds) => {
+      setSharedBoxesEmployee((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          sharedBoxes: (prev.sharedBoxes ?? []).filter(
+            (b) => !removedBoxIds.includes(b.id)
+          ),
+          totalBoxCount: Math.max(0, (prev.totalBoxCount ?? prev.boxCount ?? 0) - removedBoxIds.length),
+        };
+      });
+      setSharedBoxesEmployee((prev) => {
+        if (!prev || (prev.sharedBoxes ?? []).length === 0) {
+          setShowSharedBoxesModal(false);
+          return null;
+        }
+        return prev;
+      });
+      onRefetch?.();
+    }}
   />
 )}
+        </div>
     </div>
   );
 }

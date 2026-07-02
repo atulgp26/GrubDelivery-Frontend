@@ -13,6 +13,8 @@ export const MOCK_EMPLOYEE_GROUPS: EmployeeGroup[] = [
         email: "ravikr@gmail.com",
         role: "Driver",
         boxCount: 8,
+        sharedBoxesCount: 2,
+        totalBoxCount: 10,
         added: "Today",
         restaurantName: "da Pizza Place",
         isAvailable: true,

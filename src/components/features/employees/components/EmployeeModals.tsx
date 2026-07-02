@@ -45,6 +45,11 @@ export default function EmployeeModals({
             onViewList: onViewGroupedGrubPacs || (() => {}),
           },
           {
+            label: "all boxes",
+            count: modalState.selectedGroup.items?.reduce((sum, emp) => sum + (emp.totalBoxCount ?? (emp.boxCount || 0)), 0) ?? 0,
+            onViewList: onViewGroupedGrubPacs || (() => {}),
+          },
+          {
             label: "employees",
             count: modalState.selectedGroup.items?.length ?? 0,
             onViewList: onViewGroupedEmployees || (() => {}),
@@ -74,6 +79,13 @@ export default function EmployeeModals({
                 count: modalState.selectedEmployee.boxCount,
                 onViewList: onViewBoxes || (() => {}),
               },
+              ...(((modalState.selectedEmployee.totalBoxCount ?? modalState.selectedEmployee.boxCount) > modalState.selectedEmployee.boxCount)
+                ? [{
+                    label: "all boxes",
+                    count: modalState.selectedEmployee.totalBoxCount ?? modalState.selectedEmployee.boxCount,
+                    onViewList: onViewBoxes || (() => {}),
+                  }]
+                : []),
             ],
           }}
           onEdit={() => {

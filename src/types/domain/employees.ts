@@ -14,6 +14,8 @@ export interface Employee {
   email: string;
   role: string;
   boxCount: number;
+  sharedBoxesCount?: number;
+  totalBoxCount?: number;
   boxDetails?: {
     boxId?: string;
     licenseNumber?: string;
@@ -394,18 +396,10 @@ export function apiEmployeeToEmployee(e: ApiEmployee): Employee {
     }
     return null;
   };
+const boxCount = parseCount(e.boxes_count) ?? parseCount(e.box_count) ?? parseCount(e.connected_boxes_count) ?? 0;
+const totalBoxCount = parseCount((e as any).all_boxes_count) ?? parseCount(e.shared_boxes_count) ?? boxCount;
+const sharedBoxesCount = totalBoxCount - boxCount;
 const connectedBoxesCount = parseCount(e.connected_boxes_count) ?? 0;
-const sharedBoxesCount = Array.isArray((e as any).shared_boxes)
-  ? (e as any).shared_boxes.filter((b: any) => b.power_status === "on").length
-  : parseCount(e.shared_boxes_count) ?? 0;
-const boxCount =
-  (connectedBoxesCount + sharedBoxesCount) > 0
-    ? connectedBoxesCount + sharedBoxesCount
-    : parseCount(e.box_count) ??
-      parseCount(e.boxes_count) ??
-      parseCount(e.grubpac_count) ??
-      parseCount(e.total_boxes) ??
-      0;
   const boxId =
     (typeof e.box_display_id === "string" && e.box_display_id.trim()) ||
     (typeof e.box_id === "string" && e.box_id.trim()) ||
@@ -439,6 +433,8 @@ const boxCount =
     email: e.email,
     role: e.role === "delivery" ? "Driver" : "Manager",
     boxCount,
+    sharedBoxesCount,
+    totalBoxCount,
     boxDetails: boxId || licenseNumber || settingsId ? { boxId, licenseNumber, settingsId } : undefined,
     added: e.created_at ? new Date(e.created_at).toLocaleDateString("en-GB", {
       day: "2-digit",
@@ -460,7 +456,15 @@ const boxCount =
       ? new Date(e.restaurant.updated_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })
       : undefined,
     restaurantAdded: e.restaurant?.created_at
-      ? new Date(e.restaurant.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })
+      ? formatDate(e.restaurant.created_at)
+      : undefined,
+    restaurantBoxes: Array.isArray((e as any).restaurant?.restaurant_boxes)
+      ? (e as any).restaurant.restaurant_boxes
+          .map((rb: any) => ({
+            id: rb.box?.id ?? "",
+            name: rb.box?.name ?? "",
+            status: rb.status ?? "",
+          }))
       : undefined,
     status: e.status === "suspended" ? "Suspended" : "Active",
     connectedBoxesStatus:

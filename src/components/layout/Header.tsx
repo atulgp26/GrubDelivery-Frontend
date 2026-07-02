@@ -3,50 +3,15 @@ import Icon from "@/components/ui/Icon";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { PiWarningFill } from "react-icons/pi";
 import { Button } from "../ui/Button";
 import { Skeleton } from "../ui/skeleton";
 import type { HeaderProps, HeaderNotificationItem, NotificationItem } from "@/types";
+import { useQuery } from "@tanstack/react-query";
+import { notificationsService, mapApiNotificationToHeaderItem } from "@/services/notifications";
 
-const mockNotifications: HeaderNotificationItem[] = [
-  {
-    type: "warning",
-    title: "Battery below 20%",
-    message:
-      "The battery for [Box name] [Box ID] seems to be draining. Charge the device before you head outdoor.",
-    time: "12:15 PM",
-    date: "Today",
-    code: "#DL12345",
-    deviceId: "DL2BD1234",
-    place: "da Pizza Place",
-    active: true,
-  },
-  {
-    type: "error",
-    title: "Camera not working",
-    message:
-      "It seems the camera for [Box name] [Box ID] is not functioning properly. Try restarting the device once.",
-    time: "12:15 PM",
-    date: "Today",
-    code: "#DL12345",
-    deviceId: "DL2BD1234",
-    place: "da Pizza Place",
-    active: true,
-  },
-  {
-    type: "success",
-    title: "Locked opened.",
-    message:
-      "You successfully opened the Grublock for [Box name] [Box ID].",
-    time: "12:15 PM",
-    date: "Today",
-    code: "#DL12345",
-    deviceId: "DL2BD1234",
-    place: "da Pizza Place",
-    active: false,
-  },
-];
+const mockNotifications: HeaderNotificationItem[] = [];
 
 export default function Header({
   onToggleSidebarAction,
@@ -71,9 +36,21 @@ export default function Header({
     }
   }, [showDropdown]);
 
-  const isLoading = isLoadingProp ?? notificationsLoading;
+  const { data: apiNotificationsQuery, isLoading: isApiLoading } = useQuery({
+    queryKey: ["notifications", "list"],
+    queryFn: () => notificationsService.getNotifications(),
+    refetchInterval: 30000,
+    refetchOnWindowFocus: true,
+  });
 
-  const notifications = notificationsProp ?? mockNotifications;
+  const apiNotifications = useMemo(() => {
+    const raw = apiNotificationsQuery?.data?.notifications || [];
+    return raw.map(mapApiNotificationToHeaderItem);
+  }, [apiNotificationsQuery]);
+
+  const isLoading = isLoadingProp ?? (notificationsProp ? notificationsLoading : isApiLoading);
+
+  const notifications = notificationsProp ?? apiNotifications;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -153,97 +130,102 @@ export default function Header({
               </Button>
             </div>
             <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden min-h-0 overscroll-contain">
-              {isLoading
-                ? 
-                  Array.from({ length: 3 }).map((_, i) => (
+              {isLoading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div
+                    key={`skeleton-${i}`}
+                    className="self-stretch p-6 bg-[var(--gp-color-bg-white)] border-t border-[var(--gp-color-border-neutral)] flex flex-col justify-center items-start gap-3 shrink-0"
+                  >
+                    {/* Icon + Title row */}
+                    <div className="self-stretch flex justify-start items-end gap-3">
+                      <Skeleton variant="circle" width={32} height={32} />
+                      <Skeleton variant="text" width="60%" height={16} />
+                    </div>
+                    {/* Message lines */}
+                    <div className="self-stretch flex flex-col gap-1.5">
+                      <Skeleton variant="text" width="100%" height={14} />
+                      <Skeleton variant="text" width="85%" height={14} />
+                    </div>
+                    {/* Meta row */}
+                    <div className="self-stretch flex justify-between items-start gap-2">
+                      <Skeleton variant="text" width="45%" height={14} />
+                      <Skeleton variant="text" width="25%" height={14} />
+                      <Skeleton variant="text" width={50} height={14} />
+                    </div>
+                  </div>
+                ))
+              ) : notifications.length > 0 ? (
+                notifications.map((n, i) => {
+                  const isActive = n.active ?? (i < 2);
+                  const titleColor = isActive ? "var(--gp-color-text-neutral-secondary)" : "var(--gp-color-text-neutral-tertiary)";
+                  const messageColor = isActive ? "var(--gp-color-text-neutral-secondary)" : "var(--gp-color-text-neutral-tertiary)";
+                  const metaColor = "var(--gp-color-text-neutral-tertiary)";
+                  const deviceId = n.deviceId ?? "DL2BD1234";
+                  const deviceIdDisplay = deviceId.length > 8 ? deviceId.slice(0, 8) + "..." : deviceId;
+                  return (
                     <div
-                      key={`skeleton-${i}`}
+                      key={n.id ?? i}
                       className="self-stretch p-6 bg-[var(--gp-color-bg-white)] border-t border-[var(--gp-color-border-neutral)] flex flex-col justify-center items-start gap-3 shrink-0"
                     >
-                      {/* Icon + Title row */}
                       <div className="self-stretch flex justify-start items-end gap-3">
-                        <Skeleton variant="circle" width={32} height={32} />
-                        <Skeleton variant="text" width="60%" height={16} />
+                        <span className="inline-flex items-center justify-center size-8 shrink-0">
+                          {n.type === "warning" && (
+                            <PiWarningFill className="size-7" style={{ color: "var(--notif-warning)" }} />
+                          )}
+                          {n.type === "error" && (
+                            <PiWarningFill className="size-7" style={{ color: "var(--notif-error)" }} />
+                          )}
+                          {n.type === "success" && (
+                            <img src="/Dashboard/Card/check_circle.svg" alt="success" className="size-7" />
+                          )}
+                          {n.type === "yellow_warning" && (
+                            <Icon name="icon_alert" className="size-7" style={{ color: "var(--notif-warning)" }} />
+                          )}
+                        </span>
+                        <div
+                          className="text-base font-semibold leading-6 truncate min-w-0"
+                          style={{ color: titleColor }}
+                        >
+                          {n.title}
+                        </div>
                       </div>
-                      {/* Message lines */}
-                      <div className="self-stretch flex flex-col gap-1.5">
-                        <Skeleton variant="text" width="100%" height={14} />
-                        <Skeleton variant="text" width="85%" height={14} />
-                      </div>
-                      {/* Meta row */}
-                      <div className="self-stretch flex justify-between items-start gap-2">
-                        <Skeleton variant="text" width="45%" height={14} />
-                        <Skeleton variant="text" width="25%" height={14} />
-                        <Skeleton variant="text" width={50} height={14} />
-                      </div>
-                    </div>
-                  ))
-                : notifications.map((n, i) => {
-                    const isActive = n.active ?? (i < 2);
-                    const titleColor = isActive ? "var(--gp-color-text-neutral-secondary)" : "var(--gp-color-text-neutral-tertiary)";
-                    const messageColor = isActive ? "var(--gp-color-text-neutral-secondary)" : "var(--gp-color-text-neutral-tertiary)";
-                    const metaColor = "var(--gp-color-text-neutral-tertiary)";
-                    const deviceId = n.deviceId ?? "DL2BD1234";
-                    const deviceIdDisplay = deviceId.length > 8 ? deviceId.slice(0, 8) + "..." : deviceId;
-                    return (
                       <div
-                        key={n.id ?? i}
-                        className="self-stretch p-6 bg-[var(--gp-color-bg-white)] border-t border-[var(--gp-color-border-neutral)] flex flex-col justify-center items-start gap-3 shrink-0"
+                        className="self-stretch text-sm font-normal leading-5"
+                        style={{ color: messageColor }}
                       >
-                        <div className="self-stretch flex justify-start items-end gap-3">
-                          <span className="inline-flex items-center justify-center size-8 shrink-0">
-                            {n.type === "warning" && (
-                              <PiWarningFill className="size-7" style={{ color: "var(--notif-warning)" }} />
-                            )}
-                            {n.type === "error" && (
-                              <PiWarningFill className="size-7" style={{ color: "var(--notif-error)" }} />
-                            )}
-                            {n.type === "success" && (
-                              <img src="/Dashboard/Card/check_circle.svg" alt="success" className="size-7" />
-                            )}
-                            {n.type === "yellow_warning" && (
-                              <Icon name="icon_alert" className="size-7" style={{ color: "var(--notif-warning)" }} />
-                            )}
-                          </span>
-                          <div
-                            className="text-base font-semibold leading-6 truncate min-w-0"
-                            style={{ color: titleColor }}
-                          >
-                            {n.title}
-                          </div>
+                        {n.message}
+                      </div>
+                      <div className="self-stretch flex justify-between items-start gap-2">
+                        <div
+                          className="flex-1 flex items-center gap-1 min-w-0 text-sm font-normal leading-5"
+                          style={{ color: metaColor }}
+                        >
+                          <span className="shrink-0">{n.code} |</span>
+                          <span className="shrink-0">{deviceIdDisplay}</span>
+                          <span className="min-w-0 truncate">| {n.place ?? "da Pizza Place"}</span>
                         </div>
                         <div
-                          className="self-stretch text-sm font-normal leading-5"
-                          style={{ color: messageColor }}
+                          className="text-right text-sm font-normal leading-5 shrink-0"
+                          style={{ color: metaColor }}
                         >
-                          {n.message}
+                          {n.time} | {n.date}
                         </div>
-                        <div className="self-stretch flex justify-between items-start gap-2">
-                          <div
-                            className="flex-1 flex items-center gap-1 min-w-0 text-sm font-normal leading-5"
-                            style={{ color: metaColor }}
-                          >
-                            <span className="shrink-0">{n.code} |</span>
-                            <span className="shrink-0">{deviceIdDisplay}</span>
-                            <span className="min-w-0 truncate">| {n.place ?? "da Pizza Place"}</span>
-                          </div>
-                          <div
-                            className="text-right text-sm font-normal leading-5 shrink-0"
-                            style={{ color: metaColor }}
-                          >
-                            {n.time} | {n.date}
-                          </div>
-                          <button
-                            type="button"
-                            className="text-[var(--gp-color-text-brand)] text-sm font-medium uppercase leading-4 shrink-0 hover:underline"
-                            onClick={() => n.id != null && onDismissNotification?.(n.id)}
-                          >
-                            Dismiss
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          className="text-[var(--gp-color-text-brand)] text-sm font-medium uppercase leading-4 shrink-0 hover:underline"
+                          onClick={() => n.id != null && onDismissNotification?.(n.id)}
+                        >
+                          Dismiss
+                        </button>
                       </div>
-                    );
-                  })}
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="flex-1 flex items-center justify-center text-[var(--gp-color-text-neutral-tertiary)] font-normal text-sm py-12">
+                  No notification
+                </div>
+              )}
             </div>
           </div>
         )}

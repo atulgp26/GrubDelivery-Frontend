@@ -42,24 +42,30 @@ export default function NotificationList({
         </span>
       </div>
       <div className="divide-y divide-[var(--stroke\/neutral---secondary,#e0e3e1)] cursor-pointer">
-        {filtered.map((notification, idx) => (
-          <NotificationItem
-            key={notification.id}
-            notification={notification}
-            selected={selected.includes(notification.id)}
-            onSelect={(event) =>
-              setSelected((sel) =>
-                event.target.checked
-                  ? [...sel, notification.id]
-                  : sel.filter((existingId) => existingId !== notification.id)
-              )
-            }
-            onDismiss={onDismiss}
-            getNotificationIcon={getNotificationIcon}
-            isLast={idx === filtered.length - 1}
-            tone="neutral"
-          />
-        ))}
+        {filtered.length > 0 ? (
+          filtered.map((notification, idx) => (
+            <NotificationItem
+              key={notification.id}
+              notification={notification}
+              selected={selected.includes(notification.id)}
+              onSelect={(event) =>
+                setSelected((sel) =>
+                  event.target.checked
+                    ? [...sel, notification.id]
+                    : sel.filter((existingId) => existingId !== notification.id)
+                )
+              }
+              onDismiss={onDismiss}
+              getNotificationIcon={getNotificationIcon}
+              isLast={idx === filtered.length - 1}
+              tone="neutral"
+            />
+          ))
+        ) : (
+          <div className="flex items-center justify-center text-[var(--color-neutral-tertiary)] font-normal text-sm py-12 bg-white">
+            No notification
+          </div>
+        )}
       </div>
       {showMultiSelectBar && (
         <div className="fixed bottom-2 left-68 right-4 bg-[var(--color-neutral-secondary-bg)] border border-[var(--color-box-border)] rounded-lg flex items-center justify-between px-6 py-3 z-50 shadow-success-toast">

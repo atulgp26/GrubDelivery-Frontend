@@ -61,7 +61,21 @@ export function SetNewPasswordModal({
   const { onBlur: confirmPasswordOnBlur, onChange: confirmPasswordOnChange, ...confirmPasswordProps } =
     confirmPasswordField;
 
-  const onSubmit = handleSubmit(({ password }) => onSave(password));
+  const onSubmit = handleSubmit(({ password }) => {
+    if (!/[A-Z]/.test(password)) {
+      showError("Password must contain at least one capital letter.");
+      return;
+    }
+    if (!/\d/.test(password)) {
+      showError("Password must contain at least one numeric value.");
+      return;
+    }
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      showError("Password must contain at least one special character.");
+      return;
+    }
+    onSave(password);
+  });
 
   const handleDismissError = useCallback(() => setErrorMessage(null), []);
 

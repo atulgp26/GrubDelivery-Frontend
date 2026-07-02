@@ -12,6 +12,8 @@ import {
 } from "@/components/features/notifications/constants";
 import type { NotificationTone } from "@/types";
 import { Button } from "@/components/ui/Button";
+import { useQuery } from "@tanstack/react-query";
+import { notificationsService, mapApiNotificationToNotification } from "@/services/notifications";
 
 export default function NotificationsPage() {
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -23,6 +25,17 @@ export default function NotificationsPage() {
     const timer = setTimeout(() => setIsLoading(false), 1500);
     return () => clearTimeout(timer);
   }, []);
+
+  const { data: apiNotificationsQuery, isLoading: isApiLoading } = useQuery({
+    queryKey: ["notifications", "list"],
+    queryFn: () => notificationsService.getNotifications(),
+    refetchOnWindowFocus: true,
+  });
+
+  const apiNotifications = useMemo(() => {
+    const raw = apiNotificationsQuery?.data?.notifications || [];
+    return raw.map(mapApiNotificationToNotification);
+  }, [apiNotificationsQuery]);
 
   const {
     search,
@@ -42,7 +55,7 @@ export default function NotificationsPage() {
     boxOptions,
     restaurantOptions,
   } = useNotificationFilters({
-    notifications: MOCK_NOTIFICATIONS,
+    notifications: apiNotifications,
     boxes: MOCK_BOXES,
     restaurants: MOCK_RESTAURANTS,
   });

@@ -49,8 +49,18 @@ const isNameValid = (value: string): boolean => {
 
 const isEmailValid = (value: string): boolean => {
   const trimmed = value.trim();
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(trimmed);
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailRegex.test(trimmed)) {
+    return false;
+  }
+  const parts = trimmed.split(".");
+  const tld = parts[parts.length - 1].toLowerCase();
+  const domainPart = trimmed.split("@")[1]?.toLowerCase() || "";
+  
+  const isComTld = (tld === "com");
+  const isYahooOrOutlook = domainPart.includes("yahoo") || domainPart.includes("outlook");
+  
+  return isComTld || isYahooOrOutlook;
 };
 
 const isContactValid = (value: string): boolean => {

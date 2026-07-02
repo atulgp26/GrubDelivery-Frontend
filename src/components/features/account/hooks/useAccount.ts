@@ -12,11 +12,13 @@ import accountService, {
   type ChangePasswordRequest,
   type UpdateAccountRequest,
 } from "@/services/account";
+import authService from "@/services/auth";
 import type {
   AccountProfileData,
   FieldsState,
   UserDataState,
 } from "@/components/features/account/types";
+import { useOtpTimer } from "@/components/features/account/hooks/useOtpTimer";
 
 const DEFAULT_FIELDS: FieldsState = {
   name: "",
@@ -132,6 +134,12 @@ export function useAccount() {
     otpModalOpen: false,
     otpError: false,
   });
+
+  const {
+    seconds: timer,
+    start: startOtpTimer,
+    reset: resetOtpTimer,
+  } = useOtpTimer(60);
 
   const [otp, setOtp] = useState<string[]>(["", "", "", ""]);
   const [otpRefs] = useState<Array<React.RefObject<HTMLInputElement | null>>>([
@@ -297,9 +305,46 @@ export function useAccount() {
 
   const handleDelete = () => updateModalState({ deleteOpen: true });
 
-  const handleDeleteAccount = () => {
-    updateModalState({ deleteOpen: false, otpModalOpen: true, otpError: false });
-    setOtp(["", "", "", ""]);
+  const handleDeleteAccount = async () => {
+    const email = userData?.basicDetails?.email || fields.email;
+    if (!email || !email.trim()) {
+      showError("Email not found. Cannot proceed with account deletion.");
+      return;
+    }
+
+    try {
+      const res = await authService.sendOtp({ email });
+      if (res.success) {
+        showSuccess("OTP has been sent successfully", "");
+        updateModalState({ deleteOpen: false, otpModalOpen: true, otpError: false });
+        setOtp(["", "", "", ""]);
+        startOtpTimer();
+      } else {
+        showError(res.error || "Failed to send OTP. Please try again.");
+      }
+    } catch (err) {
+      showError(getApiErrorMessage(err, "Failed to send OTP. Please try again."));
+    }
+  };
+
+  const handleSendDeleteOtp = async (): Promise<void> => {
+    const email = userData?.basicDetails?.email || fields.email;
+    if (!email || !email.trim()) {
+      showError("Email not found. Cannot send OTP.");
+      return;
+    }
+
+    try {
+      const res = await authService.sendOtp({ email });
+      if (res.success) {
+        showSuccess("OTP has been sent successfully", "");
+        startOtpTimer();
+      } else {
+        showError(res.error || "Failed to send OTP. Please try again.");
+      }
+    } catch (err) {
+      showError(getApiErrorMessage(err, "Failed to send OTP. Please try again."));
+    }
   };
 
   const handleOtpVerify = async () => {
@@ -367,6 +412,9 @@ export function useAccount() {
     handleResendOtp,
     handleDelete,
     handleDeleteAccount,
+    handleSendDeleteOtp,
     handleOtpVerify,
+    timer,
+    resetOtpTimer,
   };
 }

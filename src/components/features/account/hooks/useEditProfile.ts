@@ -26,8 +26,18 @@ const isNameValid = (value: string): boolean => {
 
 const isEmailValid = (value: string): boolean => {
   const trimmed = value.trim();
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(trimmed);
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailRegex.test(trimmed)) {
+    return false;
+  }
+  const parts = trimmed.split(".");
+  const tld = parts[parts.length - 1].toLowerCase();
+  const domainPart = trimmed.split("@")[1]?.toLowerCase() || "";
+  
+  const isComTld = (tld === "com");
+  const isYahooOrOutlook = domainPart.includes("yahoo") || domainPart.includes("outlook");
+  
+  return isComTld || isYahooOrOutlook;
 };
 
 const normalizeIndianContact = (value: string): string | null => {
@@ -247,6 +257,7 @@ export function useEditProfile({
     if (hasFieldValueChanged(fieldName, currentFields[fieldName], tempValue)) {
       const validationError = getFieldValidationError(fieldName, tempValue);
       if (validationError) {
+        showError(validationError);
         onAlertError?.(validationError);
         return false;
       }
@@ -279,6 +290,7 @@ export function useEditProfile({
     ) {
       const validationError = getFieldValidationError(editingField, tempValue);
       if (validationError) {
+        showError(validationError);
         onAlertError?.(validationError);
         return "ERROR";
       }
@@ -313,6 +325,15 @@ export function useEditProfile({
       ...Array.from(editedFields),
       ...(justCommitted ? [justCommitted.field] : []),
     ]);
+
+    for (const field of Array.from(allChanged)) {
+      const val = nextFields[field];
+      const err = getFieldValidationError(field, val);
+      if (err) {
+        showError(err);
+        return;
+      }
+    }
 
     if (allChanged.has("password")) {
       setShowPasswordModal(true);

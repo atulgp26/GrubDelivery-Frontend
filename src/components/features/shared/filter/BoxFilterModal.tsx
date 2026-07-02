@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, forwardRef } from "react";
+import { useState, forwardRef, useEffect } from "react";
 import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 import FilterSection from "./FilterSection";
@@ -72,6 +72,12 @@ const BoxFilterModal = forwardRef<HTMLDivElement, BoxFilterModalProps>(
     panelStyle,
   }, ref) => {
     const [filters, setFilters] = useState<FilterState>(initialFilters);
+
+    useEffect(() => {
+      if (open) {
+        setFilters(initialFilters);
+      }
+    }, [open, initialFilters]);
 
     if (!open) return null;
 

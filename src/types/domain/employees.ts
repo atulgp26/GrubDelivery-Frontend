@@ -44,7 +44,11 @@ export interface Employee {
   restaurantStatus?: string;
   restaurantAddress?: string;
   restaurantUpdated?: string;
-  restaurantAdded?: string;
+  restaurantBoxes?: Array<{
+    id: string;
+    name: string;
+    status: string;
+  }>;
   status?: EmployeeStatus;
   isAvailable?: boolean;
   connectedBoxesStatus?: boolean;

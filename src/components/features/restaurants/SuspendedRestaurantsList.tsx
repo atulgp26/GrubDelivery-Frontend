@@ -99,10 +99,53 @@ function buildRestaurantAddress(data: RestaurantData): string {
   return fullAddress;
 }
 
+function extractEmployees(data: any): any[] {
+  if (typeof data !== "object" || data === null) return [];
+  if (Array.isArray(data.employees)) return data.employees;
+  
+  const groups = data.groups;
+  if (groups && typeof groups === "object") {
+    const list: any[] = [];
+    Object.values(groups).forEach((g: any) => {
+      if (g && Array.isArray(g.array)) {
+        list.push(...g.array);
+      } else if (g && Array.isArray(g.employees)) {
+        list.push(...g.employees);
+      } else if (Array.isArray(g)) {
+        list.push(...g);
+      }
+    });
+    return list;
+  }
+  return [];
+}
+
+function extractGrubPacs(data: any): any[] {
+  if (typeof data !== "object" || data === null) return [];
+  if (Array.isArray(data.boxes)) return data.boxes;
+  
+  const groups = data.groups;
+  if (groups && typeof groups === "object") {
+    const list: any[] = [];
+    Object.values(groups).forEach((g: any) => {
+      if (g && Array.isArray(g.array)) {
+        list.push(...g.array);
+      } else if (g && Array.isArray(g.boxes)) {
+        list.push(...g.boxes);
+      } else if (Array.isArray(g)) {
+        list.push(...g);
+      }
+    });
+    return list;
+  }
+  return [];
+}
+
 export default function SuspendedRestaurantsList({ className = "" }: SuspendedRestaurantsListProps) {
   const router = useRouter();
   const [restaurants, setRestaurants] = useState<GroupRow[]>([]);
   const [showResourcesModal, setShowResourcesModal] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string>("");
   const [resourcesTab, setResourcesTab] = useState<"grubpacs" | "employees">("grubpacs");
   const [resourceEmployees, setResourceEmployees] = useState<any[]>([]);
   const [resourceGrubPacs, setResourceGrubPacs] = useState<any[]>([]);
@@ -319,7 +362,7 @@ export default function SuspendedRestaurantsList({ className = "" }: SuspendedRe
         boxes: suspendedRestaurant.boxCount || 0,
         updated: suspendedRestaurant.added || "",
         suspendedOn: suspendedRestaurant.suspended,
-        status: "Suspended",
+        status: "suspended",
       };
       setSelectedRestaurant(restaurant as Restaurant);
       setShowDetailsModal(true);
@@ -352,36 +395,58 @@ export default function SuspendedRestaurantsList({ className = "" }: SuspendedRe
         ? roles.map(r => r === "driver" ? "delivery" : r)
         : [];
 
-      const res = await employeeService.getList({
+      const commonParams = {
         ...(apiRoles.length === 1 ? { role: apiRoles[0] as "manager" | "delivery" } : {}),
-        status: availableDriversOnly ? "unassigned" : undefined,
         restaurant_id: availableDriversOnly ? undefined : selectedRestaurant.id,
         limit: 10,
         page,
         query: query.trim() || undefined,
-      });
-      if (res.success && res.data) {
-        const list = res.data.employees || [];
-        setResourceEmployees(list.map((e: any) => {
-          const mapped = apiEmployeeToEmployee(e);
-          return {
-            id: mapped.id,
-            name: mapped.name,
-            employeeId: mapped.employeeId,
-            joinedDate: mapped.joinedDate,
-            phone: mapped.phone,
-            email: mapped.email,
-            role: mapped.role,
-            boxCount: mapped.boxCount,
-            added: mapped.added,
-            isAvailable: e.status === "active",
-          };
-        }));
-        setResourceEmployeeTotalEntries(res.pagination?.total_count ?? list.length);
+      };
+
+      let combinedEmployees: any[] = [];
+      let totalCount = 0;
+
+      if (availableDriversOnly) {
+        const res = await employeeService.getList({ ...commonParams, status: "unassigned" });
+        if (res.success && res.data) {
+          const list = extractEmployees(res.data);
+          combinedEmployees = list;
+          totalCount = (res.pagination as any)?.total_count ?? list.length;
+        }
       } else {
-        setResourceEmployees([]);
-        setResourceEmployeeTotalEntries(0);
+        const [resActive, resSuspended] = await Promise.all([
+          employeeService.getList({ ...commonParams, status: "active" }),
+          employeeService.getList({ ...commonParams, status: "suspended" })
+        ]);
+
+        if (resActive.success && resActive.data) {
+          const list = extractEmployees(resActive.data);
+          combinedEmployees = combinedEmployees.concat(list);
+          totalCount += (resActive.pagination as any)?.total_count ?? list.length;
+        }
+        if (resSuspended.success && resSuspended.data) {
+          const list = extractEmployees(resSuspended.data);
+          combinedEmployees = combinedEmployees.concat(list);
+          totalCount += (resSuspended.pagination as any)?.total_count ?? list.length;
+        }
       }
+
+      setResourceEmployees(combinedEmployees.map((e: any) => {
+        const mapped = apiEmployeeToEmployee(e);
+        return {
+          id: mapped.id,
+          name: mapped.name,
+          employeeId: mapped.employeeId,
+          joinedDate: mapped.joinedDate,
+          phone: mapped.phone,
+          email: mapped.email,
+          role: mapped.role,
+          boxCount: mapped.boxCount,
+          added: mapped.added,
+          isAvailable: e.status === "active",
+        };
+      }));
+      setResourceEmployeeTotalEntries(totalCount);
     } catch (err) {
       console.error(err);
       setResourceEmployees([]);
@@ -444,13 +509,12 @@ export default function SuspendedRestaurantsList({ className = "" }: SuspendedRe
       if (filters && filters.zone2Min !== -20) apiParams.zone2_min = filters.zone2Min;
       if (filters && filters.zone2Max !== 30) apiParams.zone2_max = filters.zone2Max;
 
-      const fallbackPowerStatus = params.showOfflineBoxes ? "off" : "on";
+      const fallbackPowerStatus = undefined;
 
-      const res = await grubpacService.getList({
+      const commonParams = {
         restaurant_id: selectedRestaurant.id,
         limit: 10,
         page: params.page,
-        status: "active",
         query: params.query.trim() || undefined,
         power_status: apiParams.power_status ?? fallbackPowerStatus,
         connection_status: apiParams.connection_status,
@@ -464,30 +528,57 @@ export default function SuspendedRestaurantsList({ className = "" }: SuspendedRe
         zone1_max: apiParams.zone1_max,
         zone2_min: apiParams.zone2_min,
         zone2_max: apiParams.zone2_max,
-      });
+      };
 
-      if (res.success && res.data) {
-        const list = res.data.boxes || [];
-        setResourceGrubPacs(list.map((b: any) => {
-          const mapped = apiGrubPacToItem(b);
-          return {
-            id: mapped.id,
-            name: mapped.name,
-            details: mapped.details,
-            power: mapped.power,
-            driver: mapped.driverName,
-            added: mapped.added,
-            isLocked: mapped.grublockStatus === "locked",
-            isOffline: mapped.connectionStatus === "offline",
-          };
-        }));
-        setResourceGrubPacTotalEntries(res.pagination?.total_count ?? list.length);
-      } else {
-        setResourceGrubPacs([]);
-        setResourceGrubPacTotalEntries(0);
+      const [resActive, resSuspended] = await Promise.all([
+        grubpacService.getList({ ...commonParams, status: "active" }),
+        grubpacService.getList({ ...commonParams, status: "suspended" })
+      ]);
+
+      console.log("[fetchResourceGrubPacs] selectedRestaurant.id:", selectedRestaurant.id);
+      console.log("[fetchResourceGrubPacs] commonParams:", commonParams);
+      console.log("[fetchResourceGrubPacs] resActive:", resActive);
+      console.log("[fetchResourceGrubPacs] resSuspended:", resSuspended);
+
+      let combinedBoxes: any[] = [];
+      let totalCount = 0;
+
+      if (resActive.success && resActive.data) {
+        const list = extractGrubPacs(resActive.data);
+        combinedBoxes = combinedBoxes.concat(list);
+        totalCount += (resActive.pagination as any)?.total_count ?? list.length;
       }
-    } catch (err) {
+      if (resSuspended.success && resSuspended.data) {
+        const list = extractGrubPacs(resSuspended.data);
+        combinedBoxes = combinedBoxes.concat(list);
+        totalCount += (resSuspended.pagination as any)?.total_count ?? list.length;
+      }
+
+      setResourceGrubPacs(combinedBoxes.map((b: any) => {
+        const mapped = apiGrubPacToItem(b);
+        const detailsParts = [mapped.boxDisplayId || mapped.boxId, mapped.vehicleNumber, mapped.restaurantName].filter(Boolean);
+        return {
+          id: mapped.id,
+          name: mapped.name || mapped.boxDisplayId || `Box ${mapped.id}`,
+          details: detailsParts.join(" | "),
+          power: mapped.power === "on" ? "on" : mapped.power === "off" ? "off" : "warning",
+          driver: mapped.handler || undefined,
+          added: mapped.added || "",
+          isLocked: mapped.grublockStatus === "locked" || mapped.locked,
+          isOffline: mapped.power === "off" || mapped.handlerStatus === "offline" || mapped.powerStatus === "off",
+        };
+      }));
+      setResourceGrubPacTotalEntries(totalCount);
+      
+      setDebugInfo(JSON.stringify({
+        id: selectedRestaurant.id,
+        params: commonParams,
+        active: { success: resActive.success, count: (resActive.data as any)?.boxes?.length || 0, data: resActive.data },
+        suspended: { success: resSuspended.success, count: (resSuspended.data as any)?.boxes?.length || 0, data: resSuspended.data }
+      }, null, 2));
+    } catch (err: any) {
       console.error(err);
+      setDebugInfo(`Error: ${err.message}\n${err.stack}`);
       setResourceGrubPacs([]);
       setResourceGrubPacTotalEntries(0);
     } finally {
@@ -1050,6 +1141,11 @@ const _boxesCount = (selectedRestaurant as any)?._count?.boxes ?? selectedRestau
         grubPacTotalEntries={resourceGrubPacTotalEntries}
         loading={resourcesLoading}
       />
+      {debugInfo && (
+        <pre style={{ position: "fixed", bottom: 10, left: 10, background: "rgba(0,0,0,0.9)", color: "#00ff00", zIndex: 999999, padding: 15, borderRadius: 8, maxHeight: 400, maxWidth: 500, overflow: "auto", fontSize: 11, border: "1px solid #00ff00", fontFamily: "monospace", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
+          {debugInfo}
+        </pre>
+      )}
     </div>
   );
 }

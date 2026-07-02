@@ -33,7 +33,7 @@ const INITIAL_FORM: NewOwnerFormData = {
 const FULL_NAME_MAX_LENGTH = 50;
 const ORGANISATION_NAME_MAX_LENGTH = 80;
 const INDIA_LOCAL_DIGITS = 10;
-const NAME_SANITIZE_REGEX = /[^\p{L}\s'-]/gu;
+const NAME_SANITIZE_REGEX = /[^\p{L}\p{N}\s'-]/gu;
 const ORGANISATION_SANITIZE_REGEX = /[^\p{L}\p{N}\s&'.,()-]/gu;
 const toDigits = (value: string): string => value.replace(/\D/g, "");
 

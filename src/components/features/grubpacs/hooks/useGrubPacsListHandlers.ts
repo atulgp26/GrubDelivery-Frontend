@@ -273,7 +273,7 @@ export function useGrubPacsListHandlers({
     // Handle future feature: remove vehicle
     if (settingType === "REMOVE ANY ROOM ASSIGNED") {
       closeModal("applySettings");
-      showSuccess("Remove vehicle feature will be implemented in the future");
+      showSuccess("Info", "Remove vehicle feature will be implemented in the future");
       return;
     }
 

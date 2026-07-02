@@ -190,15 +190,31 @@ export function useGrubPacsListState() {
     if (!hasData) return [];
     if (!isSearchMode) return groups;
 
-    const groupedMatches: GrubPacGroup[] = groups
-      .map((group) => ({
-        ...group,
-        items: (group.items || []).filter((item) => searchResultIds.has(String(item.id))),
-      }))
+    const hasSearchApiResults = searchResults && searchResults.length > 0;
+
+    const matchedGroups: GrubPacGroup[] = groups
+      .map((group) => {
+        const matchedItems = (group.items || []).filter((item) => {
+          if (hasSearchApiResults) {
+            return searchResultIds.has(String(item.id));
+          }
+          const term = searchTerm.trim().toLowerCase();
+          return (
+            (item.name || "").toLowerCase().includes(term) ||
+            (item.code && item.code.toLowerCase().includes(term)) ||
+            (item.boxId && item.boxId.toLowerCase().includes(term))
+          );
+        });
+
+        return {
+          ...group,
+          items: matchedItems,
+        };
+      })
       .filter((group) => (group.items?.length ?? 0) > 0);
 
     const existingIds = new Set(
-      groupedMatches.flatMap((group) => (group.items || []).map((item) => String(item.id))),
+      matchedGroups.flatMap((group) => (group.items || []).map((item) => String(item.id))),
     );
 
     const fallbackItems: GrubPacItem[] = searchResults
@@ -217,14 +233,14 @@ export function useGrubPacsListState() {
       }));
 
     if (fallbackItems.length > 0) {
-      groupedMatches.push({
+      matchedGroups.push({
         name: "Search results",
         items: fallbackItems,
       });
     }
 
-    return groupedMatches;
-  }, [groups, hasData, isSearchMode, searchResultIds, searchResults]);
+    return matchedGroups;
+  }, [groups, hasData, isSearchMode, searchResultIds, searchResults, searchTerm]);
 
   const filteredGroups: GrubPacGroup[] = useMemo(
     () =>

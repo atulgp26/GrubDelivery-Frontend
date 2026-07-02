@@ -15,6 +15,79 @@ interface UseGrubPacsDataReturn {
   totalEntries: number;
 }
 
+function matchesFilters(item: ApiGrubPac, params?: GrubPacListParams): boolean {
+  if (!params) return true;
+
+  if (params.power_status) {
+    const itemPower = (item.power_status ?? "").toLowerCase();
+    if (itemPower !== params.power_status.toLowerCase()) {
+      return false;
+    }
+  }
+
+  if (params.connection_status) {
+    const itemConn = (item.connection_status ?? "").toLowerCase();
+    if (itemConn !== params.connection_status.toLowerCase()) {
+      return false;
+    }
+  }
+
+  if (params.health_status) {
+    const itemHealth = (item.health_status ?? "").toLowerCase();
+    if (itemHealth !== params.health_status.toLowerCase()) {
+      return false;
+    }
+  }
+
+  if (params.grublock_status) {
+    const itemLock = (item.lock?.lock_status ?? item.grublock_status ?? "").toLowerCase();
+    if (itemLock !== params.grublock_status.toLowerCase()) {
+      return false;
+    }
+  }
+
+  if (params.restaurant_assigned === "on") {
+    const hasRestaurant = (item.restaurants?.length ?? 0) > 0 || (item.restaurant_boxes?.length ?? 0) > 0 || !!(item as any).restaurant_id;
+    if (!hasRestaurant) return false;
+  }
+
+  if (params.vehicle_assigned === "on") {
+    if (!item.vehicle_number) return false;
+  }
+
+  if (params.ioniser_status) {
+    const itemIoniser = (item.ioniser_status ?? "").toLowerCase();
+    if (itemIoniser !== params.ioniser_status.toLowerCase()) {
+      return false;
+    }
+  }
+
+  if (params.dual_zone_status) {
+    const itemDual = (item.dual_zone_status ?? "").toLowerCase();
+    if (itemDual !== params.dual_zone_status.toLowerCase()) {
+      return false;
+    }
+  }
+
+  const zone1 = item.zone1_temp ?? (item as any).temp_zone1;
+  if (params.zone1_min !== undefined && zone1 != null) {
+    if (zone1 < params.zone1_min) return false;
+  }
+  if (params.zone1_max !== undefined && zone1 != null) {
+    if (zone1 > params.zone1_max) return false;
+  }
+
+  const zone2 = item.zone2_temp ?? (item as any).temp_zone2;
+  if (params.zone2_min !== undefined && zone2 != null) {
+    if (zone2 < params.zone2_min) return false;
+  }
+  if (params.zone2_max !== undefined && zone2 != null) {
+    if (zone2 > params.zone2_max) return false;
+  }
+
+  return true;
+}
+
 export const useGrubPacsData = (apiParams?: GrubPacListParams): UseGrubPacsDataReturn => {
   const [data, setData] = useState<GrubPacItem[]>([]);
   const [serverGroups, setServerGroups] = useState<Array<{ name: string; items: GrubPacItem[]; pagination?: any; groupTableKey?: string }> | null>(null);
@@ -45,7 +118,9 @@ export const useGrubPacsData = (apiParams?: GrubPacListParams): UseGrubPacsDataR
             .filter(([key]) => !key.endsWith("_name")) // Filter out metadata keys
             .map(([groupKey, groupValue]) => {
               const value = groupValue as any;
-              const items = getWrappedGroupArray<ApiGrubPac>(value).map((item) => apiGrubPacToItem(item));
+              const items = getWrappedGroupArray<ApiGrubPac>(value)
+                .filter((item) => matchesFilters(item, apiParams))
+                .map((item) => apiGrubPacToItem(item));
               const nameKey = `${groupKey}_name`;
               const nameValue = (responseGroups as any)[nameKey];
               const fallbackName =
@@ -81,13 +156,17 @@ export const useGrubPacsData = (apiParams?: GrubPacListParams): UseGrubPacsDataR
             setTotalEntries((flat as any).total_count ?? (flat as any).count ?? mappedGroups.reduce((acc, g) => acc + g.items.length, 0));
           } else {
             setServerGroups(null);
-            const items = ((flat as { boxes?: ApiGrubPac[] }).boxes ?? []).map((item) => apiGrubPacToItem(item));
+            const items = ((flat as { boxes?: ApiGrubPac[] }).boxes ?? [])
+              .filter((item) => matchesFilters(item, apiParams))
+              .map((item) => apiGrubPacToItem(item));
             setData(items);
             setTotalEntries((flat as any).total_count ?? items.length);
           }
         } else {
           setServerGroups(null);
-          const items = ((flat as { boxes?: ApiGrubPac[] }).boxes ?? []).map((item) => apiGrubPacToItem(item));
+          const items = ((flat as { boxes?: ApiGrubPac[] }).boxes ?? [])
+            .filter((item) => matchesFilters(item, apiParams))
+            .map((item) => apiGrubPacToItem(item));
           setData(items);
           setTotalEntries((flat as any).total_count ?? items.length);
         }
@@ -150,18 +229,20 @@ export const useGrubPacsData = (apiParams?: GrubPacListParams): UseGrubPacsDataR
            const updatedGroupEntry = group.groupTableKey
              ? [group.groupTableKey, (responseGroups as Record<string, unknown>)[group.groupTableKey]]
              : Object.entries(responseGroups).find(([k, v]) => {
-                 const items = getWrappedGroupArray<ApiGrubPac>(v);
-                 const nameValue = (responseGroups as any)[`${k}_name`];
-                 const firstItem = items[0] ? apiGrubPacToItem(items[0]) : null;
-                 const groupName = (v as any)?.name ?? (typeof nameValue === "string" && nameValue.trim().length > 0 ? nameValue : (firstItem?.restaurantName ?? (k === "unassigned" ? "Unassigned" : k)));
-                 return groupName === group.name;
-               });
+                  const items = getWrappedGroupArray<ApiGrubPac>(v);
+                  const nameValue = (responseGroups as any)[`${k}_name`];
+                  const firstItem = items[0] ? apiGrubPacToItem(items[0]) : null;
+                  const groupName = (v as any)?.name ?? (typeof nameValue === "string" && nameValue.trim().length > 0 ? nameValue : (firstItem?.restaurantName ?? (k === "unassigned" ? "Unassigned" : k)));
+                  return groupName === group.name;
+                });
 
            if (updatedGroupEntry) {
              const [updatedGroupKey, value] = updatedGroupEntry;
              if (!value) return;
              const normalizedGroupKey = String(updatedGroupKey);
-             const items = getWrappedGroupArray<ApiGrubPac>(value).map((item) => apiGrubPacToItem(item));
+             const items = getWrappedGroupArray<ApiGrubPac>(value)
+               .filter((item) => matchesFilters(item, apiParams))
+               .map((item) => apiGrubPacToItem(item));
              setServerGroups((prev) => 
                 prev ? prev.map(g => (g.groupTableKey === normalizedGroupKey || g.name === group.name) ? { 
                   ...g, 

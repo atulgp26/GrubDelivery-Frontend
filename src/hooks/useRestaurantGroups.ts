@@ -2,6 +2,16 @@ import { useCallback, useEffect, useState } from "react";
 import { flattenWrappedGroupRecord } from "@/lib/utils/groupedResponse";
 import type { RestaurantGroup, Restaurant, RestaurantData } from "@/types/domain/restaurants";
 import foodService from "@/services/food";
+import grubpacService from "@/services/grubpacs";
+
+function extractGrubPacs(data: any): any[] {
+  if (typeof data !== "object" || data === null) return [];
+  if (Array.isArray(data.boxes)) return data.boxes;
+  if (data.groups && typeof data.groups === "object" && !Array.isArray(data.groups)) {
+    return flattenWrappedGroupRecord<any>(data.groups as Record<string, unknown>);
+  }
+  return [];
+}
 
 export interface UseRestaurantGroupsOptions {
   searchTerm?: string;
@@ -123,9 +133,40 @@ export function useRestaurantGroups({
         params.group_by = "boxes";
       }
 
-      const response = await foodService.getRestaurants({
-        ...(params as any),
-      });
+      const [response, grubpacsRes] = await Promise.all([
+        foodService.getRestaurants({
+          ...(params as any),
+        }),
+        grubpacService.getList({ limit: 1000 })
+      ]);
+
+      const boxCounts: Record<string, number> = {};
+      if (grubpacsRes.success && grubpacsRes.data) {
+        const boxes = extractGrubPacs(grubpacsRes.data);
+        boxes.forEach((box: any) => {
+          const rIds = new Set<string>();
+          if (box.restaurant_boxes && Array.isArray(box.restaurant_boxes)) {
+            box.restaurant_boxes.forEach((rb: any) => {
+              if (rb.restaurant_id) rIds.add(rb.restaurant_id);
+            });
+          }
+          if (box.restaurants && Array.isArray(box.restaurants)) {
+            box.restaurants.forEach((r: any) => {
+              if (r.id) rIds.add(r.id);
+            });
+          }
+          if (typeof box.restaurant_id === "string" && box.restaurant_id) {
+            rIds.add(box.restaurant_id);
+          }
+
+          const isBoxActive = !box.status || box.status.toLowerCase() === "active";
+          if (isBoxActive) {
+            rIds.forEach((rId) => {
+              boxCounts[rId] = (boxCounts[rId] || 0) + 1;
+            });
+          }
+        });
+      }
 
       if (response.success && response.data) {
         const mapRestaurantData = (r: RestaurantData): Restaurant => ({
@@ -134,7 +175,7 @@ export function useRestaurantGroups({
           address: buildRestaurantAddress(r),
           manager: getManagerName(r.manager),
           drivers: r._count?.drivers || 0,
-          boxes: r._count?.boxes || 0,
+          boxes: boxCounts[r.id] !== undefined ? boxCounts[r.id] : (r._count?.boxes || 0),
           suspended_boxes: r._count?.suspended_boxes || 0,
           updated: r.updated_at ? new Date(r.updated_at).toLocaleDateString('en-GB', {
             day: '2-digit',
@@ -274,7 +315,38 @@ export function useRestaurantGroups({
 
       if (status) params.status = status;
 
-      const response = await foodService.getRestaurants(params as any);
+      const [response, grubpacsRes] = await Promise.all([
+        foodService.getRestaurants(params as any),
+        grubpacService.getList({ limit: 1000 })
+      ]);
+
+      const boxCounts: Record<string, number> = {};
+      if (grubpacsRes.success && grubpacsRes.data) {
+        const boxes = extractGrubPacs(grubpacsRes.data);
+        boxes.forEach((box: any) => {
+          const rIds = new Set<string>();
+          if (box.restaurant_boxes && Array.isArray(box.restaurant_boxes)) {
+            box.restaurant_boxes.forEach((rb: any) => {
+              if (rb.restaurant_id) rIds.add(rb.restaurant_id);
+            });
+          }
+          if (box.restaurants && Array.isArray(box.restaurants)) {
+            box.restaurants.forEach((r: any) => {
+              if (r.id) rIds.add(r.id);
+            });
+          }
+          if (typeof box.restaurant_id === "string" && box.restaurant_id) {
+            rIds.add(box.restaurant_id);
+          }
+
+          const isBoxActive = !box.status || box.status.toLowerCase() === "active";
+          if (isBoxActive) {
+            rIds.forEach((rId) => {
+              boxCounts[rId] = (boxCounts[rId] || 0) + 1;
+            });
+          }
+        });
+      }
 
       if (response.success && response.data) {
         // Find the group in the response
@@ -288,7 +360,7 @@ export function useRestaurantGroups({
             address: buildRestaurantAddress(r),
             manager: getManagerName(r.manager),
             drivers: r._count?.drivers || 0,
-            boxes: r._count?.boxes || 0,
+            boxes: boxCounts[r.id] !== undefined ? boxCounts[r.id] : (r._count?.boxes || 0),
             suspended_boxes: r._count?.suspended_boxes || 0,
             updated: r.updated_at ? new Date(r.updated_at).toLocaleDateString('en-GB', {
               day: '2-digit',

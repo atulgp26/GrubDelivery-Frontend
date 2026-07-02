@@ -122,7 +122,7 @@ function RestaurantsContent() {
         pincode: data.pincode || "",
         line_one: data.line1 || "",
         // line_two: data.line2 || "",
-        line_two: data.line2?.trim() || null,
+        line_two: data.line2?.trim() || undefined,
         latitude: data.latitude?.trim() || undefined,
         longitude: data.longitude?.trim() || undefined,
         status: data.status,

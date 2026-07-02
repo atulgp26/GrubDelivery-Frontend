@@ -21,6 +21,12 @@ import foodService from "@/services/food";
 import { showError, showSuccess } from "@/components/ui/toast";
 import { useRestaurantSearch } from "./hooks/useRestaurantSearch";
 import { highlightMatch } from "@/lib/utils/highlightMatch";
+import { apiEmployeeToEmployee } from "@/types/domain/employees";
+import { apiGrubPacToItem } from "@/types/domain/grubpacs";
+import employeeService from "@/services/employees";
+import grubpacService from "@/services/grubpacs";
+import RestaurantResourcesModal from "@/components/features/restaurants/modals/RestaurantResourcesModal";
+import { defaultBoxFilters } from "@/components/features/shared/filter/BoxFilterModal";
 
 // Columns that match the Figma design: Name, Address, Added, Suspended, Actions
 const SUSPENDED_COLUMNS: GroupColumnId[] = [
@@ -96,6 +102,13 @@ function buildRestaurantAddress(data: RestaurantData): string {
 export default function SuspendedRestaurantsList({ className = "" }: SuspendedRestaurantsListProps) {
   const router = useRouter();
   const [restaurants, setRestaurants] = useState<GroupRow[]>([]);
+  const [showResourcesModal, setShowResourcesModal] = useState(false);
+  const [resourcesTab, setResourcesTab] = useState<"grubpacs" | "employees">("grubpacs");
+  const [resourceEmployees, setResourceEmployees] = useState<any[]>([]);
+  const [resourceGrubPacs, setResourceGrubPacs] = useState<any[]>([]);
+  const [resourceEmployeeTotalEntries, setResourceEmployeeTotalEntries] = useState(0);
+  const [resourceGrubPacTotalEntries, setResourceGrubPacTotalEntries] = useState(0);
+  const [resourcesLoading, setResourcesLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
@@ -330,6 +343,157 @@ export default function SuspendedRestaurantsList({ className = "" }: SuspendedRe
       setShowDeleteModal(true);
     }
   };
+
+  const fetchResourceEmployees = useCallback(async (query = "", page = 1, availableDriversOnly = false, roles?: string[]) => {
+    if (!selectedRestaurant) return;
+    setResourcesLoading(true);
+    try {
+      const apiRoles = (roles && roles.length > 0)
+        ? roles.map(r => r === "driver" ? "delivery" : r)
+        : [];
+
+      const res = await employeeService.getList({
+        ...(apiRoles.length === 1 ? { role: apiRoles[0] as "manager" | "delivery" } : {}),
+        status: availableDriversOnly ? "unassigned" : undefined,
+        restaurant_id: availableDriversOnly ? undefined : selectedRestaurant.id,
+        limit: 10,
+        page,
+        query: query.trim() || undefined,
+      });
+      if (res.success && res.data) {
+        const list = res.data.employees || [];
+        setResourceEmployees(list.map((e: any) => {
+          const mapped = apiEmployeeToEmployee(e);
+          return {
+            id: mapped.id,
+            name: mapped.name,
+            employeeId: mapped.employeeId,
+            joinedDate: mapped.joinedDate,
+            phone: mapped.phone,
+            email: mapped.email,
+            role: mapped.role,
+            boxCount: mapped.boxCount,
+            added: mapped.added,
+            isAvailable: e.status === "active",
+          };
+        }));
+        setResourceEmployeeTotalEntries(res.pagination?.total_count ?? list.length);
+      } else {
+        setResourceEmployees([]);
+        setResourceEmployeeTotalEntries(0);
+      }
+    } catch (err) {
+      console.error(err);
+      setResourceEmployees([]);
+      setResourceEmployeeTotalEntries(0);
+    } finally {
+      setResourcesLoading(false);
+    }
+  }, [selectedRestaurant]);
+
+  const fetchResourceGrubPacs = useCallback(async (params: {
+    page: number;
+    query: string;
+    showOfflineBoxes?: boolean;
+    filters?: any;
+  }) => {
+    if (!selectedRestaurant) return;
+    setResourcesLoading(true);
+    try {
+      const filters = params.filters;
+      const apiParams: any = {};
+      
+      const power = filters?.power ?? [];
+      if (power.length === 1) {
+        const value = power[0];
+        if (value === "Powered on") apiParams.power_status = "on";
+        else if (value === "Powered off") apiParams.power_status = "off";
+        else if (value === "Unknown") apiParams.power_status = "unknown";
+      }
+
+      const connection = filters?.connection ?? [];
+      if (connection.length === 1) {
+        const value = connection[0];
+        if (value === "Connected") apiParams.connection_status = "connected";
+        else if (value === "Disconnected") apiParams.connection_status = "disconnected";
+      }
+
+      const health = filters?.health ?? [];
+      if (health.length === 1) {
+        const value = health[0];
+        if (value === "Critical") apiParams.health_status = "critical";
+        else if (value === "Healthy") apiParams.health_status = "healthy";
+        else if (value === "Needs attention") apiParams.health_status = "attention";
+      }
+
+      const grublockStatus = filters?.grubLockStatus ?? [];
+      if (grublockStatus.length === 1) {
+        const value = grublockStatus[0];
+        if (value === "Locked") apiParams.grublock_status = "locked";
+        else if (value === "Unlocked") apiParams.grublock_status = "unlocked";
+        else if (value === "No lock available") apiParams.grublock_status = "not_available";
+      }
+
+      if (filters?.restaurantAssigned) apiParams.restaurant_assigned = "on";
+      if (filters?.vehicleAssigned) apiParams.vehicle_assigned = "on";
+      if (filters?.ioniserOn) apiParams.ioniser_status = "on";
+      if (filters?.dualZoneOn) apiParams.dual_zone_status = "on";
+
+      if (filters && filters.zone1Min !== -20) apiParams.zone1_min = filters.zone1Min;
+      if (filters && filters.zone1Max !== 30) apiParams.zone1_max = filters.zone1Max;
+      if (filters && filters.zone2Min !== -20) apiParams.zone2_min = filters.zone2Min;
+      if (filters && filters.zone2Max !== 30) apiParams.zone2_max = filters.zone2Max;
+
+      const fallbackPowerStatus = params.showOfflineBoxes ? "off" : "on";
+
+      const res = await grubpacService.getList({
+        restaurant_id: selectedRestaurant.id,
+        limit: 10,
+        page: params.page,
+        status: "active",
+        query: params.query.trim() || undefined,
+        power_status: apiParams.power_status ?? fallbackPowerStatus,
+        connection_status: apiParams.connection_status,
+        health_status: apiParams.health_status,
+        grublock_status: apiParams.grublock_status,
+        restaurant_assigned: apiParams.restaurant_assigned,
+        vehicle_assigned: apiParams.vehicle_assigned,
+        ioniser_status: apiParams.ioniser_status,
+        dual_zone_status: apiParams.dual_zone_status,
+        zone1_min: apiParams.zone1_min,
+        zone1_max: apiParams.zone1_max,
+        zone2_min: apiParams.zone2_min,
+        zone2_max: apiParams.zone2_max,
+      });
+
+      if (res.success && res.data) {
+        const list = res.data.boxes || [];
+        setResourceGrubPacs(list.map((b: any) => {
+          const mapped = apiGrubPacToItem(b);
+          return {
+            id: mapped.id,
+            name: mapped.name,
+            details: mapped.details,
+            power: mapped.power,
+            driver: mapped.driverName,
+            added: mapped.added,
+            isLocked: mapped.grublockStatus === "locked",
+            isOffline: mapped.connectionStatus === "offline",
+          };
+        }));
+        setResourceGrubPacTotalEntries(res.pagination?.total_count ?? list.length);
+      } else {
+        setResourceGrubPacs([]);
+        setResourceGrubPacTotalEntries(0);
+      }
+    } catch (err) {
+      console.error(err);
+      setResourceGrubPacs([]);
+      setResourceGrubPacTotalEntries(0);
+    } finally {
+      setResourcesLoading(false);
+    }
+  }, [selectedRestaurant]);
 
   const handleActivateFromDetails = () => {
     // When clicking activate from details modal, close details and open reactivate modal
@@ -844,12 +1008,47 @@ const _boxesCount = (selectedRestaurant as any)?._count?.boxes ?? selectedRestau
           suspendedOn: (selectedRestaurant as any)?.suspendedOn,
           address: selectedRestaurant?.address,
           resources: [
-            { label: "GrubPacs", count: _boxesCount },
-            { label: "employees", count: _employeesCount },
+            {
+              label: "GrubPacs",
+              count: _boxesCount,
+              onViewList: () => {
+                setResourcesTab("grubpacs");
+                setShowDetailsModal(false);
+                setShowResourcesModal(true);
+                void fetchResourceGrubPacs({ page: 1, query: "", showOfflineBoxes: false, filters: defaultBoxFilters });
+              },
+            },
+            {
+              label: "employees",
+              count: _employeesCount,
+              onViewList: () => {
+                setResourcesTab("employees");
+                setShowDetailsModal(false);
+                setShowResourcesModal(true);
+                void fetchResourceEmployees("", 1);
+              },
+            },
           ],
         }}
         onActivate={handleActivateFromDetails}
         onDelete={handleDeleteFromDetails}
+      />
+
+      <RestaurantResourcesModal
+        open={showResourcesModal}
+        onClose={() => {
+          setShowResourcesModal(false);
+          setShowDetailsModal(true);
+        }}
+        restaurantName={selectedRestaurant?.name || ""}
+        tab={resourcesTab}
+        grubPacs={resourceGrubPacs}
+        employees={resourceEmployees}
+        onFetchEmployees={fetchResourceEmployees}
+        onFetchGrubPacs={fetchResourceGrubPacs}
+        employeeTotalEntries={resourceEmployeeTotalEntries}
+        grubPacTotalEntries={resourceGrubPacTotalEntries}
+        loading={resourcesLoading}
       />
     </div>
   );

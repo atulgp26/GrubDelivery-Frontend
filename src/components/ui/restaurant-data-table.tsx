@@ -31,6 +31,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 export type GroupColumnId = "name" | "address" | "manager" | "drivers" | "boxes" | "updated" | "suspended" | "added" | "actions";
 
@@ -116,6 +117,7 @@ export function GroupDataTable({
 	onViewBoxesList,
 	className,
 }: GroupDataTableProps) {
+	const router = useRouter();
 	const [internalSelectedIds, setInternalSelectedIds] = React.useState<Set<string>>(new Set());
 	const [openDropdownRowId, setOpenDropdownRowId] = React.useState<string | null>(null);
 	const [openManagerTooltipRowId, setOpenManagerTooltipRowId] = React.useState<string | null>(null);
@@ -263,6 +265,7 @@ export function GroupDataTable({
 									setOpenDriversTooltipRowId,
 									openBoxesTooltipRowId,
 									setOpenBoxesTooltipRowId,
+									router,
 									...callbacks,
 								})}
 							</DataTableCell>
@@ -302,6 +305,7 @@ interface RenderCellCallbacks extends CellCallbacks {
 	setOpenDriversTooltipRowId: (id: string | null) => void;
 	openBoxesTooltipRowId: string | null;
 	setOpenBoxesTooltipRowId: (id: string | null) => void;
+	router?: any;
 }
 
 function getManagerDisplayValue(manager: unknown): string | undefined {
@@ -547,7 +551,7 @@ function renderCell(
 							if (row.boxCount > 0) {
 								callbacks.onViewBoxesList?.(row);
 							} else {
-								callbacks.onAssignBoxes?.(row);
+								callbacks.router?.push("/grubpacs/list");
 							}
 						}}
 					className={`group/badge inline-flex items-center gap-[var(--gp-space-s)] px-[10px] rounded-full py-[5px] transition-[background-color,border-color] duration-200 cursor-pointer ${
@@ -592,7 +596,7 @@ function renderCell(
 							if (row.boxCount > 0) {
 								callbacks.onViewBoxesList?.(row);
 							} else {
-								callbacks.onAssignBoxes?.(row);
+								callbacks.router?.push("/grubpacs/list");
 							}
 						}}
 					>

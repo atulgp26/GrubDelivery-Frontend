@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/tooltip";
 import TableCheckbox from "@/components/ui/TableCheckbox";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
+import { useRouter } from "next/navigation";
 
 export type RestaurantResourceColumnId = "name" | "contactInfo" | "role" | "box" | "added";
 
@@ -86,6 +87,7 @@ export function RestaurantResourceModalTable({
 	allSelected = false,
 	onSelectAll,
 }: ViewListEmployeeTableProps) {
+	const router = useRouter();
 
 	const [openBoxesTooltipRowId, setOpenBoxesTooltipRowId] = React.useState<string | null>(null);
 
@@ -151,6 +153,7 @@ export function RestaurantResourceModalTable({
 									setOpenBoxesTooltipRowId,
 									onViewBoxesList,
 									onAssignBoxes,
+									router,
 								})}
 							</DataTableCell>
 						))}
@@ -166,6 +169,7 @@ interface RenderCellCallbacks {
 	setOpenBoxesTooltipRowId: (id: string | null) => void;
 	onViewBoxesList?: (row: RestaurantResourceRow) => void;
 	onAssignBoxes?: (row: RestaurantResourceRow) => void;
+	router?: any;
 }
 
 function renderCell(
@@ -281,7 +285,7 @@ function renderCell(
 							if (boxCount > 0) {
 								callbacks.onViewBoxesList?.(row);
 							} else {
-								callbacks.onAssignBoxes?.(row);
+								callbacks.router?.push("/grubpacs/list");
 							}
 						}}
 					>

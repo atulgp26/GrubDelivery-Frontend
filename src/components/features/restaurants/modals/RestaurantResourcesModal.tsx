@@ -249,15 +249,37 @@ export default function RestaurantResourcesModal({
     state.selectedRoles,
   ]);
 
-  const totalEntries = state.activeTab === "grubpacs" ? (grubPacTotalEntries ?? grubPacs.length) : (employeeTotalEntries ?? employees.length);
+  const filteredData = useMemo(() => {
+    const term = state.searchTerm.trim().toLowerCase();
+    if (state.activeTab === "grubpacs") {
+      if (!term) return grubPacs;
+      return grubPacs.filter(
+        (box) =>
+          box.name.toLowerCase().includes(term) ||
+          (box.details && box.details.toLowerCase().includes(term))
+      );
+    } else {
+      if (!term) return employees;
+      return employees.filter(
+        (emp) =>
+          emp.name.toLowerCase().includes(term) ||
+          (emp.employeeId && emp.employeeId.toLowerCase().includes(term)) ||
+          (emp.email && emp.email.toLowerCase().includes(term)) ||
+          (emp.phone && emp.phone.toLowerCase().includes(term))
+      );
+    }
+  }, [state.activeTab, state.searchTerm, grubPacs, employees]);
+
+  const totalEntries = state.searchTerm.trim()
+    ? filteredData.length
+    : (state.activeTab === "grubpacs" ? (grubPacTotalEntries ?? grubPacs.length) : (employeeTotalEntries ?? employees.length));
+
   const totalPages = Math.max(
     1,
     Math.ceil(totalEntries / (state.activeTab === "grubpacs" ? grubPacPageSize : employeePageSize)),
   );
-  const paginatedData =
-    state.activeTab === "grubpacs"
-      ? grubPacs
-      : employees;
+
+  const paginatedData = filteredData;
 
   const handleTabChange = (newTab: ResourceTabType) => {
     setState((prev) => ({
@@ -646,58 +668,64 @@ export default function RestaurantResourcesModal({
           )}
         </div>
 
-        <div className="px-6 pt-4 pb-0 border-t border-[var(--color-stroke-neutral)]">
-          {state.isEditMode ? (
-            <div className="flex items-center justify-between">
-              <div className="text-base text-[var(--color-neutral-secondary)]">
-                {state.activeTab === "grubpacs"
-                  ? state.selectedBoxIds.size > 0
-                    ? `${state.selectedBoxIds.size} box${state.selectedBoxIds.size > 1 ? "es" : ""} selected.`
-                    : "No box selected yet!"
-                  : state.selectedEmployeeIds.size > 0
-                    ? `${state.selectedEmployeeIds.size} employee${state.selectedEmployeeIds.size > 1 ? "s" : ""} selected.`
-                    : "No employee selected yet!"}
+        {((state.isEditMode) || (state.activeTab === "grubpacs" && (onReassignBoxes || onEditList))) && (
+          <div className="px-6 pt-4 pb-0 border-t border-[var(--color-stroke-neutral)]">
+            {state.isEditMode ? (
+              <div className="flex items-center justify-between">
+                <div className="text-base text-[var(--color-neutral-secondary)]">
+                  {state.activeTab === "grubpacs"
+                    ? state.selectedBoxIds.size > 0
+                      ? `${state.selectedBoxIds.size} box${state.selectedBoxIds.size > 1 ? "es" : ""} selected.`
+                      : "No box selected yet!"
+                    : state.selectedEmployeeIds.size > 0
+                      ? `${state.selectedEmployeeIds.size} employee${state.selectedEmployeeIds.size > 1 ? "s" : ""} selected.`
+                      : "No employee selected yet!"}
+                </div>
+                <Button
+                  variant="primary"
+                  appearance="outlined"
+                  state="press"
+                  onClick={handleConfirmRemoval}
+                  disabled={
+                    (state.activeTab === "grubpacs" ? state.selectedBoxIds.size === 0 : state.selectedEmployeeIds.size === 0) || loading
+                  }
+                  className="w-full max-w-xs disabled:bg-[var(--color-neutral-secondary-bg)] disabled:border-[var(--color-stroke-neutral)] disabled:text-[var(--color-box-border)] disabled:shadow-none h-[48px] hover:underline-offset-4"
+                >
+                  <span>CONFIRM REMOVAL</span>
+                </Button>
               </div>
-              <Button
-                variant="primary"
-                appearance="outlined"
-                state="press"
-                onClick={handleConfirmRemoval}
-                disabled={
-                  (state.activeTab === "grubpacs" ? state.selectedBoxIds.size === 0 : state.selectedEmployeeIds.size === 0) || loading
-                }
-                className="w-full max-w-xs disabled:bg-[var(--color-neutral-secondary-bg)] disabled:border-[var(--color-stroke-neutral)] disabled:text-[var(--color-box-border)] disabled:shadow-none h-[48px] hover:underline-offset-4"
-              >
-                <span>CONFIRM REMOVAL</span>
-              </Button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-4">
-              <Button
-                variant="primary"
-                appearance="outlined"
-                state="press"
-                onClick={handleReassignBoxes}
-                disabled={loading || totalEntries === 0}
-                className="flex-1 flex items-center font-medium justify-center gap-2 h-12 hover:underline-offset-4"
-              >
-                <FigIcon name="Group/Popup/refresh" className="w-5 h-5" />
-                <span>REASSIGN ALL BOXES</span>
-              </Button>
-              <Button
-                variant="primary"
-                appearance="outlined"
-                state="press"
-                onClick={handleEditList}
-                disabled={loading || totalEntries === 0}
-                className="flex-1 flex items-center font-medium justify-center gap-2 h-12 hover:underline-offset-4"
-              >
-                <FigIcon name="Employee/Popup/pen" size={24} className="w-5 h-5" />
-                <span>EDIT LIST</span>
-              </Button>
-            </div>
-          )}
-        </div>
+            ) : (
+              <div className="flex items-center gap-4">
+                {onReassignBoxes && (
+                  <Button
+                    variant="primary"
+                    appearance="outlined"
+                    state="press"
+                    onClick={handleReassignBoxes}
+                    disabled={loading || totalEntries === 0}
+                    className="flex-1 flex items-center font-medium justify-center gap-2 h-12 hover:underline-offset-4"
+                  >
+                    <FigIcon name="Group/Popup/refresh" className="w-5 h-5" />
+                    <span>REASSIGN ALL BOXES</span>
+                  </Button>
+                )}
+                {onEditList && (
+                  <Button
+                    variant="primary"
+                    appearance="outlined"
+                    state="press"
+                    onClick={handleEditList}
+                    disabled={loading || totalEntries === 0}
+                    className="flex-1 flex items-center font-medium justify-center gap-2 h-12 hover:underline-offset-4"
+                  >
+                    <FigIcon name="Employee/Popup/pen" size={24} className="w-5 h-5" />
+                    <span>EDIT LIST</span>
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
         <BoxFilterModal
           open={state.activeTab === "grubpacs" && state.showFilterModal}
           onClose={() => setState((prev) => ({ ...prev, showFilterModal: false }))}

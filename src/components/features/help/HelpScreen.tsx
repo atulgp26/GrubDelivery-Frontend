@@ -63,14 +63,25 @@ export default function HelpScreen() {
               <HelpCard
                 key={category.id}
                 icon={
-                  <Image
-                    src={getIconUrl(category.icon.bucket_key)}
-                    alt={category.icon.name}
-                    width={80}
-                    height={80}
-                    className="h-20 w-20 shrink-0 object-contain"
-                    unoptimized
-                  />
+                  category.icon && category.icon.bucket_key ? (
+                    <Image
+                      src={getIconUrl(category.icon.bucket_key)}
+                      alt={category.icon.name || category.name}
+                      width={80}
+                      height={80}
+                      className="h-20 w-20 shrink-0 object-contain"
+                      unoptimized
+                    />
+                  ) : (
+                    <Image
+                      src="/alert_help.svg"
+                      alt={category.name}
+                      width={80}
+                      height={80}
+                      className="h-20 w-20 shrink-0 object-contain"
+                      unoptimized
+                    />
+                  )
                 }
                 title={category.name}
                 onClick={() =>

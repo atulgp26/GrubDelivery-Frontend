@@ -263,4 +263,25 @@ export default function NotificationsPage() {
         setShowFilterModal={setShowFilterModal}
         isFilterModalOpen={showFilterModal}
       />
-      <Notifi
+      <NotificationFilterModal
+        open={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
+        selectedTypes={selectedTypes}
+        setSelectedTypes={setSelectedTypes}
+        selectedStatuses={selectedStatuses}
+        setSelectedStatuses={setSelectedStatuses}
+        onFilter={() => setShowFilterModal(false)}
+      />
+      <NotificationList
+        filtered={filteredNotifications}
+        selected={selectedNotificationIds}
+        setSelected={setSelectedNotificationIds}
+        getNotificationIcon={getNotificationIcon}
+        allSelected={allVisibleSelected}
+        onToggleAll={handleToggleAllVisible}
+        onDismiss={handleDismiss}
+        onMarkAsRead={handleMarkAsRead}
+      />
+    </>
+  );
+}

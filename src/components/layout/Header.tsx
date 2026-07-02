@@ -34,7 +34,7 @@ export default function Header({
       return;
     }
     setApiNotifications((prev) => prev.filter((n) => n.id !== id));
-    notificationsService.dismissNotification(String(id)).catch(() => {});
+    notificationsService.markAsDismissed([String(id)]).catch(() => {});
   };
 
   useEffect(() => {

@@ -18,6 +18,7 @@ import type {
   UserDataState,
 } from "@/components/features/account/types";
 import { formatDate as fmtDate } from "@/lib/utils/date";
+import { useOtpTimer } from "@/components/features/account/hooks/useOtpTimer";
 
 const DEFAULT_FIELDS: FieldsState = {
   name: "",
@@ -137,6 +138,8 @@ export function useAccount() {
     useRef<HTMLInputElement | null>(null),
     useRef<HTMLInputElement | null>(null),
   ]);
+
+  const { seconds: deleteTimer, start: startDeleteOtpTimer, reset: resetDeleteOtpTimer } = useOtpTimer(60);
 
   const queryClient = useQueryClient();
   const authToken = getAuthToken();
@@ -297,6 +300,13 @@ export function useAccount() {
   const handleDeleteAccount = () => {
     updateModalState({ deleteOpen: false, otpModalOpen: true, otpError: false });
     setOtp(["", "", "", ""]);
+    startDeleteOtpTimer();
+  };
+
+  const handleResendDeleteOtp = async () => {
+    // TODO: Implement actual API call when endpoint is available
+    showSuccess("OTP has been sent successfully", "");
+    resetDeleteOtpTimer();
   };
 
   const handleOtpVerify = async () => {
@@ -359,11 +369,13 @@ export function useAccount() {
     setOtp,
     handleEditSave,
     handlePasswordChange,
-    handleSendOtp,
-    handleConfirmOtp,
-    handleResendOtp,
     handleDelete,
     handleDeleteAccount,
     handleOtpVerify,
+    handleResendDeleteOtp,
+    handleSendOtp,
+    handleConfirmOtp,
+    handleResendOtp,
+    deleteTimer,
   };
 }

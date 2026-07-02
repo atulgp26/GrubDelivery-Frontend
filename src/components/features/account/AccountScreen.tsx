@@ -32,6 +32,8 @@ function AccountScreenContent(): React.ReactElement {
 		handleDelete,
 		handleDeleteAccount,
 		handleOtpVerify,
+		handleResendDeleteOtp,
+		deleteTimer,
 	} = useAccount();
 
 	if (isLoading) {
@@ -119,7 +121,7 @@ function AccountScreenContent(): React.ReactElement {
 				email={userData?.basicDetails?.email || ""}
 				otp={otp}
 				setOtp={setOtp}
-				timer={0}
+				timer={deleteTimer}
 				onBack={() => {
 					updateState({
 						otpModalOpen: false,
@@ -130,11 +132,7 @@ function AccountScreenContent(): React.ReactElement {
 				onVerify={handleOtpVerify}
 				otpRefs={otpRefs}
 				otpError={state.otpError}
-				onResend={() => {
-					showError(
-						"Please contact support to resend OTP for account deletion",
-					);
-				}}
+				onResend={handleResendDeleteOtp}
 				title="Verify Account Deletion"
 				message="Enter the OTP sent to your email to confirm account deletion"
 				showBackButton={true}

@@ -332,13 +332,13 @@ const handleExport = async () => {
         return;
       }
 
-      const nextCategories = response.data.categories.map((category: string) => ({
+      const nextCategories = (response.data?.categories || []).map((category: string) => ({
         id: category,
         label: category,
       }));
 
       setCategoryOptions(nextCategories);
-      setTypeMapping(response.data.mapping ?? {});
+      setTypeMapping(response.data?.mapping || {});
       setSelectedCategories((prev) => {
         if (shouldPreselectEmployeeCategory) {
           const employeeCategory = nextCategories.find(

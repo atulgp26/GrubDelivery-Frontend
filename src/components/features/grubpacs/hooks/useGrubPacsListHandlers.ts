@@ -399,16 +399,38 @@ export function useGrubPacsListHandlers({
   ]);
 
   const handleReassignConfirm = useCallback(
-    (group: { name: string }): void => {
+    async (group: { name: string; id: string }): Promise<void> => {
       closeModal("reassignGroup");
-      const totalSelected =
-        (selected.poweredOn?.length || 0) + (selected.poweredOff?.length || 0);
-      showSuccess(
-        `${totalSelected} boxes reassigned to ${group.name} successfully!`,
-        ""
-      );
+      const boxIds = [
+        ...(selected.poweredOn || []),
+        ...(selected.poweredOff || []),
+      ].map(String);
+
+      if (boxIds.length === 0) return;
+
+      try {
+        const response = await grubpacService.reassign({
+          box_ids: boxIds,
+          destination_restaurant_id: group.id,
+        });
+
+        if (response?.success) {
+          showSuccess(
+            `${boxIds.length} boxes reassigned to ${group.name} successfully!`,
+            ""
+          );
+          setSelected({ poweredOn: [], poweredOff: [] });
+          if (refetchGrubPacs) {
+            await refetchGrubPacs();
+          }
+        } else {
+          showError(response?.error || "Failed to reassign boxes.");
+        }
+      } catch (error) {
+        showError(getApiErrorMessage(error, "Failed to reassign boxes."));
+      }
     },
-    [selected, closeModal]
+    [selected, closeModal, refetchGrubPacs, setSelected]
   );
 
   const handleGroupClick = useCallback(

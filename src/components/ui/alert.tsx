@@ -88,11 +88,11 @@ function Alert({ className, variant, appearance, children, autoDismiss = true, o
 			{/* CLOSE BUTTON */}
 			{showClose && onDismiss && (
 				<button 
-					onClick={(e) => {
-						e.stopPropagation();
+					type="button"
+					onClick={() => {
 						onDismiss();
 					}}
-					className="shrink-0 text-current hover:opacity-70 transition-opacity p-1"
+					className="shrink-0 text-current hover:opacity-70 transition-opacity p-1 relative z-10"
 					aria-label="Dismiss alert"
 				>
 					<IoMdClose className="w-5 h-5" />

@@ -30,13 +30,29 @@ const PERMISSION_OPTIONS: { value: PermissionOption; title: string; description:
 function ReadOnlyPermissionRadio({ checked }: { checked: boolean }) {
   return (
     <span
-      className={`mt-[2px] shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+      className={`mt-[2px] shrink-0 w-5 h-5 rounded-[4px] border-2 flex items-center justify-center ${
         checked
           ? "border-[var(--gp-color-border-neutral-secondary)] bg-[var(--gp-color-bg-white)]"
           : "border-[var(--gp-color-border-neutral)] bg-[var(--gp-color-bg-neutral-tertiary)]"
       }`}
     >
-      {checked && <span className="w-[10px] h-[10px] rounded-full bg-[var(--gp-color-border-neutral-secondary)]" />}
+      {checked && (
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 20 20"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M5 10.5L9 14L15 7"
+            stroke="var(--gp-color-border-neutral-secondary)"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
     </span>
   );
 }

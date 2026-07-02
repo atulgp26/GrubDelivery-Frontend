@@ -45,7 +45,7 @@ export default function TransferOtpModal({
 
   useEffect(() => {
     if (open) {
-      setTimer(12)
+      setTimer(60)
       setOtp(["", "", "", ""])
       setOtpError(false)
     }
@@ -60,7 +60,7 @@ export default function TransferOtpModal({
   // ✅ Clean handleResend — sirf parent onResend call karo
   const handleResend = async () => {
     console.log("🔥 TransferOtpModal handleResend called")
-    setTimer(12)
+    setTimer(60)
     setOtp(["", "", "", ""])
     setOtpError(false)
     otpRefs[0].current?.focus()

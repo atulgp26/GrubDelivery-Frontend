@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 
 const OTP_LENGTH = 4;
-const OTP_TIMER_SECONDS = 12;
+const OTP_TIMER_SECONDS = 60;
 const EMPTY_OTP: string[] = Array(OTP_LENGTH).fill("");
 
 export function useOtpState(otpVerifyModalOpen: boolean) {

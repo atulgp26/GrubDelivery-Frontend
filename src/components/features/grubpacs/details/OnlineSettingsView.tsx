@@ -200,8 +200,8 @@ function BoxSection({
                   {hw.power.connected
                     ? "The box is currently powered on and connected to:"
                     : hw.power.status === "ON"
-                    ? "The box is currently powered on."
-                    : "The box is currently powered off."}
+                      ? "The box is currently powered on."
+                      : "The box is currently powered off."}
                 </p>
                 {hw.power.connected && settings.driver && (
                   <div className="flex items-center gap-2 p-2 rounded-lg w-full">
@@ -339,14 +339,13 @@ function ZoneOverlay({
   const colors = warning
     ? { bg: "rgba(199,44,52,0.70)", border: "#cf3f40" }
     : isTop
-    ? { bg: "rgba(26,156,214,0.64)", border: "#1a9cd6" }
-    : { bg: "rgba(249,157,32,0.64)", border: "#f99d20" };
+      ? { bg: "rgba(26,156,214,0.64)", border: "#1a9cd6" }
+      : { bg: "rgba(249,157,32,0.64)", border: "#f99d20" };
 
   return (
     <div
-      className={`absolute left-[18%] right-0 flex flex-col justify-start p-4 pt-7 rounded ${
-        isTop ? "top-[12.81%] bottom-[43.13%]" : "top-[60.62%] bottom-[15.63%]"
-      } backdrop-blur-sm ${onSelect ? "cursor-pointer" : ""}`}
+      className={`absolute left-[18%] right-0 flex flex-col justify-start p-4 pt-7 rounded ${isTop ? "top-[12.81%] bottom-[43.13%]" : "top-[60.62%] bottom-[15.63%]"
+        } backdrop-blur-sm ${onSelect ? "cursor-pointer" : ""}`}
       style={{
         background: colors.bg,
         border: selected ? "2px dashed #ffffff" : warning ? "2px dashed #ffb3b3" : `1px solid ${colors.border}`,
@@ -382,10 +381,10 @@ function UnifiedZoneOverlay({
   const base = warning
     ? "rgba(199,44,52,0.70)"
     : temp > 10
-    ? "rgba(199,44,52,0.65)"
-    : temp < 0
-    ? "rgba(26,156,214,0.64)"
-    : "rgba(249,157,32,0.64)";
+      ? "rgba(199,44,52,0.65)"
+      : temp < 0
+        ? "rgba(26,156,214,0.64)"
+        : "rgba(249,157,32,0.64)";
 
   return (
     <div
@@ -395,8 +394,8 @@ function UnifiedZoneOverlay({
         border: selected
           ? "2px dashed #ffffff"
           : warning
-          ? "2px dashed #ffb3b3"
-          : "1px solid #f99d20",
+            ? "2px dashed #ffb3b3"
+            : "1px solid #f99d20",
       }}
       onClick={onSelect}
     >
@@ -466,7 +465,7 @@ export function OnlineSettingsView({
       <div className="flex-1 overflow-y-auto scrollbar-hide py-6 pl-6 pr-2">
         {isEditMode && editDraft ? (
           <div className="flex flex-col gap-4">
-            <SectionHeading title="Box" open={true} onToggle={() => {}} />
+            <SectionHeading title="Box" open={true} onToggle={() => { }} />
             <ToggleCard
               icon="/GrubPac/Box-settings/switch.svg"
               title="Power"
@@ -495,10 +494,10 @@ export function OnlineSettingsView({
                   next
                     ? { ...current, dual_zone_status: "on" }
                     : {
-                        ...current,
-                        dual_zone_status: "off",
-                        zone2_temp: current.zone1_temp,
-                      },
+                      ...current,
+                      dual_zone_status: "off",
+                      zone2_temp: current.zone1_temp,
+                    },
                 )
               }
             />

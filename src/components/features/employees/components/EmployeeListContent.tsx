@@ -70,7 +70,7 @@ interface EmployeeListContentProps {
   onRolesChange?: (roles: Array<"manager" | "delivery">) => void;
   onPageChange?: (group: EmployeeGroup, page: number) => void;
   totalEntries?: number;
-    onRefetch?: () => void;
+  onRefetch?: () => void;
 }
 
 export default function EmployeeListContent({
@@ -100,9 +100,9 @@ export default function EmployeeListContent({
   const [resourceEmployees, setResourceEmployees] = useState<ResourceEmployee[]>([]);
   const [resourceGrubPacs, setResourceGrubPacs] = useState<ResourceGrubPac[]>([]);
   const [resourcesLoading, setResourcesLoading] = useState(false);
-const [showSharedBoxesModal, setShowSharedBoxesModal] = useState(false);
-const [sharedBoxesEmployee, setSharedBoxesEmployee] = useState<Employee | null>(null);
-const [mainModalBoxes, setMainModalBoxes] = useState<EmployeeBox[] | undefined>(undefined);
+  const [showSharedBoxesModal, setShowSharedBoxesModal] = useState(false);
+  const [sharedBoxesEmployee, setSharedBoxesEmployee] = useState<Employee | null>(null);
+  const [mainModalBoxes, setMainModalBoxes] = useState<EmployeeBox[] | undefined>(undefined);
   const [showGroupedDeleteModal, setShowGroupedDeleteModal] = useState(false);
   const [showGroupedManageResourcesDeleteModal, setShowGroupedManageResourcesDeleteModal] = useState(false);
   const [showGroupedSuspendModal, setShowGroupedSuspendModal] = useState(false);
@@ -171,14 +171,14 @@ const [mainModalBoxes, setMainModalBoxes] = useState<EmployeeBox[] | undefined>(
       const allBoxes = [...direct, ...shared];
       const boxes = allBoxes.length > 0
         ? allBoxes.map((b) => ({
-            id: b.id,
-            name: b.name,
-            details: [b.displayId, b.vehicleNumber].filter(Boolean).join(" | "),
-            power: "on" as const,
-            added: "-",
-            isLocked: false,
-            isOffline: false,
-          }))
+          id: b.id,
+          name: b.name,
+          details: [b.displayId, b.vehicleNumber].filter(Boolean).join(" | "),
+          power: "on" as const,
+          added: "-",
+          isLocked: false,
+          isOffline: false,
+        }))
         : undefined;
       setMainModalBoxes(boxes);
     }
@@ -336,9 +336,9 @@ const [mainModalBoxes, setMainModalBoxes] = useState<EmployeeBox[] | undefined>(
         setReassignRestaurants(mapped);
         setReassignTotalEntries(
           ((response.pagination as { total_count?: number } | undefined)?.total_count)
-            ?? (response.data as { total_count?: number }).total_count
-            ?? response.data.count
-            ?? mapped.length,
+          ?? (response.data as { total_count?: number }).total_count
+          ?? response.data.count
+          ?? mapped.length,
         );
       } else {
         setReassignRestaurants([]);
@@ -784,325 +784,327 @@ const [mainModalBoxes, setMainModalBoxes] = useState<EmployeeBox[] | undefined>(
       <div className="flex-shrink-0 space-y-6">
         <EmployeeListHeader onAddNew={onAddEmployee} onViewSuspended={onViewSuspended} />
         <EmployeeToolbar
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            onSearchClear={clearSearch}
-            onSuggestionSelect={(emp) => {
-              setSearchTerm(emp.name);
-              const groupIndex = groups.findIndex((group) =>
-                (group.items || []).some((item) => item.id === emp.id)
-              );
-              if (groupIndex !== -1) {
-                setOpenIndex(groupIndex);
-              }
-            }}
-            totalEntries={displayTotalEntries}
-            isGrouped={isGrouped}
-            onGroupedChange={handleGroupedChange}
-            selectedRoles={selectedRoles}
-            onRolesChange={handleRolesChange}
-            showAvailableDriversOnly={showAvailableDriversOnly}
-            onAvailableDriversOnlyChange={handleAvailableDriversOnlyChange}
-            roleOptions={roleOptions}
-            searchSuggestions={searchSuggestions}
-            isSearching={isSearching}
-            searchError={searchError}
-            showAvailableDriversFilter={true}
-          />
-        </div>
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          onSearchClear={clearSearch}
+          onSuggestionSelect={(emp) => {
+            setSearchTerm(emp.name);
+            const groupIndex = groups.findIndex((group) =>
+              (group.items || []).some((item) => item.id === emp.id)
+            );
+            if (groupIndex !== -1) {
+              setOpenIndex(groupIndex);
+            }
+          }}
+          totalEntries={displayTotalEntries}
+          isGrouped={isGrouped}
+          onGroupedChange={handleGroupedChange}
+          selectedRoles={selectedRoles}
+          onRolesChange={handleRolesChange}
+          showAvailableDriversOnly={showAvailableDriversOnly}
+          onAvailableDriversOnlyChange={handleAvailableDriversOnlyChange}
+          roleOptions={roleOptions}
+          searchSuggestions={searchSuggestions}
+          isSearching={isSearching}
+          searchError={searchError}
+          showAvailableDriversFilter={true}
+        />
+      </div>
 
-        <div className="flex-1 overflow-y-auto min-h-0 space-y-6 pt-4">
-          {displayLoading ? (
-            <LoadingDetails entity="employees" />
-          ) : <GroupCollapseTable
-            groups={displayGroups}
-            openIndex={openIndex}
-            setOpenIndex={setOpenIndex}
-            isPageLoading={displayLoading}
-            onGroupClick={isGrouped ? (group) => {
-              if (!group.items?.length) return;
-              const firstEmployee = group.items[0];
-              if (!firstEmployee.restaurantId) return;
-              openGroupDetailsModal(group);
-            } : undefined}
-            renderTable={(group) => (
-              <EmployeeGroupTable 
-                mode="active"
-                group={group} 
-                selectedIds={selectedIds}
-                onRowSelect={handleRowSelect}
-                onRowClick={(employee) => {
-                  navigateToLogs(employee);
-                }}
-                onSuspend={handleSuspendEmployee}
-                onDelete={handleDeleteEmployee}
-                onEdit={onEditEmployee ? (employee) => {
-                  onEditEmployee(employee);
-                  closeDetailsModal();
-                } : (employee) => {
-                  openDetailsModal(employee);
-                }}
-                onViewLogs={handleViewLogs}
-              onViewAllBoxes={(employee) => {
-  setBoxesModalSource("employee");
-  openResourcesModal(employee, "boxes");
-}}
-
-onViewRestaurantBoxes={(employee) => {
-  setSharedBoxesEmployee(employee);
-  setShowSharedBoxesModal(true);
-}}
-              />
-            )}
-            tableContainerClass="bg-white"
-            noResultsMessage={searchTerm ? "No employees match your search." : "No employees found."}
-            pageSize={pageSize}
-            onPageChange={onPageChange}
-          />}
-
-          <EmployeeModals
-            modalState={modalState}
-            onCloseDetails={closeDetailsModal}
-            onCloseGroupDetails={closeGroupDetailsModal}
-            onEdit={(employee) => {
-              if (onEditEmployee) {
+      <div className="flex-1 overflow-y-auto min-h-0 space-y-6 pt-4">
+        {displayLoading ? (
+          <LoadingDetails entity="employees" />
+        ) : <GroupCollapseTable
+          groups={displayGroups}
+          openIndex={openIndex}
+          setOpenIndex={setOpenIndex}
+          isPageLoading={displayLoading}
+          onGroupClick={isGrouped ? (group) => {
+            if (!group.items?.length) return;
+            const firstEmployee = group.items[0];
+            if (!firstEmployee.restaurantId) return;
+            openGroupDetailsModal(group);
+          } : undefined}
+          renderTable={(group) => (
+            <EmployeeGroupTable
+              mode="active"
+              group={group}
+              selectedIds={selectedIds}
+              onRowSelect={handleRowSelect}
+              onRowClick={(employee) => {
+                navigateToLogs(employee);
+              }}
+              onSuspend={handleSuspendEmployee}
+              onDelete={handleDeleteEmployee}
+              onEdit={onEditEmployee ? (employee) => {
                 onEditEmployee(employee);
                 closeDetailsModal();
+              } : (employee) => {
+                openDetailsModal(employee);
+              }}
+              onViewLogs={handleViewLogs}
+              onViewAllBoxes={(employee) => {
+                setBoxesModalSource("employee");
+                openResourcesModal(employee, "boxes");
+              }}
+
+              onViewRestaurantBoxes={(employee) => {
+                setSharedBoxesEmployee(employee);
+                setShowSharedBoxesModal(true);
+              }}
+            />
+          )}
+          tableContainerClass="bg-white"
+          noResultsMessage={searchTerm ? "No employees match your search." : "No employees found."}
+          pageSize={pageSize}
+          onPageChange={onPageChange}
+        />}
+
+        <EmployeeModals
+          modalState={modalState}
+          onCloseDetails={closeDetailsModal}
+          onCloseGroupDetails={closeGroupDetailsModal}
+          onEdit={(employee) => {
+            if (onEditEmployee) {
+              onEditEmployee(employee);
+              closeDetailsModal();
+            }
+          }}
+          onDelete={handleDeleteEmployee}
+          onSuspend={handleSuspendEmployee}
+          onViewBoxes={handleViewBoxes}
+          onEditGroupedRestaurant={handleEditGroupedRestaurant}
+          onDeleteGroupedRestaurant={handleDeleteGroupedRestaurant}
+          onViewGroupedGrubPacs={handleViewGroupedGrubPacs}
+          onViewGroupedEmployees={handleViewGroupedEmployees}
+        />
+
+        {selectedGroupedRestaurant && (
+          <RestaurantResourcesModal
+            open={showGroupedRestaurantResourcesModal}
+            onClose={() => setShowGroupedRestaurantResourcesModal(false)}
+            restaurantName={selectedGroupedRestaurant.name}
+            tab={groupedRestaurantResourcesTab}
+            grubPacs={resourceGrubPacs}
+            employees={resourceEmployees}
+            onReassignBoxes={(boxIds) => {
+              const ids = boxIds.length > 0 ? boxIds : resourceGrubPacs.map((box) => box.id);
+              if (ids.length === 0) {
+                showError("No boxes available for reassignment");
+                return;
               }
+              setGroupedSelectedBoxIds(Array.from(new Set(ids)));
+              setGroupedReassignFlowType("boxes");
+              setShowGroupedRestaurantResourcesModal(false);
+              setShowGroupedReassignModal(true);
             }}
-            onDelete={handleDeleteEmployee}
-            onSuspend={handleSuspendEmployee}
-            onViewBoxes={handleViewBoxes}
-            onEditGroupedRestaurant={handleEditGroupedRestaurant}
-            onDeleteGroupedRestaurant={handleDeleteGroupedRestaurant}
-            onViewGroupedGrubPacs={handleViewGroupedGrubPacs}
-            onViewGroupedEmployees={handleViewGroupedEmployees}
-          />
-
-          {selectedGroupedRestaurant && (
-            <RestaurantResourcesModal
-              open={showGroupedRestaurantResourcesModal}
-              onClose={() => setShowGroupedRestaurantResourcesModal(false)}
-              restaurantName={selectedGroupedRestaurant.name}
-              tab={groupedRestaurantResourcesTab}
-              grubPacs={resourceGrubPacs}
-              employees={resourceEmployees}
-              onReassignBoxes={(boxIds) => {
-                const ids = boxIds.length > 0 ? boxIds : resourceGrubPacs.map((box) => box.id);
-                if (ids.length === 0) {
-                  showError("No boxes available for reassignment");
-                  return;
-                }
-                setGroupedSelectedBoxIds(Array.from(new Set(ids)));
-                setGroupedReassignFlowType("boxes");
-                setShowGroupedRestaurantResourcesModal(false);
-                setShowGroupedReassignModal(true);
-              }}
-              onEditList={(boxIds) => {
-                if (boxIds.length === 0) {
-                  showError("No boxes selected for reassignment");
-                  return;
-                }
-                setGroupedSelectedBoxIds(Array.from(new Set(boxIds)));
-                setGroupedReassignFlowType("boxes");
-                setShowGroupedRestaurantResourcesModal(false);
-                setShowGroupedReassignModal(true);
-              }}
-              loading={resourcesLoading}
-            />
-          )}
-
-          {selectedGroupedRestaurant && (
-            <DeleteRestaurantModal
-              open={showGroupedDeleteModal && !showGroupedManageResourcesDeleteModal}
-              onClose={() => setShowGroupedDeleteModal(false)}
-              onConfirm={handleGroupedDeleteConfirm}
-              onSuspend={() => {
-                setShowGroupedDeleteModal(false);
-                setShowGroupedManageResourcesDeleteModal(false);
-                setShowGroupedSuspendModal(true);
-              }}
-              onManageResources={() => {
-                setShowGroupedDeleteModal(false);
-                setShowGroupedManageResourcesDeleteModal(true);
-              }}
-              restaurantName={selectedGroupedRestaurant.name}
-              restaurantCount={1}
-              hasAssignedResources={(selectedGroupedRestaurant.boxes || 0) > 0 || (selectedGroupedRestaurant.drivers || 0) > 0}
-              isWithoutBoxesGroup={(selectedGroupedRestaurant.boxes || 0) <= 0}
-              loading={groupedDeleteLoading}
-            />
-          )}
-
-          {selectedGroupedRestaurant && (
-            <ManageResourcesDeleteModal
-              open={showGroupedManageResourcesDeleteModal}
-              onClose={() => setShowGroupedManageResourcesDeleteModal(false)}
-              onBack={() => {
-                setShowGroupedManageResourcesDeleteModal(false);
-                setShowGroupedDeleteModal(true);
-              }}
-              onConfirm={handleGroupedManageResourcesDelete}
-              onSuspend={() => {
-                setShowGroupedManageResourcesDeleteModal(false);
-                setShowGroupedSuspendModal(true);
-              }}
-              restaurantName={selectedGroupedRestaurant.name}
-              restaurantCount={1}
-              loading={groupedDeleteLoading}
-            />
-          )}
-
-          {selectedGroupedRestaurant && (
-            <SuspendRestaurantModal
-              open={showGroupedSuspendModal}
-              onClose={() => setShowGroupedSuspendModal(false)}
-              onConfirm={handleGroupedSuspendConfirm}
-              restaurantName={selectedGroupedRestaurant.name}
-              restaurantCount={1}
-              isWithoutBoxesGroup={(selectedGroupedRestaurant.boxes || 0) <= 0}
-              hasAssignedResources={(selectedGroupedRestaurant.boxes || 0) > 0 || (selectedGroupedRestaurant.drivers || 0) > 0}
-              loading={groupedIsSuspending}
-            />
-          )}
-
-          {selectedGroupedRestaurant && (
-            <ReassignResourcesModal
-              open={showGroupedReassignModal}
-              onClose={() => {
-                setShowGroupedReassignModal(false);
-                setGroupedSelectedBoxIds([]);
-              }}
-              onConfirm={handleGroupedReassignConfirm}
-              restaurants={
-                (restaurants ?? [])
-                  .filter((r) => r.id !== selectedGroupedRestaurant.id)
-                  .map((r) => ({
-                    id: r.id,
-                    name: r.name,
-                    address: r.address ?? "",
-                    manager: null,
-                    drivers: 0,
-                    boxes: r.boxes ?? 0,
-                    updated: r.updated ?? "-",
-                    status: "active",
-                  }))
+            onEditList={(boxIds) => {
+              if (boxIds.length === 0) {
+                showError("No boxes selected for reassignment");
+                return;
               }
-              sourceRestaurantName={selectedGroupedRestaurant.name}
-              loading={groupedIsReassigning}
-            />
-          )}
+              setGroupedSelectedBoxIds(Array.from(new Set(boxIds)));
+              setGroupedReassignFlowType("boxes");
+              setShowGroupedRestaurantResourcesModal(false);
+              setShowGroupedReassignModal(true);
+            }}
+            loading={resourcesLoading}
+          />
+        )}
 
-          <TableActionBar
-            selectedCount={selectedIds.size}
-            onClearSelection={clearSelection}
-            onReassignRole={handleReassignRestaurant}
-            onSuspend={handleSuspendSelection}
-            onDelete={handleDeleteSelection}
-            reassignLabel="RE/ASSIGN RESTAURANT"
-            allowReassign={true}
-            allowSuspend={true}
-            allowDelete={true}
+        {selectedGroupedRestaurant && (
+          <DeleteRestaurantModal
+            open={showGroupedDeleteModal && !showGroupedManageResourcesDeleteModal}
+            onClose={() => setShowGroupedDeleteModal(false)}
+            onConfirm={handleGroupedDeleteConfirm}
+            onSuspend={() => {
+              setShowGroupedDeleteModal(false);
+              setShowGroupedManageResourcesDeleteModal(false);
+              setShowGroupedSuspendModal(true);
+            }}
+            onManageResources={() => {
+              setShowGroupedDeleteModal(false);
+              setShowGroupedManageResourcesDeleteModal(true);
+            }}
+            restaurantName={selectedGroupedRestaurant.name}
+            restaurantCount={1}
+            hasAssignedResources={(selectedGroupedRestaurant.boxes || 0) > 0 || (selectedGroupedRestaurant.drivers || 0) > 0}
+            isWithoutBoxesGroup={(selectedGroupedRestaurant.boxes || 0) <= 0}
+            loading={groupedDeleteLoading}
           />
+        )}
 
-          <SuspendEmployeeModal
-            open={showSuspendModal}
-            onClose={closeSuspendModal}
-            onConfirm={handleSuspendConfirm}
-            employeeName={actionMenuEmployee?.name || selectedEmployees[0]?.name || ""}
-            employeeCount={actionMenuEmployee ? 1 : selectedEmployees.length}
-            loading={false}
+        {selectedGroupedRestaurant && (
+          <ManageResourcesDeleteModal
+            open={showGroupedManageResourcesDeleteModal}
+            onClose={() => setShowGroupedManageResourcesDeleteModal(false)}
+            onBack={() => {
+              setShowGroupedManageResourcesDeleteModal(false);
+              setShowGroupedDeleteModal(true);
+            }}
+            onConfirm={handleGroupedManageResourcesDelete}
+            onSuspend={() => {
+              setShowGroupedManageResourcesDeleteModal(false);
+              setShowGroupedSuspendModal(true);
+            }}
+            restaurantName={selectedGroupedRestaurant.name}
+            restaurantCount={1}
+            loading={groupedDeleteLoading}
           />
-          <DeleteEmployeeModal
-            open={showDeleteModal}
-            onClose={closeDeleteModal}
-            onConfirm={handleDeleteConfirm}
-            onSuspend={handleDeleteToSuspend}
-            employeeName={actionMenuEmployee?.name || selectedEmployeesStable[0]?.name || ""}
-            employeeCount={actionMenuEmployee ? 1 : selectedEmployeesStable.length}
-            loading={isDeleting}
+        )}
+
+        {selectedGroupedRestaurant && (
+          <SuspendRestaurantModal
+            open={showGroupedSuspendModal}
+            onClose={() => setShowGroupedSuspendModal(false)}
+            onConfirm={handleGroupedSuspendConfirm}
+            restaurantName={selectedGroupedRestaurant.name}
+            restaurantCount={1}
+            isWithoutBoxesGroup={(selectedGroupedRestaurant.boxes || 0) <= 0}
+            hasAssignedResources={(selectedGroupedRestaurant.boxes || 0) > 0 || (selectedGroupedRestaurant.drivers || 0) > 0}
+            loading={groupedIsSuspending}
           />
-          <ReassignEmployeeModal
-            open={showReassignModal}
+        )}
+
+        {selectedGroupedRestaurant && (
+          <ReassignResourcesModal
+            open={showGroupedReassignModal}
             onClose={() => {
-              closeReassignModal();
-              setReassignRestaurants([]);
-              setReassignTotalEntries(0);
+              setShowGroupedReassignModal(false);
+              setGroupedSelectedBoxIds([]);
             }}
-            onConfirm={handleReassignConfirm}
-            restaurants={reassignRestaurants}
-            totalEntries={reassignTotalEntries}
-            onFetchRestaurants={handleFetchReassignRestaurants}
-            sourceEmployeeName={reassignSourceEmployees[0]?.name}
-            loading={isReassigning || reassignRestaurantsLoading}
+            onConfirm={handleGroupedReassignConfirm}
+            restaurants={
+              (restaurants ?? [])
+                .filter((r) => r.id !== selectedGroupedRestaurant.id)
+                .map((r) => ({
+                  id: r.id,
+                  name: r.name,
+                  address: r.address ?? "",
+                  manager: null,
+                  drivers: 0,
+                  boxes: r.boxes ?? 0,
+                  updated: r.updated ?? "-",
+                  status: "active",
+                }))
+            }
+            sourceRestaurantName={selectedGroupedRestaurant.name}
+            loading={groupedIsReassigning}
           />
-        {modalState.selectedEmployee && (
-<EmployeeBoxesModal
-  open={modalState.isResourcesModalOpen && modalState.resourcesModalTab === "boxes"}
-  onClose={closeResourcesModal}
-  employeeId={boxesModalSource === "employee" ? modalState.selectedEmployee.id : undefined}
-  restaurantId={modalState.selectedEmployee.restaurantId}
-  employeeName={modalState.selectedEmployee.name}
-  staticBoxes={mainModalBoxes}
-  hideEditList
-  onEditList={() => {}}
-  onConfirmRemoval={async (removedBoxIds) => {
-    setMainModalBoxes((prev) =>
-      prev?.filter((b) => !removedBoxIds.includes(b.id))
-    );
-  }}
-/>
-)}
+        )}
 
-{sharedBoxesEmployee && (
-  <EmployeeBoxesModal
-    open={showSharedBoxesModal}
-    onClose={() => {
-      setShowSharedBoxesModal(false);
-      setSharedBoxesEmployee(null);
-    }}
-    employeeId={sharedBoxesEmployee.id}
-    restaurantId={undefined}
-    staticBoxes={(() => {
-      const direct = getDirectBoxes(sharedBoxesEmployee);
-      const shared = getSharedBoxes(sharedBoxesEmployee);
-      const allBoxes = [...direct, ...shared];
-      return allBoxes.map((b) => ({
-        id: b.id,
-        name: b.name,
-        details: [b.displayId, b.vehicleNumber].filter(Boolean).join(" | "),
-        power: b.powerStatus === "on" ? "on" : b.powerStatus === "off" ? "off" : "warning",
-        added: "-",
-        isLocked: false,
-        isOffline: b.powerStatus === "off",
-      }));
-    })()}
-    employeeName={sharedBoxesEmployee.name}
-    hideEditList
-    onEditList={() => {}}
-    onConfirmRemoval={async (removedBoxIds) => {
-      setSharedBoxesEmployee((prev) => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          sharedBoxes: (prev.sharedBoxes ?? []).filter(
-            (b) => !removedBoxIds.includes(b.id)
-          ),
-          totalBoxCount: Math.max(0, (prev.totalBoxCount ?? prev.boxCount ?? 0) - removedBoxIds.length),
-        };
-      });
-      setSharedBoxesEmployee((prev) => {
-        if (!prev || (prev.sharedBoxes ?? []).length === 0) {
-          setShowSharedBoxesModal(false);
-          return null;
-        }
-        return prev;
-      });
-      onRefetch?.();
-    }}
-  />
-)}
-        </div>
+        <TableActionBar
+          selectedCount={selectedIds.size}
+          onClearSelection={clearSelection}
+          onReassignRole={handleReassignRestaurant}
+          onSuspend={handleSuspendSelection}
+          onDelete={handleDeleteSelection}
+          reassignLabel="RE/ASSIGN RESTAURANT"
+          allowReassign={true}
+          allowSuspend={true}
+          allowDelete={true}
+        />
+
+        <SuspendEmployeeModal
+          open={showSuspendModal}
+          onClose={closeSuspendModal}
+          onConfirm={handleSuspendConfirm}
+          employeeName={actionMenuEmployee?.name || selectedEmployees[0]?.name || ""}
+          employeeCount={actionMenuEmployee ? 1 : selectedEmployees.length}
+          loading={false}
+        />
+        <DeleteEmployeeModal
+          open={showDeleteModal}
+          onClose={closeDeleteModal}
+          onConfirm={handleDeleteConfirm}
+          onSuspend={handleDeleteToSuspend}
+          employeeName={actionMenuEmployee?.name || selectedEmployeesStable[0]?.name || ""}
+          employeeCount={actionMenuEmployee ? 1 : selectedEmployeesStable.length}
+          loading={isDeleting}
+        />
+        <ReassignEmployeeModal
+          open={showReassignModal}
+          onClose={() => {
+            closeReassignModal();
+            setReassignRestaurants([]);
+            setReassignTotalEntries(0);
+          }}
+          onConfirm={handleReassignConfirm}
+          restaurants={reassignRestaurants}
+          totalEntries={reassignTotalEntries}
+          onFetchRestaurants={handleFetchReassignRestaurants}
+          sourceEmployeeName={reassignSourceEmployees[0]?.name}
+          loading={isReassigning || reassignRestaurantsLoading}
+        />
+        {modalState.selectedEmployee && (
+          <EmployeeBoxesModal
+            open={modalState.isResourcesModalOpen && modalState.resourcesModalTab === "boxes"}
+            onClose={closeResourcesModal}
+            employeeId={boxesModalSource === "employee" ? modalState.selectedEmployee.id : undefined}
+            restaurantId={modalState.selectedEmployee.restaurantId}
+            employeeName={modalState.selectedEmployee.name}
+            staticBoxes={mainModalBoxes}
+            hideEditList
+            onEditList={() => { }}
+            onConfirmRemoval={async (removedBoxIds) => {
+              setMainModalBoxes((prev) =>
+                prev?.filter((b) => !removedBoxIds.includes(b.id))
+              );
+            }}
+          />
+        )}
+
+        {sharedBoxesEmployee && (
+          <EmployeeBoxesModal
+            open={showSharedBoxesModal}
+            onClose={() => {
+              setShowSharedBoxesModal(false);
+              setSharedBoxesEmployee(null);
+            }}
+            employeeId={sharedBoxesEmployee.id}
+            restaurantId={sharedBoxesEmployee.restaurantId}
+            staticBoxes={(() => {
+              const direct = getDirectBoxes(sharedBoxesEmployee);
+              const shared = getSharedBoxes(sharedBoxesEmployee);
+              const allBoxes = [...direct, ...shared];
+              return allBoxes.length > 0
+                ? allBoxes.map((b) => ({
+                    id: b.id,
+                    name: b.name,
+                    details: [b.displayId, b.vehicleNumber].filter(Boolean).join(" | "),
+                    power: b.powerStatus === "on" ? "on" : b.powerStatus === "off" ? "off" : "warning",
+                    added: "-",
+                    isLocked: false,
+                    isOffline: b.powerStatus === "off",
+                  }))
+                : undefined;
+            })()}
+            employeeName={sharedBoxesEmployee.name}
+            hideEditList
+            onEditList={() => { }}
+            onConfirmRemoval={async (removedBoxIds) => {
+              setSharedBoxesEmployee((prev) => {
+                if (!prev) return null;
+                return {
+                  ...prev,
+                  sharedBoxes: (prev.sharedBoxes ?? []).filter(
+                    (b) => !removedBoxIds.includes(b.id)
+                  ),
+                  totalBoxCount: Math.max(0, (prev.totalBoxCount ?? prev.boxCount ?? 0) - removedBoxIds.length),
+                };
+              });
+              setSharedBoxesEmployee((prev) => {
+                if (!prev || (prev.sharedBoxes ?? []).length === 0) {
+                  setShowSharedBoxesModal(false);
+                  return null;
+                }
+                return prev;
+              });
+              onRefetch?.();
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 }

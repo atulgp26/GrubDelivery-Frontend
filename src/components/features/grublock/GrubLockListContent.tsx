@@ -257,6 +257,22 @@ export default function GrubLockListContent({
 
   const handleEmergencyUnlock = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
+
+    const selectedBoxes = allBoxes.filter((box) => selectedIds.has(String(box.id)));
+    const alreadyUnlocked = selectedBoxes.filter((box) => {
+      const currentStatus = statusOverrides[box.id] ?? box.status;
+      return currentStatus === "unlocked";
+    });
+
+    if (alreadyUnlocked.length > 0) {
+      if (selectedBoxes.length === 1) {
+        showError("The selected box is already unlocked.");
+      } else {
+        showError("One or more selected boxes are already unlocked.");
+      }
+      return;
+    }
+
     openHaveEmergencyModal(e.currentTarget);
   };
 
@@ -559,158 +575,158 @@ export default function GrubLockListContent({
 
       <div className={cn("flex flex-col h-full overflow-hidden", className)}>
         <div className="flex-shrink-0 space-y-6">
-        <GrubLockListHeader onViewAllBoxes={handleViewAllBoxes} />
+          <GrubLockListHeader onViewAllBoxes={handleViewAllBoxes} />
 
-        <GrubLockListToolbar
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          onSearchClear={handleSearchClear}
-          totalEntries={entriesCount}
-          isGrouped={isGrouped}
-          onGroupedChange={handleGroupedChange}
-          showUnlockedBoxes={showUnlockedBoxes}
-          onShowUnlockedBoxesChange={setShowUnlockedBoxes}
-          onFilterClick={() => setShowFilterModal(true)}
-          isFilterModalOpen={showFilterModal}
-          searchResults={searchResults}
-          onSearchResultClick={handleSearchResultClick}
-        />
-      </div>
+          <GrubLockListToolbar
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            onSearchClear={handleSearchClear}
+            totalEntries={entriesCount}
+            isGrouped={isGrouped}
+            onGroupedChange={handleGroupedChange}
+            showUnlockedBoxes={showUnlockedBoxes}
+            onShowUnlockedBoxesChange={setShowUnlockedBoxes}
+            onFilterClick={() => setShowFilterModal(true)}
+            isFilterModalOpen={showFilterModal}
+            searchResults={searchResults}
+            onSearchResultClick={handleSearchResultClick}
+          />
+        </div>
 
         <div className="flex-1 overflow-y-auto min-h-0 pt-4 space-y-6">
-        {shouldShowSkeleton ? (
-          <LoadingDetails entity="boxes" />
-        ) : (
-          <>
-            {shouldShowGroupedEmpty ? (
-              <div className="bg-white rounded-lg p-6 text-center text-[var(--color-neutral-secondary)]">
-                No boxes found.
-              </div>
-            ) : (
-              <GroupCollapseTable
-                groups={filteredGroups}
-                openIndex={openIndex}
-                setOpenIndex={setOpenIndex}
-                isPageLoading={isPageLoading}
-                viewAllKey={viewAllKey}
-                renderTable={(group) => (
-                  <GrubLockGroupTable
-                    group={group}
-                    selectedIds={selectedIds}
-                    loadingRowIds={loadingRowIds}
-                    statusOverrides={statusOverrides}
-                    activeLockDetailsRowId={activeLockDetailsRowId}
-                    onRowSelect={handleRowSelect}
-                    onSelectAll={handleSelectAll}
-                    onRowClick={handleRowClick}
-                  onViewDetailsClick={(box) => {
-  router.push(`/grubpacs/details?id=${box.id}&pinSelected=1&from=%2Fgrublock%2Flist`);
-}}
-                    onViewInGrubPacsClick={(box) => {
-                      router.push(`/grubpacs/list?selectBoxId=${encodeURIComponent(String(box.id))}&from=%2Fgrublock%2Flist`);
-                    }}
-                    onLockButtonClick={(box, buttonElement) => {
-                      const isSameBox = modalState.selectedBox?.id === box.id;
-                      if (isSameBox) {
-                        if (modalState.isEmergencyUnlockModalOpen) {
-                          closeEmergencyUnlockModal();
-                          return;
+          {shouldShowSkeleton ? (
+            <LoadingDetails entity="boxes" />
+          ) : (
+            <>
+              {shouldShowGroupedEmpty ? (
+                <div className="bg-white rounded-lg p-6 text-center text-[var(--color-neutral-secondary)]">
+                  No boxes found.
+                </div>
+              ) : (
+                <GroupCollapseTable
+                  groups={filteredGroups}
+                  openIndex={openIndex}
+                  setOpenIndex={setOpenIndex}
+                  isPageLoading={isPageLoading}
+                  viewAllKey={viewAllKey}
+                  renderTable={(group) => (
+                    <GrubLockGroupTable
+                      group={group}
+                      selectedIds={selectedIds}
+                      loadingRowIds={loadingRowIds}
+                      statusOverrides={statusOverrides}
+                      activeLockDetailsRowId={activeLockDetailsRowId}
+                      onRowSelect={handleRowSelect}
+                      onSelectAll={handleSelectAll}
+                      onRowClick={handleRowClick}
+                      onViewDetailsClick={(box) => {
+                        router.push(`/grubpacs/details?id=${box.id}&pinSelected=1&from=%2Fgrublock%2Flist`);
+                      }}
+                      onViewInGrubPacsClick={(box) => {
+                        router.push(`/grubpacs/list?selectBoxId=${encodeURIComponent(String(box.id))}&from=%2Fgrublock%2Flist`);
+                      }}
+                      onLockButtonClick={(box, buttonElement) => {
+                        const isSameBox = modalState.selectedBox?.id === box.id;
+                        if (isSameBox) {
+                          if (modalState.isEmergencyUnlockModalOpen) {
+                            closeEmergencyUnlockModal();
+                            return;
+                          }
+                          if (modalState.isHaveEmergencyModalOpen) {
+                            closeHaveEmergencyModal();
+                            return;
+                          }
+                          if (modalState.isEditDetailsModalOpen) {
+                            closeEditDetailsModal();
+                            return;
+                          }
+                          if (modalState.isUnlockBoxModalOpen) {
+                            closeUnlockBoxModal();
+                            return;
+                          }
                         }
-                        if (modalState.isHaveEmergencyModalOpen) {
-                          closeHaveEmergencyModal();
-                          return;
-                        }
-                        if (modalState.isEditDetailsModalOpen) {
-                          closeEditDetailsModal();
-                          return;
-                        }
-                        if (modalState.isUnlockBoxModalOpen) {
-                          closeUnlockBoxModal();
-                          return;
-                        }
-                      }
 
-                      setRecipient(mapBoxToRecipient(box));
-                      openUnlockBoxModal(box, buttonElement);
-                    }}
-                    onUnlockButtonClick={(box, buttonElement) => {
-                      const isSameBox = modalState.selectedBox?.id === box.id;
-                      if (isSameBox && modalState.isLockBoxModalOpen) {
-                        closeLockBoxModal();
-                        return;
-                      }
+                        setRecipient(mapBoxToRecipient(box));
+                        openUnlockBoxModal(box, buttonElement);
+                      }}
+                      onUnlockButtonClick={(box, buttonElement) => {
+                        const isSameBox = modalState.selectedBox?.id === box.id;
+                        if (isSameBox && modalState.isLockBoxModalOpen) {
+                          closeLockBoxModal();
+                          return;
+                        }
 
-                      setRecipient({ countryCode: "IN" });
-                      openLockBoxModal(box, buttonElement);
-                    }}
-                  />
-                )}
-                tableContainerClass="bg-white"
-                noResultsMessage={
-                  isGrouped
-                    ? "No restaurants found."
-                    : searchTerm
-                      ? "No boxes match your search."
-                      : "No boxes found."
+                        setRecipient({ countryCode: "IN" });
+                        openLockBoxModal(box, buttonElement);
+                      }}
+                    />
+                  )}
+                  tableContainerClass="bg-white"
+                  noResultsMessage={
+                    isGrouped
+                      ? "No restaurants found."
+                      : searchTerm
+                        ? "No boxes match your search."
+                        : "No boxes found."
+                  }
+                  pageSize={isGrouped ? 50 : 10}
+                  showPaginationPrev={true}
+                  showPaginationNext={true}
+                  onGroupClick={(group) => {
+                    if (!isGrouped) return;
+                    if (String(group.name).toLowerCase() === "unassigned") return;
+                    handleGroupClick(group);
+                  }}
+                  onPageChange={refetchGroup}
+                />
+              )}
+
+              <SelectionActionBar
+                selectedCount={selectedIds.size}
+                onClearSelection={handleClearSelection}
+                onEmergencyUnlock={handleEmergencyUnlock}
+                isEmergencyUnlockActive={
+                  modalState.isHaveEmergencyModalOpen || modalState.isEmergencyUnlockModalOpen
                 }
-                pageSize={isGrouped ? 50 : 10}
-                showPaginationPrev={true}
-                showPaginationNext={true}
-                onGroupClick={(group) => {
-                  if (!isGrouped) return;
-                  if (String(group.name).toLowerCase() === "unassigned") return;
-                  handleGroupClick(group);
-                }}
-                onPageChange={refetchGroup}
               />
-            )}
+            </>
+          )}
 
-            <SelectionActionBar
-              selectedCount={selectedIds.size}
-              onClearSelection={handleClearSelection}
-              onEmergencyUnlock={handleEmergencyUnlock}
-              isEmergencyUnlockActive={
-                modalState.isHaveEmergencyModalOpen || modalState.isEmergencyUnlockModalOpen
-              }
-            />
-          </>
-        )}
-
-        <GrubLockModals
-          modalState={modalState}
-          showFilterModal={showFilterModal}
-          filterState={filters}
-          selectedIds={selectedIds}
-          recipient={recipient}
-          isLocking={isLocking}
-          isEditingRecipient={isEditingRecipient}
-          isEmergencyUnlocking={isEmergencyUnlocking}
-          onCloseGroupDetailsModal={closeGroupDetailsModal}
-          onCloseBoxDetailsModal={closeBoxDetailsModal}
-          onCloseUnlockBoxModal={closeUnlockBoxModal}
-          onCloseEmergencyUnlockModal={closeEmergencyUnlockModal}
-          onCloseLockBoxModal={closeLockBoxModal}
-          onCloseHaveEmergencyModal={closeHaveEmergencyModal}
-          onCloseApplySettingsModal={closeApplySettingsModal}
-          onCloseFilterModal={() => setShowFilterModal(false)}
-          onApplyFilter={(nextFilters) => {
-            setFilters(nextFilters);
-            setShowFilterModal(false);
-          }}
-          onEmergencyUnlock={handleEmergencyUnlockConfirm}
-          onOpenEmergencyUnlockModal={openEmergencyUnlockModal}
-          onHaveEmergencyUnlock={handleHaveEmergencyUnlock}
-          onApplySettings={handleApplySettingsWithEmergency}
-          onOpenEditDetailsModal={openEditDetailsModal}
-          onCloseEditDetailsModal={closeEditDetailsModal}
-          onLockSubmit={handleLockSubmit}
-          onEditSave={handleEditSave}
-          onEmergencyUnlockRequest={handleEmergencyUnlockPrepare}
-          onRefreshData={async () => {
-            await refetch();
-          }}
-        />
-      </div>
+          <GrubLockModals
+            modalState={modalState}
+            showFilterModal={showFilterModal}
+            filterState={filters}
+            selectedIds={selectedIds}
+            recipient={recipient}
+            isLocking={isLocking}
+            isEditingRecipient={isEditingRecipient}
+            isEmergencyUnlocking={isEmergencyUnlocking}
+            onCloseGroupDetailsModal={closeGroupDetailsModal}
+            onCloseBoxDetailsModal={closeBoxDetailsModal}
+            onCloseUnlockBoxModal={closeUnlockBoxModal}
+            onCloseEmergencyUnlockModal={closeEmergencyUnlockModal}
+            onCloseLockBoxModal={closeLockBoxModal}
+            onCloseHaveEmergencyModal={closeHaveEmergencyModal}
+            onCloseApplySettingsModal={closeApplySettingsModal}
+            onCloseFilterModal={() => setShowFilterModal(false)}
+            onApplyFilter={(nextFilters) => {
+              setFilters(nextFilters);
+              setShowFilterModal(false);
+            }}
+            onEmergencyUnlock={handleEmergencyUnlockConfirm}
+            onOpenEmergencyUnlockModal={openEmergencyUnlockModal}
+            onHaveEmergencyUnlock={handleHaveEmergencyUnlock}
+            onApplySettings={handleApplySettingsWithEmergency}
+            onOpenEditDetailsModal={openEditDetailsModal}
+            onCloseEditDetailsModal={closeEditDetailsModal}
+            onLockSubmit={handleLockSubmit}
+            onEditSave={handleEditSave}
+            onEmergencyUnlockRequest={handleEmergencyUnlockPrepare}
+            onRefreshData={async () => {
+              await refetch();
+            }}
+          />
+        </div>
       </div>
     </div>
   );

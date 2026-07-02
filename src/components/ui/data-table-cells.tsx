@@ -91,20 +91,20 @@ export interface CheckboxCellProps {
 
 const CheckSvg = () => (
 	<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-		<path d="M12.4911 3.50074L5.24944 10.7424L1.50781 7.00074L2.33277 6.17578L5.24944 9.09245L11.6661 2.67578L12.4911 3.50074Z" fill="white"/>
+		<path d="M12.4911 3.50074L5.24944 10.7424L1.50781 7.00074L2.33277 6.17578L5.24944 9.09245L11.6661 2.67578L12.4911 3.50074Z" fill="white" />
 	</svg>
 );
 
 const MinusSvg = () => (
 	<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-		<path d="M2.33398 6.41797H11.6673V7.58464H2.33398V6.41797Z" fill="white"/>
+		<path d="M2.33398 6.41797H11.6673V7.58464H2.33398V6.41797Z" fill="white" />
 	</svg>
 );
 
 export function CheckboxCell({ checked, onChange, className, isHeader }: CheckboxCellProps) {
 	const isChecked = checked === true;
 	const isIndeterminate = checked === "indeterminate";
-	
+
 	return (
 		<button
 			type="button"

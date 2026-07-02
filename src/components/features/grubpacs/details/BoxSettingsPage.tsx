@@ -227,7 +227,11 @@ export default function BoxSettingsPage({ boxId, pinSelectedOnLoad = false, back
         connected: String(selectedBox.status ?? "").toUpperCase() === "ONLINE",
       },
       grublock: {
-        status: selectedBox.locked ? "LOCKED" : "UNLOCKED",
+        status:
+          String(selectedBox.grublockStatus ?? "").toUpperCase() === "LOCKED" ||
+          selectedBox.locked === true
+            ? "LOCKED"
+            : "UNLOCKED",
       },
       ioniser: {
         status: ioniserStatus,
@@ -394,17 +398,29 @@ export default function BoxSettingsPage({ boxId, pinSelectedOnLoad = false, back
       description:
         "An OTP will be sent to the recipient when the delivery person initiates the drop-off.",
     });
+    await refetch();
   };
 
   const handleEditSave = async (nextRecipient: Recipient) => {
     if (!nextRecipient.name || !nextRecipient.phone) return;
-    await grublockService.updateRecipient(String(selectedBox.id), {
+    const response = await grublockService.updateRecipient(String(selectedBox.id), {
       name: nextRecipient.name,
       phone: nextRecipient.phone,
       countryCode: nextRecipient.countryCode || "IN",
       keepLocked: true,
     });
+    if (!response.success) {
+      showError(
+        getContextualErrorMessage(
+          "box.lock",
+          response,
+          "Could not update recipient. Please try again.",
+        ),
+      );
+      return;
+    }
     setRecipient(nextRecipient);
+    await refetch();
   };
 
   const handleEmergencyUnlockRequest = async (reason: string) => {
@@ -426,6 +442,7 @@ export default function BoxSettingsPage({ boxId, pinSelectedOnLoad = false, back
       title: "Emergency unlock successful!",
       description: "The box has been unlocked without OTP verification.",
     });
+    await refetch();
   };
 
   const handleSuspendBox = async () => {

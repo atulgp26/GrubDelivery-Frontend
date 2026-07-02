@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import Image from "next/image";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -8,18 +8,25 @@ import type { ApiSystemLog } from "@/types/domain/system-logs";
 import logsService from "@/services/logs";
 
 export const SYSTEM_LOG_TYPES = [
-  "Box status", "Connection status", "Door status",
-  "GrubLock", "Temperature set", "Temp. self check",
-  "Ioniser status", "Battery status", "Battery self check",
+  "Creation", "Deletion", "Suspension", "Activation", "Updation",
+  "Status", "Box status", "Connection status", "Door status", "Alerts",
 ];
 
 export const ACTION_LOG_TYPES = [
-  "Assignment", "Reassignment", "Suspension",
-  "Activation", "Emergency unlock", "OTP",
+  "Assignment", "Reassignment", "Ownership", "GrubLock", 
+  "Temperature set", "Temp. self check", "Ioniser status", 
+  "Battery status", "Battery self check", "Emergency unlock", "OTP",
+  "Access", "Employee mgmt.", "Box mgmt.", "Restaurant mgmt.",
 ];
 
 const LOG_TYPE_ICON: Record<string, string> = {
   "Activation":         "/GrubPac/Box-settings/check-circle.svg",
+  "Creation":           "/GrubPac/Box-settings/check-circle.svg",
+  "Deletion":           "/GrubPac/Box-settings/minus-circle.svg",
+  "Suspension":         "/GrubPac/Box-settings/minus-circle.svg",
+  "Updation":           "/GrubPac/Box-settings/switch.svg",
+  "Status":             "/GrubPac/Box-settings/switch.svg",
+  "Ownership":          "/GrubPac/Box-settings/users.svg",
   "Assignment":         "/GrubPac/Box-settings/users.svg",
   "Reassignment":       "/GrubPac/Box-settings/users-brand.svg",
   "Box status":         "/GrubPac/Box-settings/switch.svg",
@@ -31,9 +38,13 @@ const LOG_TYPE_ICON: Record<string, string> = {
   "Door status":        "/GrubPac/Box-settings/cube-dash.svg",
   "Battery status":     "/GrubPac/Box-settings/signal.svg",
   "Battery self check": "/GrubPac/Box-settings/signal.svg",
-  "Suspension":         "/GrubPac/Box-settings/minus-circle.svg",
   "Emergency unlock":   "/GrubPac/Box-settings/grublock-open.svg",
   "OTP":                "/GrubPac/Box-settings/shield-check.svg",
+  "Access":             "/GrubPac/Box-settings/users.svg",
+  "Alerts":             "/GrubPac/Box-settings/minus-circle.svg",
+  "Employee mgmt.":     "/GrubPac/Box-settings/users.svg",
+  "Box mgmt.":          "/GrubPac/Box-settings/cube-dash.svg",
+  "Restaurant mgmt.":   "/GrubPac/Box-settings/users.svg",
 };
 
 function LogTypeIcon({ type }: { type: string }) {
@@ -46,7 +57,7 @@ function FilterCheckbox({ checked, onChange, label, isAll = false }: {
 }) {
   return (
     <button onClick={onChange} className="flex items-center gap-2.5 text-left cursor-pointer">
-      <span className={`w-5 h-5 rounded flex items-center justify-center shrink-0 border transition-colors ${
+      <span className={`w-5 h-5 rounded-sm flex items-center justify-center shrink-0 border transition-colors ${
         checked
           ? isAll ? "bg-[#cb3301] border-[#cb3301]" : "bg-[#37493f] border-[#37493f]"
           : "bg-white border-[#c1c7c4]"
@@ -115,8 +126,64 @@ export function LogsView({ boxId }: { boxId?: string }) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
-  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
+  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>(() => {
+    const end = new Date();
+    const start = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    return [start, end];
+  });
   const [startDate, endDate] = dateRange;
+
+  const [selectedPreset, setSelectedPreset] = useState<"all" | "24h" | "7d" | "30d" | "custom">("7d");
+  const [showPresetDropdown, setShowPresetDropdown] = useState(false);
+  const presetDropdownRef = useRef<HTMLDivElement>(null);
+
+  const presetLabels = {
+    all: "Date range",
+    "24h": "Last 24 hours",
+    "7d": "Last 7 days",
+    "30d": "Last 30 days",
+    custom: "Custom dates",
+  };
+
+  const getDropdownLabel = () => {
+    if (selectedPreset === "custom") {
+      if (startDate && endDate) {
+        const formatDateShort = (d: Date) => {
+          const day = String(d.getDate()).padStart(2, "0");
+          const month = d.toLocaleString("en", { month: "short" });
+          return `${day} ${month}`;
+        };
+        return `${formatDateShort(startDate)} - ${formatDateShort(endDate)}`;
+      }
+      return "Custom dates";
+    }
+    return presetLabels[selectedPreset];
+  };
+
+  const handlePresetSelect = (preset: "all" | "24h" | "7d" | "30d" | "custom") => {
+    setSelectedPreset(preset);
+    setShowPresetDropdown(false);
+    if (preset === "all") {
+      setDateRange([null, null]);
+    } else if (preset === "24h") {
+      setDateRange([new Date(Date.now() - 24 * 60 * 60 * 1000), new Date()]);
+    } else if (preset === "7d") {
+      setDateRange([new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), new Date()]);
+    } else if (preset === "30d") {
+      setDateRange([new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), new Date()]);
+    }
+    setPage(1);
+  };
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (presetDropdownRef.current && !presetDropdownRef.current.contains(event.target as Node)) {
+        setShowPresetDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (!boxId) return;
@@ -125,7 +192,7 @@ export function LogsView({ boxId }: { boxId?: string }) {
       setLoading(true);
       const res = await logsService.getList({
         subject_id: boxId,
-        category: "GrubPac",
+        category: ["GrubPac", "GrubLock"],
         limit: 100,
         start_date: startDate ? startDate.toISOString() : undefined,
         end_date: endDate ? endDate.toISOString() : undefined,
@@ -242,43 +309,70 @@ export function LogsView({ boxId }: { boxId?: string }) {
         {/* Entry count */}
         <span className="text-sm text-[#6b7971] whitespace-nowrap">{loading ? "Loading..." : `${totalCount} entries`}</span>
 
-        {/* Date range picker */}
-        <div className="relative">
-          <DatePicker
-            selectsRange
-            startDate={startDate}
-            endDate={endDate}
-            onChange={(update: [Date | null, Date | null]) => {
-              setDateRange(update);
-              setPage(1);
-            }}
-            placeholderText="Date range"
-            className="pr-10 !w-44 !h-9 cursor-pointer !rounded-lg border border-[#e0e3e1] bg-white text-sm text-[#37493f] px-3 outline-none"
-            dateFormat="dd MMM yy"
-            maxDate={new Date()}
-          />
-          {startDate ? (
+        {/* Date Preset Filter Dropdown / Date range picker */}
+        {selectedPreset === "custom" ? (
+          <div className="relative">
+            <DatePicker
+              selectsRange
+              startDate={startDate}
+              endDate={endDate}
+              onChange={(update: [Date | null, Date | null]) => {
+                setDateRange(update);
+                setPage(1);
+              }}
+              placeholderText="Select custom range"
+              className="pr-10 !w-44 !h-9 cursor-pointer !rounded-lg border border-[#e0e3e1] bg-white text-sm text-[#37493f] px-3 outline-none"
+              dateFormat="dd MMM yy"
+              maxDate={new Date()}
+              autoFocus
+            />
             <button
-              onClick={() => setDateRange([null, null])}
-              className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
+              onClick={() => handlePresetSelect("all")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-[#cb3301]"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M3 3L11 11M11 3L3 11" stroke="#cb3301" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M3 3L11 11M11 3L3 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
             </button>
-          ) : (
-            <svg
-              width="16" height="16" viewBox="0 0 16 16" fill="none"
-              className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+          </div>
+        ) : (
+          <div className="relative" ref={presetDropdownRef}>
+            <button
+              onClick={() => setShowPresetDropdown(!showPresetDropdown)}
+              className={`flex items-center justify-between h-9 w-44 px-3 border rounded-lg text-sm text-[#37493f] cursor-pointer hover:bg-[#f7f8f7] transition-colors ${
+                selectedPreset !== "all" ? "bg-[#ffece6] border-[#cb3301]" : "bg-white border-[#e0e3e1]"
+              }`}
             >
-              <rect x="2" y="3" width="12" height="11" rx="2" stroke="#cb3301" strokeWidth="1.5"/>
-              <path d="M5 1.5V4M11 1.5V4" stroke="#cb3301" strokeWidth="1.5" strokeLinecap="round"/>
-              <path d="M2 7h12" stroke="#cb3301" strokeWidth="1.5"/>
-              <rect x="4.5" y="9" width="2" height="2" rx="0.5" fill="#cb3301"/>
-              <rect x="9" y="9" width="2" height="2" rx="0.5" fill="#cb3301"/>
-            </svg>
-          )}
-        </div>
+              <span className="truncate">{getDropdownLabel()}</span>
+              <svg
+                width="16" height="16" viewBox="0 0 16 16" fill="none"
+                className={`shrink-0 ml-1 transition-colors ${selectedPreset !== "all" ? "text-[#cb3301]" : "text-[#6b7971]"}`}
+              >
+                <rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M5 1.5V4M11 1.5V4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M2 7h12" stroke="currentColor" strokeWidth="1.5"/>
+                <rect x="4.5" y="9" width="2" height="2" rx="0.5" fill="currentColor"/>
+                <rect x="9" y="9" width="2" height="2" rx="0.5" fill="currentColor"/>
+              </svg>
+            </button>
+
+            {showPresetDropdown && (
+              <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-[#e0e3e1] rounded-lg shadow-lg z-30 py-1">
+                {(["all", "24h", "7d", "30d", "custom"] as const).map((preset) => (
+                  <button
+                    key={preset}
+                    onClick={() => handlePresetSelect(preset)}
+                    className={`w-full text-left px-4 py-2 text-sm text-[#37493f] hover:bg-[#f7f8f7] transition-colors cursor-pointer ${
+                      selectedPreset === preset ? "font-semibold text-[#cb3301] bg-[#ffece6]/35" : ""
+                    }`}
+                  >
+                    {presetLabels[preset]}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Filter button + dropdown */}
         <div className="relative">

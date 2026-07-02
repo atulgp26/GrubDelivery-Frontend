@@ -21,9 +21,10 @@ export function showSuccess(
           variant="success"
           appearance="solid"
           autoDismiss
-          onDismiss={() => toast.dismiss(t.id)}
+          onDismiss={() => toast.remove(t.id)}
           dismissTime={3000}
-          className="rounded shadow-md !w-[98vw]"
+          className="rounded shadow-md !w-[98vw] cursor-pointer"
+          onClick={() => toast.remove(t.id)}
         >
           <div className="flex-1 flex items-center justify-between gap-4">
             <div className="flex items-center gap-[var(--gp-space-regular)]">
@@ -37,7 +38,7 @@ export function showSuccess(
             {href && !hideDetails && (
               <Link
                 href={href}
-                onClick={() => toast.dismiss(t.id)}
+                onClick={() => toast.remove(t.id)}
                 className="shrink-0 px-4 py-2 bg-white text-green-700 rounded-md text-sm font-semibold hover:bg-green-50 transition-colors border border-green-700"
               >
                 {buttonText}
@@ -60,9 +61,10 @@ export function showError(message: string) {
           variant="error"
           appearance="solid"
           autoDismiss
-          onDismiss={() => toast.dismiss(t.id)}
+          onDismiss={() => toast.remove(t.id)}
           dismissTime={3000}
-          className="rounded !w-[98vw]"
+          className="rounded !w-[98vw] cursor-pointer"
+          onClick={() => toast.remove(t.id)}
         >
           <AlertTitle className="text-[18px]">Error</AlertTitle>
           <AlertDescription className="text-[16px]">{message}</AlertDescription>
@@ -87,10 +89,11 @@ export function showWarning(
           variant="warning"
           appearance="solid"
           autoDismiss
-          onDismiss={() => toast.dismiss(t.id)}
+          onDismiss={() => toast.remove(t.id)}
           dismissTime={4000}
-          className="rounded shadow-md !w-[98vw]"
+          className="rounded shadow-md !w-[98vw] cursor-pointer"
           showClose={false}
+          onClick={() => toast.remove(t.id)}
         >
           <div className="flex-1 flex items-center justify-between gap-4">
             <div className="flex items-center gap-[var(--gp-space-regular)]">
@@ -104,7 +107,7 @@ export function showWarning(
             {href && !hideDetails && (
               <Link
                 href={href}
-                onClick={() => toast.dismiss(t.id)}
+                onClick={() => toast.remove(t.id)}
                 className="shrink-0 text-[#BB812C] font-[var(--gp-font-heading)] text-[16px] font-medium tracking-wider hover:opacity-80 transition-opacity uppercase"
               >
                 {buttonText}

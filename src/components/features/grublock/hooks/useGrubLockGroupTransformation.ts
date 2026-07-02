@@ -25,7 +25,7 @@ export function useGrubLockGroupTransformation({
       return groups
         .map((group) => ({
           ...group,
-          items: (group.items ?? []).filter((box) => box.status === "locked"),
+          items: (group.items ?? []).filter((box) => box.status !== "unlocked"),
         }))
         .filter((group) => (group.items ?? []).length > 0);
     }

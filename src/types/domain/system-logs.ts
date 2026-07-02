@@ -40,7 +40,7 @@ export interface SystemLogsFilterItem {
 export interface SystemLogsListRequest {
   limit?: number;
   page?: number;
-  category?: string;
+  category?: string | string[];
   filters?: SystemLogsFilterItem[];
   query?: string;
   search?: string;

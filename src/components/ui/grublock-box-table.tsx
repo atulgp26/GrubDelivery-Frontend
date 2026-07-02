@@ -123,7 +123,8 @@ export function GrubPacBoxTable({
 		},
 		[onSelectionChange, controlledSelectedIds]
 	);
-	const allSelected = data.length > 0 && selectedIds.size === data.length;
+	const selectableRows = data.filter((r) => r.lockStatus !== "unlocked");
+	const allSelected = selectableRows.length > 0 && selectableRows.every((r) => selectedIds.has(r.id));
 	const someSelected = selectedIds.size > 0 && !allSelected;
 	const headerCheckboxState: boolean | "indeterminate" = allSelected ? true : someSelected ? "indeterminate" : false;
 	const showCheckbox = selectable && columns.includes("name");
@@ -139,7 +140,7 @@ export function GrubPacBoxTable({
 		if (allSelected) {
 			setSelectedIds(new Set());
 		} else {
-			setSelectedIds(new Set(data.map((r) => r.id)));
+			setSelectedIds(new Set(selectableRows.map((r) => r.id)));
 		}
 	};
 
@@ -163,11 +164,7 @@ export function GrubPacBoxTable({
 						return (
 							<DataTableHeaderCell key={col.id}>
 								<div className="flex items-center gap-[var(--gp-space-xl)]">
-									<CheckboxCell
-										checked={headerCheckboxState}
-										onChange={toggleAll}
-										isHeader
-									/>
+									<div className="w-[20px] h-[20px] shrink-0" />
 									<span
 										className="font-[var(--gp-font-text)] text-[14px] leading-[22px] text-[var(--gp-color-text-neutral-tertiary)]"
 										style={{ fontWeight: 400 }}
@@ -286,11 +283,15 @@ function renderCell(
 			return (
 				<div className="flex items-start gap-[var(--gp-space-xl)]">
 					{callbacks.showCheckbox && (
-						<CheckboxCell
-							checked={callbacks.selectedIds.has(row.id)}
-							onChange={() => callbacks.toggleRow(row.id)}
-							className="mt-0.5"
-						/>
+						row.lockStatus === "unlocked" ? (
+							<div className="w-[20px] h-[20px] shrink-0" />
+						) : (
+							<CheckboxCell
+								checked={callbacks.selectedIds.has(row.id)}
+								onChange={() => callbacks.toggleRow(row.id)}
+								className="mt-0.5"
+							/>
+						)
 					)}
 					<div className="flex items-start gap-[var(--gp-space-s)]">
 						<Tooltip>

@@ -67,7 +67,7 @@ async function fetchGrubLockGroups({
     page: 1,
     ...params,
     group_by: isGrouped ? "restaurants" : "lock_status",
-    ...(isGrouped ? { grublock_status: groupedStatus } : {}),
+    ...(isGrouped && !showUnlockedBoxes ? { grublock_status: "locked" } : {}),
   };
 
   const res = await grublockService.getList(requestParams);
@@ -161,7 +161,7 @@ export function useGrubLockQuery({
         ...params,
         group_by: isGrouped ? "restaurants" : "lock_status",
         group_by_selected_table: (group as any).groupTableKey ?? selectedTable,
-        ...(isGrouped ? { grublock_status: groupedStatus } : {}),
+        ...(isGrouped && !showUnlockedBoxes ? { grublock_status: "locked" } : {}),
       };
 
       const res = await grublockService.getList(requestParams);

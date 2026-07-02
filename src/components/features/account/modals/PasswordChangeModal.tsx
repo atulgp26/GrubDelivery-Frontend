@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/text-field";
@@ -36,6 +36,17 @@ export default function PasswordChangeModal({
     new: false,
     confirm: false,
   });
+
+  const currentPasswordRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        currentPasswordRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [submitAttempted, setSubmitAttempted] = useState(false);
@@ -123,6 +134,7 @@ export default function PasswordChangeModal({
         {/* Form Section */}
         <div className="flex flex-col gap-[16px]">
           <TextField
+            ref={currentPasswordRef}
             type={showPassword.current ? "text" : "password"}
             placeholder="Enter current password"
             value={passwords.current}

@@ -264,6 +264,17 @@ export function TitleRow({
                 </span>
               </button>
 
+              {/* Check permission */}
+              <button
+                onClick={() => { setMenuOpen(false); onPermission?.(); }}
+                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[var(--gp-color-bg-neutral-tertiary)] transition-colors text-left"
+              >
+                <Image src="/GrubPac/Box-settings/shield-check.svg" alt="" width={18} height={18} />
+                <span className="font-[var(--gp-font-text)] text-[14px] leading-[22px] text-[var(--gp-color-text-neutral-secondary)]">
+                  Check permission
+                </span>
+              </button>
+
               {/* Suspend box */}
               <button
                 onClick={() => { setMenuOpen(false); onSuspend?.(); }}
@@ -275,27 +286,16 @@ export function TitleRow({
                 </span>
               </button>
 
-              {/* Restrict access */}
-              <button
-                onClick={() => { setMenuOpen(false); onPermission?.(); }}
-                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[var(--gp-color-bg-neutral-tertiary)] transition-colors text-left"
-              >
-                <Image src="/GrubPac/Box-settings/shield-check.svg" alt="" width={18} height={18} />
-                <span className="font-[var(--gp-font-text)] text-[14px] leading-[22px] text-[var(--gp-color-text-neutral-secondary)]">
-                  Restrict access
-                </span>
-              </button>
-
               <div className="mx-4 border-t border-[var(--gp-color-border-neutral)]" />
 
-              {/* Delete box — destructive */}
+              {/* Remove box — destructive */}
               <button
                 onClick={() => { setMenuOpen(false); onDelete?.(); }}
-                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[var(--gp-color-bg-error-secondary)] transition-colors text-left"
+                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[var(--gp-color-bg-neutral-tertiary)] transition-colors text-left"
               >
                 <Image src="/GrubPac/Box-settings/trash.svg" alt="" width={18} height={18} />
-                <span className="font-[var(--gp-font-text)] text-[14px] leading-[22px] text-[var(--gp-color-text-error-primary)]">
-                  Delete box
+                <span className="font-[var(--gp-font-text)] text-[14px] leading-[22px] text-[var(--gp-color-text-neutral-secondary)]">
+                  Remove box
                 </span>
               </button>
             </div>

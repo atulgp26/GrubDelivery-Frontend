@@ -428,6 +428,11 @@ export function apiGrubPacToItem(g: ApiGrubPac): GrubPacItem {
     accessMode: g.access_mode ?? "public",
     blockedEmployeeIds: Array.isArray(g.blocked_employee_ids) ? g.blocked_employee_ids : [],
     permissionsBlockedCount: typeof g.permissions_blocked_count === "number" ? g.permissions_blocked_count : undefined,
+    camera_status: g.camera_status ?? undefined,
+    advert_screen_status: g.advert_screen_status ?? undefined,
+    ioniser_status: g.ioniser_status ?? undefined,
+    dual_zone_status: g.dual_zone_status ?? undefined,
+    power_status: g.power_status ?? undefined,
   };
 }
 
@@ -500,6 +505,11 @@ export interface GrubPacItem {
   permissionsBlockedCount?: number;
   resourceBoxCount?: number;
   resourceEmployeeCount?: number;
+  camera_status?: string | null;
+  advert_screen_status?: string | null;
+  ioniser_status?: string | null;
+  dual_zone_status?: string | null;
+  power_status?: string | null;
   [key: string]: unknown;
 }
 

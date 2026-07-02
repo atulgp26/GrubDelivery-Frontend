@@ -152,7 +152,7 @@ export default function EmployeeBoxesModal({
     restaurantId,
     fetchExcluded: isExcludedView,
     showOfflineBoxes: state.showOfflineBoxes,
-enabled: !staticBoxes && open && Boolean(employeeId || restaurantId),
+    enabled: !staticBoxes && open && Boolean(employeeId || restaurantId),
     page: state.currentPage,
     limit: PAGE_SIZE,
     searchTerm: state.searchTerm,
@@ -185,8 +185,8 @@ enabled: !staticBoxes && open && Boolean(employeeId || restaurantId),
     };
   }, [open, state.showFilterModal, updateFilterPanelPosition]);
 
-const activeBoxes = staticBoxes ?? (isExcludedView ? excludedBoxes : boxes);
-const totalEntries = staticBoxes ? staticBoxes.length : totalCount;
+  const activeBoxes = staticBoxes ?? (isExcludedView ? excludedBoxes : boxes);
+  const totalEntries = staticBoxes ? staticBoxes.length : totalCount;
   const hasMoreThanThreeRows = totalEntries > 3;
   const totalPages = Math.ceil(totalEntries / PAGE_SIZE);
 
@@ -251,13 +251,13 @@ const totalEntries = staticBoxes ? staticBoxes.length : totalCount;
 
       await onConfirmRemoval?.(selectedIds);
       await refetch();
-      
-  showSuccess(
-  "Removed",
-  selectedIds.length > 1
-    ? "Boxes removed from employee successfully."
-    : "Box removed from employee successfully."
-);
+
+      showSuccess(
+        "Removed",
+        selectedIds.length > 1
+          ? "Boxes removed from employee successfully."
+          : "Box removed from employee successfully."
+      );
 
       if (state.view === "editAssigned") {
         setState((prev) => ({
@@ -369,22 +369,22 @@ const totalEntries = staticBoxes ? staticBoxes.length : totalCount;
                 <span className="text-[14px] leading-[22px] text-[#6B7971] font-normal">
                   {totalEntries} entries
                 </span>
-              {!staticBoxes && (
-  <label className="flex items-center gap-2 cursor-pointer select-none whitespace-nowrap">
-    <CustomCheckbox
-      checked={state.showOfflineBoxes}
-      onChange={(e: ChangeEvent<HTMLInputElement> | undefined) =>
-        setState((prev) => ({ ...prev, showOfflineBoxes: e?.target.checked ?? false }))
-      }
-      colorVar="--color-brand-default"
-      hoverState="peer-hover:bg-[var(--sidebar-active-bg)] peer-hover:border-[var(--color-brand-default)]"
-      checkedHoverState="peer-hover:!bg-[var(--color-brand-default)] peer-hover:!border-[var(--color-brand-default)]"
-    />
-    <span className="text-lg text-[var(--color-neutral-secondary)]">
-      Show offline boxes
-    </span>
-  </label>
-)}
+                {!staticBoxes && (
+                  <label className="flex items-center gap-2 cursor-pointer select-none whitespace-nowrap">
+                    <CustomCheckbox
+                      checked={state.showOfflineBoxes}
+                      onChange={(e: ChangeEvent<HTMLInputElement> | undefined) =>
+                        setState((prev) => ({ ...prev, showOfflineBoxes: e?.target.checked ?? false }))
+                      }
+                      colorVar="--color-brand-default"
+                      hoverState="peer-hover:bg-[var(--sidebar-active-bg)] peer-hover:border-[var(--color-brand-default)]"
+                      checkedHoverState="peer-hover:!bg-[var(--color-brand-default)] peer-hover:!border-[var(--color-brand-default)]"
+                    />
+                    <span className="text-lg text-[var(--color-neutral-secondary)]">
+                      Show offline boxes
+                    </span>
+                  </label>
+                )}
                 <div ref={filterButtonRef}>
                   <FilterButton
                     open={state.showFilterModal}
@@ -469,9 +469,9 @@ const totalEntries = staticBoxes ? staticBoxes.length : totalCount;
                   disabled={isBusy || totalEntries === 0}
                   className="w-full flex items-center justify-center gap-2 h-[48px]"
                 >
-                  <FigIcon 
-                    name="Employee/Popup/pen" 
-                    size={24} 
+                  <FigIcon
+                    name="Employee/Popup/pen"
+                    size={24}
                     className={`w-5 h-5 ${(isBusy || totalEntries === 0) ? "grayscale opacity-40" : ""}`}
                   />
                   <span>EDIT LIST</span>

@@ -121,7 +121,7 @@ export default function OtpVerifyModal({
         <OtpInputs otp={otp} setOtp={setOtp} otpRefs={otpRefs} otpError={otpError} />
         <div className="w-full text-left text-[16px] font-medium mb-4 pl-1 text-[var(--gp-color-text-neutral-light)]">
           {timer > 0 ? (
-            `RESEND IN 0:${timer.toString().padStart(2, "0")}`
+            `RESEND IN ${Math.floor(timer / 60)}:${(timer % 60).toString().padStart(2, "0")}`
           ) : (
             <Button
               variant="neutral"

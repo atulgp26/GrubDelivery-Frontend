@@ -131,7 +131,7 @@ export function useAuthActions({
 
 			if (response.success) {
 				showSuccess("OTP has been sent successfully", "");
-				otpState.setTimer(12);
+				otpState.setTimer(60);
 			} else {
 				showError(
 					getContextualErrorMessage(

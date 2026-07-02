@@ -6,13 +6,17 @@ import NotificationList from "@/components/features/notifications/NotificationLi
 import NotificationFilterModal from "@/components/features/notifications/NotificationFilterModal";
 import { useNotificationFilters } from "@/components/features/notifications/hooks/useNotificationFilters";
 import { notificationsService } from "@/services/notifications";
-import type { NotificationTone, Notification, MultiSelectOption, NotificationGroupOption } from "@/types";
+import type {
+  NotificationTone,
+  Notification,
+  MultiSelectOption,
+  NotificationGroupOption,
+} from "@/types";
 import { Button } from "@/components/ui/Button";
 import LoadingDetails from "@/components/ui/LoadingDetails";
 
 export default function NotificationsPage() {
   const [showFilterModal, setShowFilterModal] = useState(false);
-const [dismissedNotificationIds, setDismissedNotificationIds] = useState<string[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -82,67 +86,86 @@ const [dismissedNotificationIds, setDismissedNotificationIds] = useState<string[
     restaurants,
   });
 
-  const visibleNotifications = useMemo(
-    () =>
-      filteredNotifications.filter(
-        (notification) => !dismissedNotificationIds.includes(notification.id),
-      ),
-    [filteredNotifications, dismissedNotificationIds],
-  );
-
-const handleMarkAsRead = async (ids: string[]) => {
-  // Optimistically update UI
-  setNotifications((prev) =>
-    prev.map((n) =>
-      ids.includes(n.id) ? { ...n, is_read: true } : n
-    )
-  );
-
-    try {
-    await notificationsService.markAsRead(ids);
-  } catch (error) {
-    console.error("Failed to mark notifications as read", error);
-    // Rollback on failure
+  const handleMarkAsRead = async (ids: string[]) => {
+    // Optimistically update UI
     setNotifications((prev) =>
       prev.map((n) =>
-        ids.includes(n.id) ? { ...n, is_read: false } : n
-      )
+        ids.includes(n.id) ? { ...n, is_read: true } : n,
+      ),
     );
-  }
-};
+
+    try {
+      await notificationsService.markAsRead(ids);
+    } catch (error) {
+      console.error("Failed to mark notifications as read", error);
+      // Rollback on failure
+      setNotifications((prev) =>
+        prev.map((n) =>
+          ids.includes(n.id) ? { ...n, is_read: false } : n,
+        ),
+      );
+    }
+  };
+
+  const handleDismiss = async (notificationId: string) => {
+    // Optimistically remove from UI
+    setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+    setSelectedNotificationIds((prev) =>
+      prev.filter((id) => id !== notificationId),
+    );
+
+    try {
+      await notificationsService.markAsDismissed([notificationId]);
+    } catch (error) {
+      console.error("Failed to dismiss notification", error);
+      // Refetch on failure to restore state
+      const notifRes = await notificationsService.getNotifications();
+      if (notifRes.success && notifRes.data) {
+        setNotifications(notifRes.data.notifications);
+      }
+    }
+  };
+
+  const handleDismissAll = async () => {
+    const ids = filteredNotifications.map((n) => n.id);
+    if (ids.length === 0) return;
+
+    // Optimistically remove from UI
+    setNotifications((prev) => prev.filter((n) => !ids.includes(n.id)));
+    setSelectedNotificationIds([]);
+
+    try {
+      await notificationsService.dismissAllNotifications();
+    } catch (error) {
+      console.error("Failed to dismiss all notifications", error);
+      // Refetch on failure to restore state
+      const notifRes = await notificationsService.getNotifications();
+      if (notifRes.success && notifRes.data) {
+        setNotifications(notifRes.data.notifications);
+      }
+    }
+  };
 
   const allVisibleSelected =
-    visibleNotifications.length > 0 &&
-    visibleNotifications.every((notification) =>
+    filteredNotifications.length > 0 &&
+    filteredNotifications.every((notification) =>
       selectedNotificationIds.includes(notification.id),
     );
 
   const handleToggleAllVisible = () => {
     setSelectedNotificationIds((prev) => {
-      if (visibleNotifications.length === 0) {
+      if (filteredNotifications.length === 0) {
         return prev;
       }
-      const visibleIds = visibleNotifications.map((notification) => notification.id);
+      const visibleIds = filteredNotifications.map(
+        (notification) => notification.id,
+      );
       const everySelected = visibleIds.every((id) => prev.includes(id));
       if (everySelected) {
         return prev.filter((id) => !visibleIds.includes(id));
       }
       return Array.from(new Set([...prev, ...visibleIds]));
     });
-  };
-
-const handleDismiss = (notificationId: string) => { // was number
-  setDismissedNotificationIds((prev) =>
-    prev.includes(notificationId) ? prev : [...prev, notificationId],
-  );
-  setSelectedNotificationIds((prev) => prev.filter((id) => id !== notificationId));
-};
-
-  const handleDismissAll = () => {
-    setDismissedNotificationIds((prev) => [
-      ...new Set([...prev, ...filteredNotifications.map((notification) => notification.id)]),
-    ]);
-    setSelectedNotificationIds([]);
   };
 
   const getNotificationIcon = useMemo(
@@ -181,7 +204,7 @@ const handleDismiss = (notificationId: string) => { // was number
               />
             );
           case "info":
-            case "notification": 
+          case "notification":
             return (
               <Image
                 src="/Icon-alert.svg"
@@ -203,10 +226,10 @@ const handleDismiss = (notificationId: string) => { // was number
             );
         }
       };
-      NotificationIcon.displayName = 'NotificationIcon';
+      NotificationIcon.displayName = "NotificationIcon";
       return NotificationIcon;
     },
-    []
+    [],
   );
 
   if (isLoading) {
@@ -240,26 +263,4 @@ const handleDismiss = (notificationId: string) => { // was number
         setShowFilterModal={setShowFilterModal}
         isFilterModalOpen={showFilterModal}
       />
-      <NotificationFilterModal
-        open={showFilterModal}
-        onClose={() => setShowFilterModal(false)}
-        selectedTypes={selectedTypes}
-        setSelectedTypes={setSelectedTypes}
-        selectedStatuses={selectedStatuses}
-        setSelectedStatuses={setSelectedStatuses}
-        onFilter={() => setShowFilterModal(false)}
-      />
-      <NotificationList
-        filtered={visibleNotifications}
-        selected={selectedNotificationIds}
-        setSelected={setSelectedNotificationIds}
-        getNotificationIcon={getNotificationIcon}
-        allSelected={allVisibleSelected}
-        onToggleAll={handleToggleAllVisible}
-        onDismiss={handleDismiss}
-        onMarkAsRead={handleMarkAsRead}
-      />
-    </>
-  );
-}
-
+      <Notifi

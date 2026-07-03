@@ -115,14 +115,6 @@ function buildUpdateProfileBody(fields: {
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-const deleteEligibilityStub = async (_email: string, _otp: string) => {
-  return { success: true, code: 200 } as const;
-};
-
-const deleteAccountStub = async () => {
-  return { success: true, code: 200 } as const;
-};
-
 export function useAccount() {
   const [modalState, setModalState] = useState({
     editOpen: false,
@@ -130,6 +122,7 @@ export function useAccount() {
     otpModalOpen: false,
     otpError: false,
   });
+  const [deleteOtpId, setDeleteOtpId] = useState<string | undefined>(undefined);
 
   const [otp, setOtp] = useState<string[]>(["", "", "", ""]);
   const [otpRefs] = useState<Array<React.RefObject<HTMLInputElement | null>>>([
@@ -192,15 +185,13 @@ export function useAccount() {
       showError(getApiErrorMessage(err, "Failed to update profile")),
   });
 
-  // TODO: Replace with real API when endpoint is available
-  const eligibilityMutation = useMutation({
-    mutationFn: (vars: { email: string; otp: string }) =>
-      deleteEligibilityStub(vars.email, vars.otp),
+  const requestDeleteOtpMutation = useMutation({
+    mutationFn: () => accountService.requestDeleteAccountOtp(),
   });
 
-  // TODO: Replace with real API when endpoint is available
   const deleteAccountMutation = useMutation({
-    mutationFn: () => deleteAccountStub(),
+    mutationFn: (vars: { otp: string; otp_id?: string }) =>
+      accountService.deleteAccount(vars),
   });
 
   const changePasswordMutation = useMutation({
@@ -297,16 +288,37 @@ export function useAccount() {
 
   const handleDelete = () => updateModalState({ deleteOpen: true });
 
-  const handleDeleteAccount = () => {
-    updateModalState({ deleteOpen: false, otpModalOpen: true, otpError: false });
-    setOtp(["", "", "", ""]);
-    startDeleteOtpTimer();
+  const handleDeleteAccount = async () => {
+    try {
+      const res = await requestDeleteOtpMutation.mutateAsync();
+      if (!res.success) {
+        showError(res.error || "Failed to send OTP for account deletion");
+        return;
+      }
+      setDeleteOtpId(res.data?.otp_id);
+      updateModalState({ deleteOpen: false, otpModalOpen: true, otpError: false });
+      setOtp(["", "", "", ""]);
+      startDeleteOtpTimer();
+    } catch (error) {
+      showError(getApiErrorMessage(error, "Failed to send OTP for account deletion"));
+    }
   };
 
   const handleResendDeleteOtp = async () => {
-    // TODO: Implement actual API call when endpoint is available
-    showSuccess("OTP has been sent successfully", "");
-    resetDeleteOtpTimer();
+    try {
+      const res = await accountService.resendDeleteAccountOtp(deleteOtpId);
+      if (!res.success) {
+        showError(res.error || "Unable to resend OTP right now. Please try again.");
+        return;
+      }
+      if (res.data?.otp_id) {
+        setDeleteOtpId(res.data.otp_id);
+      }
+      showSuccess("OTP has been sent successfully", "");
+      resetDeleteOtpTimer();
+    } catch (error) {
+      showError(getApiErrorMessage(error, "Unable to resend OTP right now. Please try again."));
+    }
   };
 
   const handleOtpVerify = async () => {
@@ -317,28 +329,17 @@ export function useAccount() {
     }
 
     try {
-      const email = userData?.basicDetails?.email || "";
-      if (!email || !email.trim()) {
-        showError("Email not found. Cannot proceed with account deletion.");
-        return;
-      }
-
-      const eligibilityResponse = await eligibilityMutation.mutateAsync({
-        email,
+      const deleteResponse = await deleteAccountMutation.mutateAsync({
         otp: enteredOtp,
+        otp_id: deleteOtpId,
       });
-      if (eligibilityResponse?.success && eligibilityResponse?.code === 200) {
-        const deleteResponse = await deleteAccountMutation.mutateAsync();
-        if (deleteResponse?.success && deleteResponse?.code === 200) {
-          showSuccess("Account deleted successfully!", "");
-          updateModalState({ otpModalOpen: false });
-          clearAuthCookies();
-          window.location.href = "/auth";
-        } else {
-          showError("Failed to delete account");
-        }
-      } else {
+      if (deleteResponse?.success && deleteResponse?.code === 200) {
+        showSuccess("Account deleted successfully!", "");
         updateModalState({ otpModalOpen: false });
+        clearAuthCookies();
+        window.location.href = "/auth";
+      } else {
+        showError("Failed to delete account");
       }
     } catch (error) {
       showError(

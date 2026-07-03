@@ -47,10 +47,11 @@ const isNameValid = (value: string): boolean => {
   return trimmed.length >= 1 && trimmed.length <= 50;
 };
 
+import { EMAIL_PATTERN } from "@/components/features/auth/validation";
+
 const isEmailValid = (value: string): boolean => {
   const trimmed = value.trim();
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(trimmed);
+  return EMAIL_PATTERN.test(trimmed);
 };
 
 const isContactValid = (value: string): boolean => {

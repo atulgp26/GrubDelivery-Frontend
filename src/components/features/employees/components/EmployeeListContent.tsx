@@ -1043,6 +1043,13 @@ onViewRestaurantBoxes={(employee) => {
   employeeId={boxesModalSource === "employee" ? modalState.selectedEmployee.id : undefined}
   restaurantId={modalState.selectedEmployee.restaurantId}
   employeeName={modalState.selectedEmployee.name}
+  connectionStatus={
+    modalState.selectedEmployee.connectedBoxesStatus === false
+      ? "disconnected"
+      : modalState.selectedEmployee.connectedBoxesStatus === true
+        ? "connected"
+        : undefined
+  }
   staticBoxes={mainModalBoxes}
   hideEditList
   onEditList={() => {}}

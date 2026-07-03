@@ -408,6 +408,11 @@ export default function BoxSettingsPage({ boxId, pinSelectedOnLoad = false, back
   };
 
   const handleEmergencyUnlockRequest = async (reason: string) => {
+    if (grublockStatus === "UNLOCKED") {
+      showError("Selected box is already unlocked.");
+      return false;
+    }
+
     const response = await grublockService.emergencyUnlockBox(String(selectedBox.id), reason);
     if (!response.success) {
       showError(
@@ -417,7 +422,7 @@ export default function BoxSettingsPage({ boxId, pinSelectedOnLoad = false, back
           "Could not unlock box. Please try again.",
         ),
       );
-      return;
+      return false;
     }
 
     setGrublockStatus("UNLOCKED");
@@ -426,6 +431,8 @@ export default function BoxSettingsPage({ boxId, pinSelectedOnLoad = false, back
       title: "Emergency unlock successful!",
       description: "The box has been unlocked without OTP verification.",
     });
+    await refetch();
+    return "apply" as const;
   };
 
   const handleSuspendBox = async () => {
@@ -539,7 +546,7 @@ setStatusAlert({
     });
     setIsSettingsConfirmOpen(false);
   } finally {
-    // setIsSettingsApplying(false);
+    setIsSettingsApplying(false);
   }
 };
 
@@ -771,7 +778,10 @@ setStatusAlert({
         onCloseApplySettingsModal={closeApplySettingsModal}
         onCloseFilterModal={() => {}}
         onApplyFilter={() => {}}
-        onEmergencyUnlock={closeEmergencyUnlockModal}
+        onEmergencyUnlock={() => {
+          closeEmergencyUnlockModal();
+          closeUnlockBoxModal();
+        }}
         onOpenEmergencyUnlockModal={openEmergencyUnlockModal}
         onHaveEmergencyUnlock={() => {}}
         onApplySettings={() => {}}

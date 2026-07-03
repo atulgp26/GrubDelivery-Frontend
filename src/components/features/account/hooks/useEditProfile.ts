@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { showError, showSuccess } from "@/components/ui/toast";
 import { getApiErrorMessage, getContextualErrorMessage } from "@/lib/errors";
 import { useOtpTimer } from "@/components/features/account/hooks/useOtpTimer";
+import { EMAIL_PATTERN } from "@/components/features/auth/validation";
 import type { EditFields } from "@/components/features/account/types";
 
 export type { EditFields };
@@ -26,8 +27,7 @@ const isNameValid = (value: string): boolean => {
 
 const isEmailValid = (value: string): boolean => {
   const trimmed = value.trim();
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(trimmed);
+  return EMAIL_PATTERN.test(trimmed);
 };
 
 const normalizeIndianContact = (value: string): string | null => {
@@ -331,12 +331,12 @@ export function useEditProfile({
 
         if (response?.success && response?.is_otp) {
           const otpType = response.data?.otp_details?.type;
-          
+
           let queue: Array<"email" | "contact"> = [];
           if (otpType === "email") queue = ["email"];
           else if (otpType === "phone" || otpType === "contact") queue = ["contact"];
           else if (otpType === "both") queue = ["contact", "email"];
-          
+
           if (queue.length > 0) {
             setPendingVerifications(queue);
             setShowOtpModal(true);
@@ -366,7 +366,7 @@ export function useEditProfile({
       if (onConfirmOtp) {
         res = await onConfirmOtp(enteredOtp);
       }
-      
+
       const nextPending = pendingVerifications.slice(1);
       if (nextPending.length > 0) {
         setPendingVerifications(nextPending);
@@ -381,9 +381,9 @@ export function useEditProfile({
       resetOtpTimer();
       const title = res?.message_toast_title ?? "Profile updated!";
       const description = res?.message_toast_description ?? "Your profile information has been updated successfully.";
-      
+
       showSuccess(title, description);
-      
+
       setShowOtpModal(false);
       setPendingVerifications([]);
 
@@ -491,7 +491,7 @@ export function useEditProfile({
   const title = "Hold on!";
   let description = "To confirm your changes, enter the OTP sent to your updated details.";
   let otpEmail = "";
-  
+
   if (currentVerification === "email") {
     description = `To confirm the change, enter the OTP sent to your updated email address - ${currentFields.email}`;
     otpEmail = currentFields.email;

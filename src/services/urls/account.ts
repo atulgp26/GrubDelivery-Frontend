@@ -8,4 +8,7 @@ export const ACCOUNT_URLS = {
 	UPDATE: ACCOUNT_BASE,
 	CONFIRM: `${ACCOUNT_BASE}/confirm`,
 	RESEND_OTP: `${ACCOUNT_BASE}/update/resend-otp`,
+	DELETE_OTP: `${ACCOUNT_BASE}/delete/otp`,
+	DELETE_RESEND_OTP: `${ACCOUNT_BASE}/delete/resend-otp`,
+	DELETE: ACCOUNT_BASE,
 } as const;

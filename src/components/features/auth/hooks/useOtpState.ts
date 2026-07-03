@@ -21,14 +21,18 @@ export function useOtpState(otpVerifyModalOpen: boolean) {
   ];
 
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | undefined;
-    if (otpVerifyModalOpen && timer > 0) {
-      interval = setInterval(() => setTimer((v) => v - 1), 1000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [otpVerifyModalOpen, timer]);
+    if (!otpVerifyModalOpen || timer <= 0) return;
+    const interval = setInterval(() => {
+      setTimer((v) => {
+        if (v <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return v - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [otpVerifyModalOpen, timer > 0]);
 
   const resetOtp = () => {
     setOtp([...EMPTY_OTP]);

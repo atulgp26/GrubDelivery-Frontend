@@ -23,6 +23,7 @@ interface UseEmployeeBoxesOptions {
   page?: number;
   limit?: number;
   searchTerm?: string;
+  connectionStatus?: "connected" | "disconnected";
   filters?: FilterState;
   restaurantId?: string;
 }
@@ -141,6 +142,7 @@ export function useEmployeeBoxes({
   limit = 50,
   searchTerm = "",
   filters,
+  connectionStatus,
 }: UseEmployeeBoxesOptions): UseEmployeeBoxesResult {
   const [boxes, setBoxes] = useState<EmployeeBox[]>([]);
   const [excludedBoxes, setExcludedBoxes] = useState<EmployeeBox[]>([]);
@@ -180,7 +182,7 @@ const listRes = await grubpacService.getList({
   ...(employeeId ? { employee_id: employeeId } : {}),
           permission_status: restaurantId ? undefined : permissionStatus, 
           power_status: apiFilterParams.power_status ?? fallbackPowerStatus,
-          connection_status: apiFilterParams.connection_status,
+          connection_status: apiFilterParams.connection_status ?? connectionStatus,
           health_status: apiFilterParams.health_status,
           grublock_status: apiFilterParams.grublock_status,
           restaurant_assigned: apiFilterParams.restaurant_assigned,
@@ -237,7 +239,7 @@ const listRes = await grubpacService.getList({
     };
 
     void run();
-  }, [employeeId, enabled, restaurantId, fetchExcluded, reloadToken, showOfflineBoxes, page, limit, searchTerm, filters]);
+  }, [employeeId, enabled, restaurantId, fetchExcluded, reloadToken, showOfflineBoxes, page, limit, searchTerm, filters, connectionStatus]);
 
   return {
     boxes,

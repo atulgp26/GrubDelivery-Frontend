@@ -835,8 +835,24 @@ const _boxesCount = (selectedRestaurant as any)?._count?.boxes ?? selectedRestau
           suspendedOn: (selectedRestaurant as any)?.suspendedOn,
           address: selectedRestaurant?.address,
           resources: [
-            { label: "GrubPacs", count: _boxesCount },
-            { label: "employees", count: _employeesCount },
+            {
+              label: "GrubPacs",
+              count: _boxesCount,
+              onViewList: () => {
+                if (!selectedRestaurant?.id) return;
+                setShowDetailsModal(false);
+                router.push(`/grubpacs/list?grouped=true&restaurantId=${selectedRestaurant.id}`);
+              },
+            },
+            {
+              label: "employees",
+              count: _employeesCount,
+              onViewList: () => {
+                if (!selectedRestaurant?.id) return;
+                setShowDetailsModal(false);
+                router.push(`/employees/list?restaurantId=${selectedRestaurant.id}`);
+              },
+            },
           ],
         }}
         onActivate={handleActivateFromDetails}

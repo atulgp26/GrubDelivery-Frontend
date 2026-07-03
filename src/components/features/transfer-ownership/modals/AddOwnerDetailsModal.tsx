@@ -38,6 +38,7 @@ export default function AddOwnerDetailsModal({
     handleCountryChange,
     handleStateChange,
     isValid,
+    isFullNameValid,
     isEmailValid,
     stateOptions,
     reset,
@@ -62,6 +63,7 @@ export default function AddOwnerDetailsModal({
 
   const missingFields: string[] = [];
   if (!form.fullName.trim()) missingFields.push("Full name");
+  else if (!isFullNameValid) missingFields.push("Full name cannot contain numeric values");
   if (!form.organisationName.trim()) missingFields.push("Organisation name");
   if (form.phone.trim().length !== 10) missingFields.push("Valid phone number");
   if (!isEmailValid) missingFields.push("Valid email address");

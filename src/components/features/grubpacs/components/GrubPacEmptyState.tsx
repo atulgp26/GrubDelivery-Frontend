@@ -4,6 +4,7 @@ export type EmptyStateType =
   | "ungrouped-powered-on" 
   | "ungrouped-powered-off" 
   | "grouped-restaurant" 
+  | "grouped-restaurant-offline"
   | "grouped-unassigned";
 
 export interface GrubPacEmptyStateProps {
@@ -15,6 +16,7 @@ const EMPTY_STATE_MESSAGES: Record<EmptyStateType, string> = {
   "ungrouped-powered-on": "Turn on your GrubPacs to see the list here.",
   "ungrouped-powered-off": "All GrubPacs are powered on.",
   "grouped-restaurant": "No box assigned to this restaurant",
+  "grouped-restaurant-offline": "No offline boxes found for this restaurant",
   "grouped-unassigned": "No box left without a restaurant! :)",
 };
 

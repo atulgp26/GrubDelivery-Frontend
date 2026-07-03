@@ -696,7 +696,13 @@ export default function GrubPacsListScreen() {
                     </>
                   ) : (
                     <GrubPacEmptyState
-                      type={groupName === "Unassigned" ? "grouped-unassigned" : "grouped-restaurant"}
+                      type={
+                        groupName === "Unassigned"
+                          ? "grouped-unassigned"
+                          : showOffline && groupItems.length > 0
+                            ? "grouped-restaurant-offline"
+                            : "grouped-restaurant"
+                      }
                     />
                   )}
                 </>

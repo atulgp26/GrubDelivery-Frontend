@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/text-field";
 import Modal from "@/components/ui/Modal";
 import FigIcon from "@/components/ui/FigIcon";
-import { showError } from "@/components/ui/toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { showError } from "@/components/ui/toast";
+import { PASSWORD_MIN_LENGTH, PASSWORD_PATTERN, PASSWORD_RULES_MESSAGE } from "@/components/features/auth/validation";
 
 export interface SetNewPasswordModalProps {
   open: boolean;
@@ -46,8 +47,12 @@ export function SetNewPasswordModal({
   const passwordField = register("password", {
     required: "Password is required",
     minLength: {
-      value: 8,
-      message: "Password must be at least 8 characters long",
+      value: PASSWORD_MIN_LENGTH,
+      message: PASSWORD_RULES_MESSAGE,
+    },
+    pattern: {
+      value: PASSWORD_PATTERN,
+      message: PASSWORD_RULES_MESSAGE,
     },
   });
 
@@ -239,8 +244,12 @@ export function SetNewPasswordForgotModal({
   const passwordField = register("password", {
     required: "Password is required",
     minLength: {
-      value: 8,
-      message: "Password must be at least 8 characters long",
+      value: PASSWORD_MIN_LENGTH,
+      message: PASSWORD_RULES_MESSAGE,
+    },
+    pattern: {
+      value: PASSWORD_PATTERN,
+      message: PASSWORD_RULES_MESSAGE,
     },
   });
 

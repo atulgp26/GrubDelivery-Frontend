@@ -33,12 +33,15 @@ const INITIAL_FORM: NewOwnerFormData = {
 const FULL_NAME_MAX_LENGTH = 50;
 const ORGANISATION_NAME_MAX_LENGTH = 80;
 const INDIA_LOCAL_DIGITS = 10;
-const NAME_SANITIZE_REGEX = /[^\p{L}\s'-]/gu;
 const ORGANISATION_SANITIZE_REGEX = /[^\p{L}\p{N}\s&'.,()-]/gu;
+const FULL_NAME_NUMERIC_REGEX = /\d/;
 const toDigits = (value: string): string => value.replace(/\D/g, "");
 
-const sanitizeNameInput = (value: string): string =>
-  value.replace(NAME_SANITIZE_REGEX, "").slice(0, FULL_NAME_MAX_LENGTH);
+const sanitizeFullNameInput = (value: string): string =>
+  value.slice(0, FULL_NAME_MAX_LENGTH);
+
+const hasNumericInFullName = (value: string): boolean =>
+  FULL_NAME_NUMERIC_REGEX.test(value);
 
 const sanitizeOrganisationInput = (value: string): string =>
   value.replace(ORGANISATION_SANITIZE_REGEX, "").slice(0, ORGANISATION_NAME_MAX_LENGTH);
@@ -61,7 +64,7 @@ export function useTransferForm() {
   const set = (field: keyof NewOwnerFormData) => (value: string) =>
     setForm((prev) => {
       if (field === "fullName") {
-        return { ...prev, fullName: sanitizeNameInput(value) };
+        return { ...prev, fullName: sanitizeFullNameInput(value) };
       }
 
       if (field === "organisationName") {
@@ -98,8 +101,11 @@ export function useTransferForm() {
   const isEmailValid = trimmedEmail !== "" && EMAIL_PATTERN.test(trimmedEmail);
   const isContactValid = normalizedContact !== null;
 
+  const isFullNameValid =
+    trimmedFullName !== "" && !hasNumericInFullName(form.fullName);
+
   const isValid =
-    trimmedFullName !== "" &&
+    isFullNameValid &&
     trimmedOrganisationName !== "" &&
     isContactValid &&
     isEmailValid &&
@@ -119,6 +125,7 @@ export function useTransferForm() {
     handleCountryChange,
     handleStateChange,
     isValid,
+    isFullNameValid,
     isEmailValid,
     isContactValid,
     stateOptions,

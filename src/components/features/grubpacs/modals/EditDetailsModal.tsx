@@ -359,6 +359,8 @@ export default function EditDetails({
   const [inputCode, setInputCode] = useState(initialBoxId ?? "");
   const [vehicleNumber, setVehicleNumber] = useState(initialVehicleNumber ?? "");
   const [selectedRestaurants, setSelectedRestaurants] = useState<string[]>(initialRestaurantIds ?? []);
+  const [permissionSearchTerm, setPermissionSearchTerm] = useState("");
+  const [showPermissionSearch, setShowPermissionSearch] = useState(false);
   const [permissionOption, setPermissionOption] = useState<"anyone" | "all" | "restaurants">(
     initialAccessMode === "all_employees"
       ? "all"
@@ -609,7 +611,14 @@ export default function EditDetails({
   };
 
   // Employees data (excluded list)
-  const employees = excludedEmployees;
+  const employees = excludedEmployees.filter((emp) => {
+    const q = permissionSearchTerm.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      emp.name.toLowerCase().includes(q) ||
+      emp.code.toLowerCase().includes(q)
+    );
+  });
 
   const handleSelectAll = (checked: boolean) => {
     setCheckedExcludedEmployees(checked ? employees.map((e) => e.id) : []);
@@ -698,12 +707,23 @@ export default function EditDetails({
               </h2>
               <button
                 type="button"
+                onClick={() => setShowPermissionSearch((v) => !v)}
                 className="flex items-center gap-2 font-[var(--gp-font-interactive)] text-[16px] font-medium text-[var(--gp-color-text-brand)] hover:opacity-80 transition-opacity"
               >
                 <FiSearch className="size-4" />
                 SEARCH
               </button>
             </div>
+            {showPermissionSearch && (
+              <input
+                type="text"
+                value={permissionSearchTerm}
+                onChange={(e) => setPermissionSearchTerm(e.target.value)}
+                placeholder="Search employee"
+                className="h-9 px-3 rounded-lg border border-[var(--gp-color-border-neutral)] text-sm w-full"
+                autoFocus
+              />
+            )}
           </div>
 
           {/* Table header */}
@@ -719,7 +739,12 @@ export default function EditDetails({
 
           {/* Employee rows — max 5 rows visible, then scroll */}
           <div className="overflow-y-auto divide-y divide-[var(--gp-color-border-neutral)]" style={{ maxHeight: "calc(5 * 78px)" }}>
-            {employees.map((emp) => {
+            {employees.length === 0 ? (
+              <div className="px-6 py-8 text-center font-[var(--gp-font-text)] text-[14px] leading-[22px] text-[var(--gp-color-text-neutral-tertiary)]">
+                No employees match your search.
+              </div>
+            ) : (
+            employees.map((emp) => {
               const checked = checkedExcludedEmployees.includes(emp.id);
               return (
                 <div key={emp.id} className="px-6 py-4 flex items-center gap-4">
@@ -740,7 +765,8 @@ export default function EditDetails({
                   </span>
                 </div>
               );
-            })}
+            })
+            )}
           </div>
 
           {/* Footer */}

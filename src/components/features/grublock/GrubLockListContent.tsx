@@ -435,11 +435,29 @@ export default function GrubLockListContent({
       return false;
     }
 
+    const resolveBoxStatus = (id: string): "locked" | "unlocked" => {
+      if (statusOverrides[id]) return statusOverrides[id];
+      const box =
+        allBoxes.find((item) => String(item.id) === String(id)) ??
+        (String(modalState.selectedBox?.id) === String(id) ? modalState.selectedBox : undefined);
+      return box?.status === "locked" ? "locked" : "unlocked";
+    };
+
+    const lockedIds = emergencyUnlockIds.filter((id) => resolveBoxStatus(id) === "locked");
+    if (lockedIds.length === 0) {
+      setActionAlert({
+        variant: "error",
+        title: "Emergency unlock failed",
+        description: "Selected box(es) are already unlocked.",
+      });
+      return false;
+    }
+
     try {
       setIsEmergencyUnlocking(true);
       addLoadingRows(emergencyUnlockIds);
       const response = await grublockService.emergencyUnlock({
-        ids: emergencyUnlockIds,
+        ids: lockedIds,
         reason,
       });
 
@@ -456,7 +474,7 @@ export default function GrubLockListContent({
         return false;
       }
 
-      applyStatusOverride(emergencyUnlockIds, "unlocked");
+      applyStatusOverride(lockedIds, "unlocked");
       setActionAlert({
         variant: "success",
         title: "Unlock Request Sent!",
@@ -466,7 +484,7 @@ export default function GrubLockListContent({
       });
       setSelectedIds(new Set());
       await refetch();
-      clearStatusOverrides(emergencyUnlockIds);
+      clearStatusOverrides(lockedIds);
       return true;
     } catch (submitError) {
       setActionAlert({

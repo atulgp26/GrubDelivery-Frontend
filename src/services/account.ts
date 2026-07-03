@@ -27,6 +27,12 @@ export interface UpdatePhoneRequest {
 
 export interface ConfirmOtpRequest {
   otp: string;
+  otp_id?: string;
+}
+
+export interface DeleteAccountRequest {
+  otp: string;
+  otp_id?: string;
 }
 
 export interface AccountMyGrubPac {
@@ -113,6 +119,18 @@ const accountService = {
 
   async resendOtp() {
     return httpClient.patch<unknown>(ACCOUNT_URLS.RESEND_OTP, {});
+  },
+
+  async requestDeleteAccountOtp() {
+    return httpClient.post<{ otp_id: string }>(ACCOUNT_URLS.DELETE_OTP, {});
+  },
+
+  async resendDeleteAccountOtp(otp_id?: string) {
+    return httpClient.patch<{ otp_id: string }>(ACCOUNT_URLS.DELETE_RESEND_OTP, { otp_id });
+  },
+
+  async deleteAccount(body: DeleteAccountRequest) {
+    return httpClient.delete<unknown>(ACCOUNT_URLS.DELETE, body);
   },
 };
 

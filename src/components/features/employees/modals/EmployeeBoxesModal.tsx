@@ -42,6 +42,7 @@ interface EmployeeBoxesModalProps {
   restaurantId?: string;
   staticBoxes?: EmployeeBox[];
   hideEditList?: boolean;
+  connectionStatus?: "connected" | "disconnected";
 }
 interface ModalState {
   view: ModalView;
@@ -106,6 +107,7 @@ export default function EmployeeBoxesModal({
   onViewExcludedBoxes,
   loading: externalLoading = false,
   hideEditList = false,
+  connectionStatus,
 }: EmployeeBoxesModalProps) {
   const [isRemoving, setIsRemoving] = useState(false);
   const modalContentRef = useRef<HTMLDivElement | null>(null);
@@ -157,6 +159,7 @@ enabled: !staticBoxes && open && Boolean(employeeId || restaurantId),
     limit: PAGE_SIZE,
     searchTerm: state.searchTerm,
     filters: state.filterState,
+    connectionStatus,
   });
 
   useEffect(() => {

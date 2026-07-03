@@ -150,7 +150,10 @@ export function LogsView({ boxId }: { boxId?: string }) {
   const filteredLogs = useMemo(() => logs.filter((log) => {
     const q = search.toLowerCase();
     const matchesSearch = !search || log.action.toLowerCase().includes(q) || log.type.toLowerCase().includes(q);
-    const matchesFilter = log.category === "System log" ? systemFilters.has(log.type) : actionFilters.has(log.type);
+    const isKnownType = SYSTEM_LOG_TYPES.includes(log.type) || ACTION_LOG_TYPES.includes(log.type);
+    const matchesFilter = isKnownType
+      ? (log.category === "System log" ? systemFilters.has(log.type) : actionFilters.has(log.type))
+      : true;
     return matchesSearch && matchesFilter;
   }), [logs, search, systemFilters, actionFilters]);
 

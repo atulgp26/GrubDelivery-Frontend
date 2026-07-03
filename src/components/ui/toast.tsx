@@ -16,7 +16,7 @@ export function showSuccess(
 ) {
   toast.custom(
     (t) => (
-      <div className="w-[98vw] flex justify-center">
+      <div className="w-[98vw] flex justify-center pointer-events-auto">
         <Alert
           variant="success"
           appearance="solid"
@@ -55,7 +55,7 @@ export function showSuccess(
 export function showError(message: string) {
   toast.custom(
     (t) => (
-      <div className="w-[100vw] flex justify-center">
+      <div className="w-[100vw] flex justify-center pointer-events-auto">
         <Alert
           variant="error"
           appearance="solid"
@@ -82,7 +82,7 @@ export function showWarning(
 ) {
   toast.custom(
     (t) => (
-      <div className="w-[98vw] flex justify-center">
+      <div className="w-[98vw] flex justify-center pointer-events-auto">
         <Alert
           variant="warning"
           appearance="solid"

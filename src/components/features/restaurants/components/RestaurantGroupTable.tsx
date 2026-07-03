@@ -682,7 +682,7 @@ const handleViewManagerDetail = (row: GroupRow) => {
     const restaurant = group.items?.find(item => item.id === row.id);
     if (restaurant) {
       openResourcesModal(restaurant, "grubpacs");
-      void fetchRestaurantResources();
+      void fetchResourceGrubPacs(restaurant.id);
     }
   };
 
@@ -690,7 +690,7 @@ const handleViewManagerDetail = (row: GroupRow) => {
     const restaurant = group.items?.find(item => item.id === row.id);
     if (restaurant) {
       openResourcesModal(restaurant, "grubpacs");
-      void fetchRestaurantResources();
+      void fetchResourceGrubPacs(restaurant.id);
     }
   };
 

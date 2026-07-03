@@ -60,14 +60,14 @@ async function fetchGrubLockGroups({
   isGrouped = false,
   showUnlockedBoxes = true,
 }: UseGrubLockQueryOptions): Promise<GrubLockQueryResult> {
-  const groupedStatus = showUnlockedBoxes ? "unlocked" : "locked";
+  const groupedStatus = showUnlockedBoxes ? undefined : "locked";
   const requestParams: GrubLockListParams = {
     status: "active",
     limit: 50,
     page: 1,
     ...params,
     group_by: isGrouped ? "restaurants" : "lock_status",
-    ...(isGrouped ? { grublock_status: groupedStatus } : {}),
+    ...(isGrouped && groupedStatus ? { grublock_status: groupedStatus } : {}),
   };
 
   const res = await grublockService.getList(requestParams);
@@ -149,7 +149,7 @@ export function useGrubLockQuery({
   const refetchGroup = async (group: GrubLockGroup, page: number) => {
     setIsPageLoading(true);
     try {
-      const groupedStatus = showUnlockedBoxes ? "unlocked" : "locked";
+      const groupedStatus = showUnlockedBoxes ? undefined : "locked";
       const selectedTable = isGrouped 
         ? (group.name === "Unassigned" ? "unassigned" : "restaurants")
         : (group.name === "Box locked" ? "locked" : "unlocked");
@@ -161,7 +161,7 @@ export function useGrubLockQuery({
         ...params,
         group_by: isGrouped ? "restaurants" : "lock_status",
         group_by_selected_table: (group as any).groupTableKey ?? selectedTable,
-        ...(isGrouped ? { grublock_status: groupedStatus } : {}),
+        ...(isGrouped && groupedStatus ? { grublock_status: groupedStatus } : {}),
       };
 
       const res = await grublockService.getList(requestParams);

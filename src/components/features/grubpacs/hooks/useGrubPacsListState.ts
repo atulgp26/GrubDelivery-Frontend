@@ -111,10 +111,8 @@ export function useGrubPacsListState() {
       else if (v === "No lock available") params.grublock_status = "not_available";
     }
 
-    // In grouped mode:
-    // - default (Show offline unchecked): only powered on.
-    // - Show offline checked: fetch without power filter so offline + unknown can be shown.
-    if (isGrouped) {
+    // In grouped mode, apply offline toggle only when no explicit power filter is selected.
+    if (isGrouped && (filters.power ?? []).length === 0) {
       params.power_status = showOffline ? "off" : "on";
     }
 
@@ -187,40 +185,34 @@ export function useGrubPacsListState() {
   );
 
   const searchedGroups = useMemo<GrubPacGroup[]>(() => {
-    if (!hasData) return [];
-    if (!isSearchMode) return groups;
+    if (!isSearchMode) {
+      return hasData ? groups : [];
+    }
 
-    const groupedMatches: GrubPacGroup[] = groups
+    const sourceGroups = hasData ? groups : [];
+    const groupedMatches: GrubPacGroup[] = sourceGroups
       .map((group) => ({
         ...group,
         items: (group.items || []).filter((item) => searchResultIds.has(String(item.id))),
       }))
       .filter((group) => (group.items?.length ?? 0) > 0);
 
-    const existingIds = new Set(
-      groupedMatches.flatMap((group) => (group.items || []).map((item) => String(item.id))),
-    );
-
-    const fallbackItems: GrubPacItem[] = searchResults
-      .filter((item) => !existingIds.has(String(item.id)))
-      .map((item) => ({
-        id: item.id,
-        name: item.name,
-        code: item.box_display_id ?? item.box_id,
-        boxId: item.box_id,
-        lifecycleStatus: item.status,
-        status: item.status === "active" ? "ON" : "OFF",
-        power: item.status === "active" ? "ON" : "OFF",
-        powerStatus: item.status === "active" ? "ON" : "OFF",
-        hasLock: false,
-        locked: undefined,
-      }));
-
-    if (fallbackItems.length > 0) {
-      groupedMatches.push({
+    if (groupedMatches.length === 0 && searchResults.length > 0) {
+      return [{
         name: "Search results",
-        items: fallbackItems,
-      });
+        items: searchResults.map((item) => ({
+          id: item.id,
+          name: item.name,
+          code: item.box_display_id ?? item.box_id,
+          boxId: item.box_id,
+          lifecycleStatus: item.status,
+          status: item.status === "active" ? "ON" : "OFF",
+          power: item.status === "active" ? "ON" : "OFF",
+          powerStatus: item.status === "active" ? "ON" : "OFF",
+          hasLock: false,
+          locked: undefined,
+        })),
+      }];
     }
 
     return groupedMatches;

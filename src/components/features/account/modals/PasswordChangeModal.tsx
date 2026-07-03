@@ -4,7 +4,8 @@ import Modal from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/text-field";
 import FigIcon from "@/components/ui/FigIcon";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { PASSWORD_MIN_LENGTH, PASSWORD_PATTERN, PASSWORD_RULES_MESSAGE } from "@/components/features/auth/validation";
 
 type PasswordFields = {
   current: string;
@@ -50,22 +51,28 @@ export default function PasswordChangeModal({
   };
 
   const hasAnyShortPassword =
-    (passwords.current.length > 0 && passwords.current.length < 8) ||
-    (passwords.new.length > 0 && passwords.new.length < 8) ||
-    (passwords.confirm.length > 0 && passwords.confirm.length < 8);
+    (passwords.current.length > 0 && passwords.current.length < PASSWORD_MIN_LENGTH) ||
+    (passwords.new.length > 0 && passwords.new.length < PASSWORD_MIN_LENGTH) ||
+    (passwords.confirm.length > 0 && passwords.confirm.length < PASSWORD_MIN_LENGTH);
+
+  const newPasswordFormatError =
+    passwords.new.length >= PASSWORD_MIN_LENGTH && !PASSWORD_PATTERN.test(passwords.new)
+      ? PASSWORD_RULES_MESSAGE
+      : undefined;
 
   const confirmMismatchError =
     (submitAttempted || hasVisitedConfirm) &&
-    passwords.confirm.length >= 8 &&
-    passwords.new.length >= 8 &&
-    passwords.new !== passwords.confirm
+      passwords.confirm.length >= PASSWORD_MIN_LENGTH &&
+      passwords.new.length >= PASSWORD_MIN_LENGTH &&
+      passwords.new !== passwords.confirm
       ? "New password and confirm password must match"
       : undefined;
 
   const isFormValid =
-    passwords.current.length >= 8 &&
-    passwords.new.length >= 8 &&
-    passwords.confirm.length >= 8 &&
+    passwords.current.length >= PASSWORD_MIN_LENGTH &&
+    passwords.new.length >= PASSWORD_MIN_LENGTH &&
+    PASSWORD_PATTERN.test(passwords.new) &&
+    passwords.confirm.length >= PASSWORD_MIN_LENGTH &&
     passwords.new === passwords.confirm;
 
   const handleSave = (): void => {
@@ -142,6 +149,7 @@ export default function PasswordChangeModal({
             size="xl"
             state="press"
             hasHoverEffect={true}
+            error={newPasswordFormatError}
             trailingIcon={<FigIcon name={showPassword.new ? "eye" : "eye-slash"} size={24} />}
             onTrailingIconClick={() => setShowPassword((prev) => ({ ...prev, new: !prev.new }))}
           />

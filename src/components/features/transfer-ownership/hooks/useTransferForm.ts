@@ -38,7 +38,7 @@ const FULL_NAME_NUMERIC_REGEX = /\d/;
 const toDigits = (value: string): string => value.replace(/\D/g, "");
 
 const sanitizeFullNameInput = (value: string): string =>
-  value.slice(0, FULL_NAME_MAX_LENGTH);
+	value.replace(/\d/g, "").slice(0, FULL_NAME_MAX_LENGTH);
 
 const hasNumericInFullName = (value: string): boolean =>
   FULL_NAME_NUMERIC_REGEX.test(value);

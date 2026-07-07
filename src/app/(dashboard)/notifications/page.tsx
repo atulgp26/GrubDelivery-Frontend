@@ -135,7 +135,7 @@ export default function NotificationsPage() {
     setSelectedNotificationIds([]);
 
     try {
-      await notificationsService.dismissAllNotifications();
+      await notificationsService.dismissAllNotifications(ids);
     } catch (error) {
       console.error("Failed to dismiss all notifications", error);
       // Refetch on failure to restore state

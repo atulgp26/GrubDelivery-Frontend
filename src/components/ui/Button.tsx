@@ -162,6 +162,7 @@ function Button({
 				buttonVariants({ variant, appearance, size, state: finalState, className })
 			)}
 			disabled={disabled}
+			suppressHydrationWarning
 			{...props}
 		/>
 	);

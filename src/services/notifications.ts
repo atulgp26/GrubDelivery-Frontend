@@ -45,11 +45,14 @@ export const notificationsService = {
       data: { ids, is_dismissed: true },
     }),
 
-  dismissAllNotifications: () =>
+  dismissAllNotifications: (ids?: string[]) =>
     makeRequest({
       method: "PATCH",
       url: "/delivery/notification",
-      data: { is_dismissed: true },
+      data: {
+        ...(ids && ids.length > 0 ? { ids } : {}),
+        is_dismissed: true,
+      },
     }),
 
   getUnreadCount: () =>

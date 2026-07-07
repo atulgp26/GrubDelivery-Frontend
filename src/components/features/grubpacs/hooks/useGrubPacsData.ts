@@ -113,15 +113,17 @@ export const useGrubPacsData = (apiParams?: GrubPacListParams): UseGrubPacsDataR
   }, [fetchData]);
 
   const groups = useMemo(() => {
+    // Always prefer server groups: they carry per-group pagination metadata and
+    // the backend group key (groupTableKey) needed to page a single group via the
+    // API. Re-grouping client-side (groupByRestaurant) silently dropped that,
+    // capping every restaurant group at the first fetched page. Fall back to
+    // client grouping only when the server returned an ungrouped/flat payload.
     if (serverGroups && serverGroups.length > 0) {
-      if (apiParams?.group_by === "restaurants") {
-        return groupByRestaurant(data);
-      }
       return serverGroups;
     }
 
     return groupByRestaurant(data);
-  }, [data, serverGroups, apiParams?.group_by]);
+  }, [data, serverGroups]);
 
   function groupByRestaurant(items: GrubPacItem[]): Array<{ name: string; items: GrubPacItem[] }> {
     const groupMap = new Map<string, GrubPacItem[]>();

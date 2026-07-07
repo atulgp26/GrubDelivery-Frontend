@@ -138,7 +138,7 @@ export default function LoginScreen() {
 							ref={formRef}
 							className="flex flex-col gap-4"
 							onSubmit={handleSubmit(
-								(data: LoginFormValues) => handleLogin(data),
+								(data: LoginFormValues) => handleLogin(data, rememberMe),
 								onLoginError,
 							)}
 						>

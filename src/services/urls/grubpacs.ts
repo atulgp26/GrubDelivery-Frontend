@@ -2,6 +2,8 @@ const GRUBPAC_BASE = "/delivery/grubpac";
 
 export const GRUBPAC_URLS = {
   LIST: GRUBPAC_BASE,
+  DETAILS: `${GRUBPAC_BASE}/details`,
+  EDIT_DETAILS: `${GRUBPAC_BASE}/edit-details`,
   DROPDOWNS: `${GRUBPAC_BASE}/dropdowns`,
   SEARCH: `${GRUBPAC_BASE}/search`,
   CREATE: GRUBPAC_BASE,

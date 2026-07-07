@@ -32,13 +32,14 @@ export function useAuthActions({
 	const [otpLoading, setOtpLoading] = useState(false);
 	const [verifyOtpLoading, setVerifyOtpLoading] = useState(false);
 
-	const handleLogin = async (data: LoginFormValues) => {
+	const handleLogin = async (data: LoginFormValues, rememberMe = false) => {
 		try {
 			setLoginLoading(true);
 			const normalizedEmail = sanitizeEmail(data.email);
 			const response = await authService.login({
 				email: normalizedEmail,
 				password: data.password,
+				remember_me: rememberMe,
 			});
 
 			if (!response.success || !response.data) {
@@ -46,7 +47,7 @@ export function useAuthActions({
 			}
 
 			const { auth_token, is_password_set, client_id } = response.data;
-			setAuthCookies(auth_token, client_id);
+			setAuthCookies(auth_token, client_id, { rememberMe });
 			queryClient.removeQueries({ queryKey: ["account", "profile"] });
 
 			showSuccess("Login successful!", "");

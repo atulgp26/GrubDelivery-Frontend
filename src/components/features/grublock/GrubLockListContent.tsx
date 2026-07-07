@@ -671,7 +671,7 @@ export default function GrubLockListContent({
                       ? "No boxes match your search."
                       : "No boxes found."
                 }
-                pageSize={isGrouped ? 50 : 10}
+                pageSize={50}
                 showPaginationPrev={true}
                 showPaginationNext={true}
                 onGroupClick={(group) => {

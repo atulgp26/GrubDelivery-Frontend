@@ -1351,7 +1351,10 @@ export default function GrubPacsListScreen() {
                       onPrev: () => {
                         if (isPageLoading) return;
                         if (poweredOnPagination) {
-                          void refetchGroup({ name: "on" }, Math.max(1, poweredOnCurrentPage - 1));
+                          void refetchGroup(
+                            { name: "on", groupTableKey: String((poweredOnGroup as { groupTableKey?: string })?.groupTableKey ?? "on") },
+                            Math.max(1, poweredOnCurrentPage - 1),
+                          );
                           return;
                         }
 
@@ -1363,7 +1366,10 @@ export default function GrubPacsListScreen() {
                       onNext: () => {
                         if (isPageLoading) return;
                         if (poweredOnPagination) {
-                          void refetchGroup({ name: "on" }, Math.min(poweredOnTotalPages, poweredOnCurrentPage + 1));
+                          void refetchGroup(
+                            { name: "on", groupTableKey: String((poweredOnGroup as { groupTableKey?: string })?.groupTableKey ?? "on") },
+                            Math.min(poweredOnTotalPages, poweredOnCurrentPage + 1),
+                          );
                           return;
                         }
 
@@ -1504,7 +1510,10 @@ export default function GrubPacsListScreen() {
                       onPrev: () => {
                         if (isPageLoading) return;
                         if (poweredOffPagination) {
-                          void refetchGroup({ name: "off" }, Math.max(1, poweredOffCurrentPage - 1));
+                          void refetchGroup(
+                            { name: "off", groupTableKey: String((poweredOffGroup as { groupTableKey?: string })?.groupTableKey ?? "off") },
+                            Math.max(1, poweredOffCurrentPage - 1),
+                          );
                           return;
                         }
 
@@ -1516,7 +1525,10 @@ export default function GrubPacsListScreen() {
                       onNext: () => {
                         if (isPageLoading) return;
                         if (poweredOffPagination) {
-                          void refetchGroup({ name: "off" }, Math.min(poweredOffTotalPages, poweredOffCurrentPage + 1));
+                          void refetchGroup(
+                            { name: "off", groupTableKey: String((poweredOffGroup as { groupTableKey?: string })?.groupTableKey ?? "off") },
+                            Math.min(poweredOffTotalPages, poweredOffCurrentPage + 1),
+                          );
                           return;
                         }
 

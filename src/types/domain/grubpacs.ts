@@ -223,12 +223,23 @@ export interface CreateGrubPacBody {
 
 export interface UpdateGrubPacBody {
   id: string;
-  name: string;
+  name?: string;
   box_id?: string;
   vehicle_number?: string | null;
   restaurant_ids?: string[];
   blocked_employee_ids?: string[];
   access_mode?: "public" | "all_employees" | "restaurant_employees";
+}
+
+export interface GrubPacEditDetailsData {
+  id: string;
+  name: string;
+  box_id?: string | null;
+  vehicle_number?: string | null;
+  restaurant_ids: string[];
+  access_mode: "public" | "all_employees" | "restaurant_employees";
+  blocked_employee_ids: string[];
+  permissions_blocked_count: number;
 }
 
 export interface ActionGrubPacBody {

@@ -21,6 +21,7 @@ import type {
   GrubPacListFlatResponse,
   GrubPacListGroupedResponse,
   GrubPacListData,
+  UpdateGrubPacBody,
 } from "@/types/domain/grubpacs";
 import { formatDate } from "@/lib/utils/date";
 
@@ -412,6 +413,53 @@ export default function EditDetails({
   useEffect(() => {
     let cancelled = false;
 
+    async function loadEditDetails() {
+      if (!open || !grubpacId) return;
+
+      const response = await grubpacService.getEditDetails(grubpacId);
+      if (!response.success || !response.data) {
+        if (!cancelled) {
+          showError(response.error ?? "Failed to load GrubPac edit details.");
+        }
+        return;
+      }
+
+      const details = response.data;
+      const nextPermissionOption = toPermissionOption(details.access_mode);
+      const restaurantIds = details.restaurant_ids ?? [];
+      const blockedIds = details.blocked_employee_ids ?? [];
+      const vehicle = details.vehicle_number ?? "";
+      const boxTag = details.box_id ?? "";
+
+      if (cancelled) return;
+
+      setName(details.name ?? "");
+      setInputCode(boxTag);
+      setVehicleNumber(vehicle);
+      setSelectedRestaurants(restaurantIds);
+      setSelectedEmployees(blockedIds);
+      setCheckedExcludedEmployees([]);
+      setPermissionOption(nextPermissionOption);
+      setExcludedCount(details.permissions_blocked_count ?? blockedIds.length);
+      setBaseline({
+        name: (details.name ?? "").trim(),
+        vehicleNumber: vehicle.trim(),
+        permissionOption: nextPermissionOption,
+        selectedRestaurants: [...restaurantIds],
+        selectedEmployees: [...blockedIds],
+      });
+    }
+
+    void loadEditDetails();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, grubpacId]);
+
+  useEffect(() => {
+    let cancelled = false;
+
     async function loadDropdowns() {
       if (!open) return;
 
@@ -530,14 +578,18 @@ export default function EditDetails({
           ? "restaurant_employees"
           : "public";
 
-      const payload = {
+      const payload: UpdateGrubPacBody = {
         id: grubpacId,
-        name: name.trim(),
         access_mode: accessModeValue,
         blocked_employee_ids: validBlockedEmployeeIds,
         vehicle_number: vehicleNumber.trim() || null,
         restaurant_ids: validRestaurantIds,
       };
+
+      const trimmedName = name.trim();
+      if (trimmedName) {
+        payload.name = trimmedName;
+      }
 
       const response = await grubpacService.update(payload);
       if (!response.success) {

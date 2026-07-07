@@ -9,6 +9,7 @@ import type {
   ApiGrubPacSearchResult,
   CreateGrubPacBody,
   UpdateGrubPacBody,
+  GrubPacEditDetailsData,
   ActionGrubPacBody,
   ReassignGrubPacBody,
   RemoveEmployeeFromBoxesBody,
@@ -178,26 +179,31 @@ function sanitizeCreatePayload(data: CreateGrubPacBody): CreateGrubPacBody | nul
 
 function sanitizeUpdatePayload(data: UpdateGrubPacBody): UpdateGrubPacBody | null {
   const id = sanitizeOptionalString(data.id);
-  const name = sanitizeOptionalString(data.name);
-  if (!id || !name) return null;
+  if (!id) return null;
 
-  return {
-    id,
-    name,
-    ...(sanitizeOptionalString(data.box_id)
-      ? { box_id: sanitizeOptionalString(data.box_id) }
-      : {}),
-    ...(data.vehicle_number === null || sanitizeOptionalString(data.vehicle_number)
-      ? { vehicle_number: data.vehicle_number === null ? null : sanitizeOptionalString(data.vehicle_number) }
-      : {}),
-    ...(data.restaurant_ids !== undefined
-      ? { restaurant_ids: sanitizeStringArray(data.restaurant_ids) ?? [] }
-      : {}),
-    ...(sanitizeStringArray(data.blocked_employee_ids)
-      ? { blocked_employee_ids: sanitizeStringArray(data.blocked_employee_ids) }
-      : {}),
-    ...(data.access_mode ? { access_mode: data.access_mode } : {}),
-  };
+  const name = sanitizeOptionalString(data.name);
+  const payload: UpdateGrubPacBody = { id };
+
+  if (name) payload.name = name;
+  if (sanitizeOptionalString(data.box_id)) {
+    payload.box_id = sanitizeOptionalString(data.box_id);
+  }
+  if (data.vehicle_number === null || sanitizeOptionalString(data.vehicle_number)) {
+    payload.vehicle_number =
+      data.vehicle_number === null ? null : sanitizeOptionalString(data.vehicle_number);
+  }
+  if (data.restaurant_ids !== undefined) {
+    payload.restaurant_ids = sanitizeStringArray(data.restaurant_ids) ?? [];
+  }
+  if (sanitizeStringArray(data.blocked_employee_ids)) {
+    payload.blocked_employee_ids = sanitizeStringArray(data.blocked_employee_ids);
+  }
+  if (data.access_mode) payload.access_mode = data.access_mode;
+
+  const { id: _id, ...updates } = payload;
+  if (Object.keys(updates).length === 0) return null;
+
+  return payload;
 }
 
 function sanitizeActionPayload(data: ActionGrubPacBody): ActionGrubPacBody | null {
@@ -308,6 +314,10 @@ const grubpacService = {
 
   async getDropdowns() {
     return httpClient.get<GrubPacDropdownsData>(GRUBPAC_URLS.DROPDOWNS);
+  },
+
+  async getEditDetails(id: string) {
+    return httpClient.get<GrubPacEditDetailsData>(GRUBPAC_URLS.EDIT_DETAILS, { id });
   },
 
   async search(params: GrubPacSearchParams) {

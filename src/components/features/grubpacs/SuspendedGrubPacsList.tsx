@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { flattenWrappedGroupRecord } from "@/lib/utils/groupedResponse";
+import { flattenWrappedGroupRecord, getWrappedGroupArray } from "@/lib/utils/groupedResponse";
 import { GrubPacSuspendedBoxTable, type SuspendedBoxRow } from "@/components/features/grubpacs/table/grubpac-suspended-box-table";
 import { Button } from "@/components/ui/Button";
 import SearchInput from "@/components/ui/SearchInput";
@@ -31,8 +31,38 @@ import SuspendedBoxFilterModal, {
 } from "@/components/features/shared/filter/SuspendedBoxFilterModal";
 
 const SUSPENDED_COLUMNS: Array<"name" | "added" | "suspended" | "actions"> = ["name", "added", "suspended", "actions"];
+const SUSPENDED_PAGE_SIZE = 50;
 
 type SuspendedGrubPacGroup = GroupCollapseTableGroup<SuspendedBoxRow>;
+
+function mapApiToSuspendedRow(g: ApiGrubPac): SuspendedBoxRow {
+    const item = apiGrubPacToSuspendedItem(g);
+    return {
+        id: String(item.id),
+        name: item.name ?? `Box ${item.id}`,
+        identifier: item.identifier,
+        added: item.added ?? "",
+        suspended: item.suspended ?? "",
+        hasBox: item.hasBox,
+        hasLock: g.lock !== null,
+        hasVehicle: g.vehicle_number !== null,
+    };
+}
+
+function getApiRestaurantName(g: ApiGrubPac): string {
+    return g.restaurant_boxes?.[0]?.restaurant?.name ?? g.restaurants?.[0]?.name ?? "Unassigned";
+}
+
+function mapGroupPagination(pagination: unknown): SuspendedGrubPacGroup["pagination"] {
+    if (!pagination || typeof pagination !== "object") return undefined;
+    const p = pagination as { page?: number; limit?: number; total_count?: number; last_page?: number };
+    return {
+        currentPage: p.page ?? 1,
+        pageSize: p.limit ?? SUSPENDED_PAGE_SIZE,
+        totalItems: p.total_count ?? 0,
+        totalPages: p.last_page ?? 1,
+    };
+}
 
 interface SuspendedGrubPacsListProps {
     className?: string;
@@ -58,10 +88,13 @@ export default function SuspendedGrubPacsList({ className = "" }: SuspendedGrubP
     const [isActivateAll, setIsActivateAll] = useState(false);
     // Track restaurant per grubpac id for grouping and hasRestaurantAssignment check
     const [restaurantById, setRestaurantById] = useState<Record<string, string>>({});
+    // Server-provided groups (grouped view) carrying per-group pagination + backend group key.
+    const [serverGroups, setServerGroups] = useState<SuspendedGrubPacGroup[]>([]);
+    const [isPageLoading, setIsPageLoading] = useState(false);
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 50;
+    const pageSize = SUSPENDED_PAGE_SIZE;
 
     const isSearchMode = searchTerm.trim().length > 0;
     const {
@@ -85,7 +118,9 @@ export default function SuspendedGrubPacsList({ className = "" }: SuspendedGrubP
             const params: Parameters<typeof grubpacService.getList>[0] = {
                 status: "suspended",
                 limit: pageSize,
-                page: currentPage,
+                // Grouped mode paginates each restaurant group independently (page 1 on load);
+                // ungrouped mode uses the flat page cursor.
+                page: isGrouped ? 1 : currentPage,
             };
             if (isGrouped) params.group_by = "restaurants";
             if (filters.restaurantAssigned) params.restaurant_assigned = "on";
@@ -95,36 +130,63 @@ export default function SuspendedGrubPacsList({ className = "" }: SuspendedGrubP
             if (res.success && res.data) {
                 const flat: GrubPacListData = res.data;
                 const grouped = (flat as { groups?: Record<string, unknown> }).groups;
-                const apiItems: ApiGrubPac[] = grouped && typeof grouped === "object"
-                    ? flattenWrappedGroupRecord<ApiGrubPac>(grouped)
-                    : ((flat as { boxes?: ApiGrubPac[] }).boxes ?? []);
-                const rows: SuspendedBoxRow[] = apiItems.map((g) => {
-                    const item = apiGrubPacToSuspendedItem(g);
-                    return {
-                        id: String(item.id),
-                        name: item.name ?? `Box ${item.id}`,
-                        identifier: item.identifier,
-                        added: item.added ?? "",
-                        suspended: item.suspended ?? "",
-                        hasBox: item.hasBox,
-                        hasLock: g.lock !== null,
-                        hasVehicle: g.vehicle_number !== null,
-                    };
-                });
-                setGrubpacs(rows);
-                setTotalEntries(
-                    ((res.pagination as any)?.total_count as number | undefined)
-                    ?? (flat as any).total_count
-                    ?? (flat as any).count
-                    ?? rows.length,
-                );
-                // Build restaurant lookup (group field from mapper = restaurant name or "Unassigned")
-                const rMap: Record<string, string> = {};
-                apiItems.forEach((g) => {
-                    rMap[g.id] = g.restaurant_boxes?.[0]?.restaurant?.name ?? g.restaurants?.[0]?.name ?? "Unassigned";
-                });
-                setRestaurantById(rMap);
+
+                if (isGrouped && grouped && typeof grouped === "object") {
+                    const mappedGroups: SuspendedGrubPacGroup[] = Object.entries(grouped)
+                        .filter(([key]) => !key.endsWith("_name") && !key.endsWith("_count"))
+                        .map(([groupKey, value]) => {
+                            const v = value as { name?: string; pagination?: unknown };
+                            const items = getWrappedGroupArray<ApiGrubPac>(value).map(mapApiToSuspendedRow);
+                            const fallbackName = groupKey === "unassigned" ? "Unassigned" : groupKey;
+                            const name = typeof v?.name === "string" && v.name.trim().length > 0 ? v.name : fallbackName;
+                            return {
+                                name,
+                                groupTableKey: groupKey,
+                                items,
+                                pagination: mapGroupPagination(v?.pagination),
+                            } as SuspendedGrubPacGroup;
+                        })
+                        .filter((g) => (g.items?.length ?? 0) > 0 || ((g.pagination?.totalItems ?? 0) > 0));
+
+                    setServerGroups(mappedGroups);
+
+                    const rows = mappedGroups.flatMap((g) => g.items ?? []);
+                    setGrubpacs(rows);
+                    setTotalEntries(
+                        ((res.pagination as any)?.total_count as number | undefined)
+                        ?? (flat as any).total_count
+                        ?? (flat as any).count
+                        ?? rows.length,
+                    );
+
+                    const rMap: Record<string, string> = {};
+                    mappedGroups.forEach((g) => {
+                        (g.items ?? []).forEach((row) => {
+                            rMap[row.id] = String(g.name);
+                        });
+                    });
+                    setRestaurantById(rMap);
+                } else {
+                    setServerGroups([]);
+                    const apiItems: ApiGrubPac[] = grouped && typeof grouped === "object"
+                        ? flattenWrappedGroupRecord<ApiGrubPac>(grouped)
+                        : ((flat as { boxes?: ApiGrubPac[] }).boxes ?? []);
+                    const rows: SuspendedBoxRow[] = apiItems.map(mapApiToSuspendedRow);
+                    setGrubpacs(rows);
+                    setTotalEntries(
+                        ((res.pagination as any)?.total_count as number | undefined)
+                        ?? (flat as any).total_count
+                        ?? (flat as any).count
+                        ?? rows.length,
+                    );
+                    const rMap: Record<string, string> = {};
+                    apiItems.forEach((g) => {
+                        rMap[g.id] = getApiRestaurantName(g);
+                    });
+                    setRestaurantById(rMap);
+                }
             } else {
+                setServerGroups([]);
                 setGrubpacs([]);
                 setTotalEntries(0);
                 setRestaurantById({});
@@ -138,7 +200,66 @@ export default function SuspendedGrubPacsList({ className = "" }: SuspendedGrubP
         } finally {
             setIsLoading(false);
         }
-    }, [activeFilters, currentPage, isGrouped]);
+    }, [activeFilters, currentPage, isGrouped, pageSize]);
+
+    const refetchSuspendedGroup = useCallback(async (group: SuspendedGrubPacGroup, page: number) => {
+        setIsPageLoading(true);
+        try {
+            const groupKey = String(
+                (group as { groupTableKey?: string }).groupTableKey ??
+                (String(group.name) === "Unassigned" ? "unassigned" : String(group.name)),
+            );
+
+            const params: Parameters<typeof grubpacService.getList>[0] = {
+                status: "suspended",
+                limit: pageSize,
+                page,
+                group_by: "restaurants",
+                group_by_selected_table: groupKey,
+            };
+            if (activeFilters.restaurantAssigned) params.restaurant_assigned = "on";
+            if (activeFilters.vehicleAssigned) params.vehicle_assigned = "on";
+
+            const res = await grubpacService.getList(params);
+            if (!res.success || !res.data) return;
+
+            const grouped = (res.data as { groups?: Record<string, unknown> }).groups ?? {};
+            const value =
+                (grouped as Record<string, unknown>)[groupKey] ??
+                Object.entries(grouped)
+                    .filter(([key]) => !key.endsWith("_name") && !key.endsWith("_count"))
+                    .map(([, v]) => v)
+                    .find((v) => {
+                        const first = getWrappedGroupArray<ApiGrubPac>(v)[0];
+                        return first ? getApiRestaurantName(first) === String(group.name) : false;
+                    });
+
+            if (!value) return;
+
+            const v = value as { pagination?: unknown };
+            const items = getWrappedGroupArray<ApiGrubPac>(value).map(mapApiToSuspendedRow);
+            const pagination = mapGroupPagination(v?.pagination);
+
+            setServerGroups((prev) =>
+                prev.map((g) =>
+                    (g as { groupTableKey?: string }).groupTableKey === groupKey || String(g.name) === String(group.name)
+                        ? { ...g, items, pagination }
+                        : g,
+                ),
+            );
+            setRestaurantById((prev) => {
+                const next = { ...prev };
+                items.forEach((row) => {
+                    next[row.id] = String(group.name);
+                });
+                return next;
+            });
+        } catch (err) {
+            console.error("[SuspendedGrubPacsList] refetchGroup error:", err);
+        } finally {
+            setIsPageLoading(false);
+        }
+    }, [activeFilters, pageSize]);
 
     useEffect(() => {
         void fetchSuspended();
@@ -197,25 +318,33 @@ export default function SuspendedGrubPacsList({ className = "" }: SuspendedGrubP
     }, [isSearchMode, restaurantById, searchResults]);
 
     const filteredGroups = useMemo<SuspendedGrubPacGroup[]>(() => {
-        const groupMap = new Map<string, SuspendedBoxRow[]>();
+        // Search mode: group the (already limited) client-side search matches. Search
+        // spans all pages via the search API, so per-group server paging does not apply.
+        if (isSearchMode) {
+            const groupMap = new Map<string, SuspendedBoxRow[]>();
 
-        filteredGrubPacs.forEach((grubpac) => {
-            const restaurant = searchableRestaurantById[grubpac.id] ?? "Unassigned";
-            const existing = groupMap.get(restaurant) ?? [];
-            groupMap.set(restaurant, [...existing, grubpac]);
-        });
+            filteredGrubPacs.forEach((grubpac) => {
+                const restaurant = searchableRestaurantById[grubpac.id] ?? "Unassigned";
+                const existing = groupMap.get(restaurant) ?? [];
+                groupMap.set(restaurant, [...existing, grubpac]);
+            });
 
-        const groups = Array.from(groupMap.entries()).map(([restaurant, items]) => ({
-            name: restaurant,
-            items,
+            return Array.from(groupMap.entries())
+                .map(([restaurant, items]) => ({ name: restaurant, items }))
+                .sort((a, b) => {
+                    if (a.name === "Unassigned") return 1;
+                    if (b.name === "Unassigned") return -1;
+                    return String(a.name).localeCompare(String(b.name));
+                });
+        }
+
+        // Default: preserve server groups (order + per-group pagination + backend key)
+        // and apply only the client-side GrubLock filter within each group's page.
+        return serverGroups.map((group) => ({
+            ...group,
+            items: filterByActiveFilters(group.items ?? []),
         }));
-
-        return groups.sort((a, b) => {
-            if (a.name === "Unassigned") return 1;
-            if (b.name === "Unassigned") return -1;
-            return String(a.name).localeCompare(String(b.name));
-        });
-    }, [filteredGrubPacs, searchableRestaurantById]);
+    }, [isSearchMode, filteredGrubPacs, searchableRestaurantById, serverGroups, filterByActiveFilters]);
 
     const hasData = filteredGrubPacs.length > 0;
 
@@ -317,10 +446,14 @@ export default function SuspendedGrubPacsList({ className = "" }: SuspendedGrubP
             }
             if (isActivateAll) {
                 setGrubpacs([]);
+                setServerGroups([]);
                 setSelectedIds(new Set());
                 setTotalEntries(0);
             } else {
                 setGrubpacs((prev) => prev.filter((g) => !modalTargetIds.has(g.id)));
+                setServerGroups((prev) =>
+                    prev.map((g) => ({ ...g, items: (g.items ?? []).filter((row) => !modalTargetIds.has(row.id)) })),
+                );
                 setSelectedIds((prev) => {
                     const next = new Set(prev);
                     modalTargetIds.forEach((id) => next.delete(id));
@@ -351,10 +484,14 @@ export default function SuspendedGrubPacsList({ className = "" }: SuspendedGrubP
             }
             if (isActivateAll) {
                 setGrubpacs([]);
+                setServerGroups([]);
                 setSelectedIds(new Set());
                 setTotalEntries(0);
             } else {
                 setGrubpacs((prev) => prev.filter((g) => !modalTargetIds.has(g.id)));
+                setServerGroups((prev) =>
+                    prev.map((g) => ({ ...g, items: (g.items ?? []).filter((row) => !modalTargetIds.has(row.id)) })),
+                );
                 setSelectedIds((prev) => {
                     const next = new Set(prev);
                     modalTargetIds.forEach((id) => next.delete(id));
@@ -545,7 +682,9 @@ export default function SuspendedGrubPacsList({ className = "" }: SuspendedGrubP
                         }}
                         tableContainerClass="bg-white"
                         noResultsMessage={searchTerm ? "No boxes match your search." : "No boxes found."}
-                        pageSize={50}
+                        pageSize={pageSize}
+                        isPageLoading={isPageLoading}
+                        onPageChange={isSearchMode ? undefined : refetchSuspendedGroup}
                     />
                 ) : (
                     <>

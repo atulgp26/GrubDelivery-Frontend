@@ -118,6 +118,26 @@ export default function SuspendedBoxDetailsPage({ boxId }: SuspendedBoxDetailsPa
   }, []);
 
   useEffect(() => {
+    const targetId = String(boxId ?? "").trim();
+    if (!targetId) return;
+
+    let cancelled = false;
+    void (async () => {
+      const response = await grubpacService.getDetails(targetId);
+      if (cancelled || !response.success || !response.data) return;
+      const item = apiGrubPacToSuspendedItem(response.data);
+      setSuspendedBoxes((prev) => {
+        const without = prev.filter((box) => String(box.id) !== String(item.id));
+        return [item, ...without];
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [boxId]);
+
+  useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);

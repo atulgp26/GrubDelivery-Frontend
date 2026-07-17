@@ -249,7 +249,7 @@ const handleOtpResend = async () => {
               variant="neutral"
               appearance="ghost"
               className="ml-auto flex items-center gap-1 shrink-0 !p-0 text-green-700 hover:text-green-800"
-              onClick={() => router.push("/grublock/details")}
+              onClick={() => router.push("/transfer-ownership/details")}
             >
               <span className="font-medium text-[16px] uppercase">View Details</span>
             </Button>

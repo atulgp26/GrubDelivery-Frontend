@@ -29,7 +29,7 @@ import { useGrubLockModals } from "@/components/features/grublock/hooks/useGrubL
 import { defaultBoxFilters } from "@/components/features/shared/filter/BoxFilterModal";
 import grublockService from "@/services/grublock";
 import grubpacService from "@/services/grubpacs";
-import type { ActionGrubPacBody } from "@/types/domain/grubpacs";
+import { apiGrubPacToItem, type ActionGrubPacBody, type GrubPacItem } from "@/types/domain/grubpacs";
 import type { GrubLockBox, Recipient } from "@/types/domain/grublock";
 
 interface BoxSettingsPageProps {
@@ -173,6 +173,39 @@ export default function BoxSettingsPage({ boxId, pinSelectedOnLoad = false, back
   } = useGrubLockModals();
 
   const { grubpacsData, isLoading , refetch} = useGrubPacsData();
+  const [detailsBox, setDetailsBox] = useState<GrubPacItem | null>(null);
+  const [isDetailsLoading, setIsDetailsLoading] = useState(false);
+
+  useEffect(() => {
+    const targetId = String(boxId ?? "").trim();
+    if (!targetId) {
+      setDetailsBox(null);
+      setIsDetailsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsDetailsLoading(true);
+
+    void (async () => {
+      const response = await grubpacService.getDetails(targetId);
+      if (cancelled) return;
+
+      if (response.success && response.data) {
+        setDetailsBox(apiGrubPacToItem(response.data));
+      } else {
+        setDetailsBox(null);
+        if (response.error) {
+          showError(response.error);
+        }
+      }
+      setIsDetailsLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [boxId]);
 
   const sidebarBoxes = useMemo(() => {
     if (!pinSelectedOnLoad) return grubpacsData;
@@ -186,7 +219,9 @@ export default function BoxSettingsPage({ boxId, pinSelectedOnLoad = false, back
   }, [grubpacsData, boxId, pinSelectedOnLoad]);
 
   const selectedBoxCandidate =
-    (boxId ? sidebarBoxes.find((b) => String(b.id) === boxId) : undefined) ?? sidebarBoxes[0];
+    detailsBox ??
+    (boxId ? sidebarBoxes.find((b) => String(b.id) === boxId) : undefined) ??
+    sidebarBoxes[0];
 
   const hasSelectedBox = Boolean(selectedBoxCandidate);
   const selectedBox =
@@ -200,8 +235,9 @@ export default function BoxSettingsPage({ boxId, pinSelectedOnLoad = false, back
       locked: false,
     } as (typeof sidebarBoxes)[number]);
 
-  const showFullPageSkeleton = isLoading && sidebarBoxes.length === 0;
-  const showRightPanelSkeleton = (isLoading && sidebarBoxes.length > 0) || isSidebarSwitchLoading;
+  const showFullPageSkeleton = (isLoading || isDetailsLoading) && sidebarBoxes.length === 0 && !detailsBox;
+  const showRightPanelSkeleton =
+    ((isLoading || isDetailsLoading) && sidebarBoxes.length > 0) || isSidebarSwitchLoading;
 
   const defaultSettings = getDefaultSettings(selectedBox.id);
 

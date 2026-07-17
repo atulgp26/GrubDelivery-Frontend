@@ -6,6 +6,7 @@ import type {
   GrubPacDropdownsData,
   GrubPacListParams,
   GrubPacSearchParams,
+  ApiGrubPac,
   ApiGrubPacSearchResult,
   CreateGrubPacBody,
   UpdateGrubPacBody,
@@ -314,6 +315,14 @@ const grubpacService = {
 
   async getDropdowns() {
     return httpClient.get<GrubPacDropdownsData>(GRUBPAC_URLS.DROPDOWNS);
+  },
+
+  async getDetails(id: string) {
+    const sanitizedId = typeof id === "string" ? id.trim() : "";
+    if (!sanitizedId) {
+      return failResponse<ApiGrubPac>("Please provide a valid box id");
+    }
+    return httpClient.get<ApiGrubPac>(GRUBPAC_URLS.DETAILS, { id: sanitizedId });
   },
 
   async getEditDetails(id: string) {

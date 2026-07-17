@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 import { AUTH_COOKIE_NAME } from "@/lib/constants/auth";
 
 const GUEST_ONLY_PATHS = ["/auth"];
-const PUBLIC_PATHS = ["/api", "/reset-password"];
+const PUBLIC_PATHS = ["/api", "/reset-password", "/impersonate"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

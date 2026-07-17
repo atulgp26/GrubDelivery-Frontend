@@ -295,7 +295,8 @@ export default function SuspendedRestaurantsList({ className = "" }: SuspendedRe
         manager: suspendedRestaurant.manager,
         drivers: suspendedRestaurant.driverCount || 0,
         boxes: suspendedRestaurant.boxCount || 0,
-        updated: suspendedRestaurant.added || "",
+        added: suspendedRestaurant.added || "",
+        updated: suspendedRestaurant.updated || suspendedRestaurant.added || "",
         suspendedOn: suspendedRestaurant.suspended,
         status: "suspended",
       };
@@ -441,11 +442,35 @@ const response = await foodService.reactivateRestaurants({
     setDeletingRestaurantIds([]);
   };
 
-  const handleDeleteSuspend = () => {
-    alert(`Suspending ${deletingRestaurantIds.length} restaurant(s) instead of deleting`);
-    setShowDeleteModal(false);
-    setDeletingRestaurantIds([]);
-    setSelectedIds(new Set());
+  const handleDeleteSuspend = async () => {
+    if (deletingRestaurantIds.length === 0) return;
+
+    setDeleteLoading(true);
+    try {
+      // Suspended list: "Suspend instead" keeps restaurants suspended (do not delete).
+      const response = await foodService.suspendRestaurants({
+        ids: deletingRestaurantIds,
+        resource_status: "suspend",
+        destination_restaurant_id: null,
+      });
+
+      if (response.success) {
+        showSuccess(
+          "Suspended",
+          `${deletingRestaurantIds.length > 1 ? "Restaurants remain" : "Restaurant remains"} suspended.`,
+        );
+        setShowDeleteModal(false);
+        setDeletingRestaurantIds([]);
+        setSelectedIds(new Set());
+        setTimeout(() => fetchSuspendedRestaurants(), 500);
+      } else {
+        throw new Error(response.error || "Failed to suspend");
+      }
+    } catch (error: any) {
+      showError(`Failed to suspend: ${error.message}`);
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const handleManageResourcesBack = () => {
@@ -812,9 +837,10 @@ const _boxesCount = (selectedRestaurant as any)?._count?.boxes ?? selectedRestau
           setEditingRestaurant(null);
         }}
         onSubmit={(data: RestaurantFormData) => {
-          alert(`Restaurant "${data.name}" updated successfully`);
+          showSuccess("Updated", `Restaurant "${data.name}" updated successfully`);
           setShowEditModal(false);
           setEditingRestaurant(null);
+          setTimeout(() => fetchSuspendedRestaurants(), 500);
         }}
         restaurant={editingRestaurant}
         loading={false}
@@ -831,7 +857,7 @@ const _boxesCount = (selectedRestaurant as any)?._count?.boxes ?? selectedRestau
         restaurant={{
           name: selectedRestaurant?.name || "",
           status: selectedRestaurant?.status,
-          createdOn: selectedRestaurant?.updated,
+          createdOn: selectedRestaurant?.added || selectedRestaurant?.updated,
           suspendedOn: (selectedRestaurant as any)?.suspendedOn,
           address: selectedRestaurant?.address,
           resources: [

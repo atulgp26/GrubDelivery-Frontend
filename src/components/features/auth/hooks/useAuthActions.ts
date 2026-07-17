@@ -17,12 +17,15 @@ interface UseAuthActionsParams {
 	modals: AuthModals;
 	otpState: OtpState;
 	setAlertMessage?: (message: string | null) => void;
+	/** Same Remember me checkbox as password login (Figma login screen). */
+	rememberMe?: boolean;
 }
 
 export function useAuthActions({
 	modals,
 	otpState,
 	setAlertMessage,
+	rememberMe = false,
 }: UseAuthActionsParams) {
 	const router = useRouter();
 	const queryClient = useQueryClient();
@@ -169,6 +172,7 @@ export function useAuthActions({
 			const response = await authService.verifyOtp({
 				email: otpState.otpEmail,
 				otp: enteredOtp,
+				remember_me: rememberMe,
 			});
 
 			if (!response.success || !response.data) {
@@ -182,9 +186,10 @@ export function useAuthActions({
 				return;
 			}
 
-			setAuthCookies(response.data.auth_token);
+			setAuthCookies(response.data.auth_token, response.data.client_id, {
+				rememberMe,
+			});
 			queryClient.removeQueries({ queryKey: ["account", "profile"] });
-
 			showSuccess("OTP verified successfully!", "");
 			modals.setOtpVerifyModalOpen(false);
 

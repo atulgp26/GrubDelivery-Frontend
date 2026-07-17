@@ -38,7 +38,7 @@ export interface ClientLayoutProps {
 }
 
 export interface HeaderNotificationItem extends NotificationItem {
-  id?: number;
+  id?: string;
   deviceId?: string;
   place?: string;
   active?: boolean;
@@ -50,7 +50,7 @@ export interface HeaderProps {
   /**Replace mock data here with api data */
   notifications?: HeaderNotificationItem[];
   /** Called when user dismisses a notification (only used when notifications from API) */
-  onDismissNotification?: (id: number) => void;
+  onDismissNotification?: (id: string) => void;
   /** Whether header data is still loading */
   isLoading?: boolean;
 }

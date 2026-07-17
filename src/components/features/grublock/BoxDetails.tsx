@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Table,
   TableHead,
@@ -15,9 +15,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { showError } from "@/components/ui/toast";
 import { getContextualErrorMessage } from "@/lib/errors";
-import { getWrappedGroupArray } from "@/lib/utils/groupedResponse";
 import grublockService from "@/services/grublock";
 import type { GrubLockBox, Recipient } from "@/types/domain/grublock";
+import { apiGrubLockToBox } from "./api/mappers";
 import { useGrubLockModals } from "./hooks/useGrubLockModals";
 import GrubLockModals from "./components/GrubLockModals";
 import { defaultBoxFilters } from "@/components/features/shared/filter/BoxFilterModal";
@@ -41,11 +41,9 @@ const BoxDetails = () => {
     modalState,
     closeGroupDetailsModal,
     closeBoxDetailsModal,
-    openUnlockBoxModal,
     closeUnlockBoxModal,
     openEmergencyUnlockModal,
     closeEmergencyUnlockModal,
-    openLockBoxModal,
     closeLockBoxModal,
     closeHaveEmergencyModal,
     closeApplySettingsModal,
@@ -66,36 +64,24 @@ const BoxDetails = () => {
     const fetchBox = async () => {
       try {
         setIsLoading(true);
-        const res = await grublockService.getList({ status: "active" });
-        const payload = (res.data as {
-          boxes?: Array<any>;
-          groups?: { locked?: { array?: Array<any> }; unlocked?: { array?: Array<any> } };
-        }) || { boxes: [] };
-        const boxes = payload.boxes && payload.boxes.length > 0
-          ? payload.boxes
-          : [
-              ...getWrappedGroupArray<any>(payload.groups?.locked),
-              ...getWrappedGroupArray<any>(payload.groups?.unlocked),
-            ];
-        const selectedBox = boxId
-          ? boxes.find((item) => item.id === boxId)
-          : boxes[0];
+        const targetId = boxId.trim();
+        if (!targetId) {
+          if (mounted) setBox(null);
+          return;
+        }
 
-        if (!mounted || !selectedBox) return;
+        const res = await grublockService.getDetails(targetId);
+        if (!mounted) return;
 
-        setBox({
-          id: selectedBox.id,
-          name: selectedBox.name,
-          boxId: selectedBox.box_id,
-          boxDisplayId: selectedBox.box_display_id,
-          boxCode: selectedBox.vehicle_number || undefined,
-          boxCode2: selectedBox.box_display_id || undefined,
-          restaurantName: selectedBox.restaurant_boxes?.[0]?.restaurant?.name,
-          status: selectedBox.grublock_status === "locked" ? "locked" : "unlocked",
-          battery: selectedBox.battery_percentage ?? undefined,
-          handler: undefined,
-          lastUpdated: selectedBox.updated_at,
-        });
+        if (!res.success || !res.data) {
+          setBox(null);
+          if (res.error) {
+            showError(res.error);
+          }
+          return;
+        }
+
+        setBox(apiGrubLockToBox(res.data));
       } finally {
         if (mounted) {
           setIsLoading(false);
@@ -108,26 +94,6 @@ const BoxDetails = () => {
       mounted = false;
     };
   }, [boxId]);
-
-  const isLockModalOpen = useMemo(() => {
-    return (
-      modalState.isLockBoxModalOpen ||
-      modalState.isUnlockBoxModalOpen ||
-      modalState.isEditDetailsModalOpen ||
-      modalState.isEmergencyUnlockModalOpen
-    );
-  }, [modalState]);
-
-  const handleLockActionClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (!box) return;
-
-    if (box.status === "unlocked") {
-      openLockBoxModal(box, e.currentTarget);
-      return;
-    }
-
-    openUnlockBoxModal(box, e.currentTarget);
-  };
 
   const handleLockSubmit = async (nextRecipient: Recipient) => {
     if (!box || !nextRecipient.name || !nextRecipient.phone) return;
@@ -162,7 +128,6 @@ const BoxDetails = () => {
       title: "Box locked successfully!",
       description:
         "An OTP will be sent to the recipient when the delivery person initiates the drop-off.",
-      // FIX: Navigate to box settings page (same as clicking box name), not the details/logs page
       viewDetailsHref: `/grubpacs/details?id=${box.id}`,
     });
   };
@@ -203,7 +168,6 @@ const BoxDetails = () => {
     setSuccessAlert({
       title: "Emergency unlock successful!",
       description: "The box has been unlocked without OTP verification.",
-      // FIX: Navigate to box settings page (same as clicking box name), not the details/logs page
       viewDetailsHref: `/grubpacs/details?id=${box.id}`,
     });
   };

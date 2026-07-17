@@ -15,7 +15,7 @@ export const mockExcludedEmployees = mockSuspendedEmployeesData.map((e) => ({
   added: e.suspended,
 }));
 
-export const mockPermissionOptions = [
+export const PERMISSION_OPTIONS = [
   {
     value: "anyone" as const,
     title: "ANYONE can connect",
@@ -35,3 +35,6 @@ export const mockPermissionOptions = [
     excludedLabel: "0 EXCLUDED",
   },
 ];
+
+/** @deprecated Use PERMISSION_OPTIONS — kept for any residual imports. */
+export const mockPermissionOptions = PERMISSION_OPTIONS;

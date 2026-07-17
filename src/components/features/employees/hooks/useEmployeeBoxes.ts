@@ -176,11 +176,16 @@ if (!enabled || (!employeeId && !restaurantId)) {
       try {
         const permissionStatus = fetchExcluded ? "blocked" : "shared";
         const apiFilterParams = mapFiltersToListParams(filters);
-  const fallbackPowerStatus = restaurantId ? undefined : (showOfflineBoxes ? "off" : "on");
-const listRes = await grubpacService.getList({
-  ...(restaurantId ? { restaurant_id: restaurantId } : {}),
-  ...(employeeId ? { employee_id: employeeId } : {}),
-          permission_status: restaurantId ? undefined : permissionStatus, 
+        // Offline toggle ON = no power filter; OFF = online only (never default to "off").
+        const fallbackPowerStatus = restaurantId
+          ? undefined
+          : showOfflineBoxes
+            ? undefined
+            : "on";
+        const listRes = await grubpacService.getList({
+          ...(restaurantId ? { restaurant_id: restaurantId } : {}),
+          ...(employeeId ? { employee_id: employeeId } : {}),
+          permission_status: restaurantId ? undefined : permissionStatus,
           power_status: apiFilterParams.power_status ?? fallbackPowerStatus,
           connection_status: apiFilterParams.connection_status ?? connectionStatus,
           health_status: apiFilterParams.health_status,

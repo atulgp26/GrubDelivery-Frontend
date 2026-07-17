@@ -22,7 +22,7 @@ const PERMISSION_OPTIONS: { value: PermissionOption; title: string; description:
   },
   {
     value: "restaurants",
-    title: "Employees from assigned resaurants only",
+    title: "Employees from assigned restaurants only",
     description: "People outside the selected restaurant cannot access the GrubPac.",
   },
 ];

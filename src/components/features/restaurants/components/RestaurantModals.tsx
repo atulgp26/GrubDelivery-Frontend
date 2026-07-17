@@ -82,7 +82,7 @@ export default function RestaurantModals({
           restaurant={{
             name: modalState.selectedRestaurant.name,
             status: modalState.selectedRestaurant.status || "Active",
-            createdOn: modalState.selectedRestaurant.updated,
+            createdOn: modalState.selectedRestaurant.added || modalState.selectedRestaurant.updated,
             address: modalState.selectedRestaurant.address,
             resources: [
               {

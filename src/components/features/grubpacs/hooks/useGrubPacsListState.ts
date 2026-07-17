@@ -111,9 +111,11 @@ export function useGrubPacsListState() {
       else if (v === "No lock available") params.grublock_status = "not_available";
     }
 
-    // In grouped mode, apply offline toggle only when no explicit power filter is selected.
+    // In grouped mode: offline toggle ON = no power filter (all); OFF = online only.
     if (isGrouped && (filters.power ?? []).length === 0) {
-      params.power_status = showOffline ? "off" : "on";
+      if (!showOffline) {
+        params.power_status = "on";
+      }
     }
 
     // Boolean filters

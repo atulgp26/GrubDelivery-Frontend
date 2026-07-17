@@ -3,6 +3,7 @@ const GRUBLOCK_BASE = "/delivery/grublock";
 
 export const GRUBLOCK_URLS = {
   LIST: GRUBLOCK_BASE,
+  DETAILS: `${GRUBLOCK_BASE}/details`,
   SEARCH: `${GRUBLOCK_BASE}/search`,
   LOCK: `${GRUBLOCK_BASE}/lock`,
   UNLOCK: `${GRUBLOCK_BASE}/unlock`,

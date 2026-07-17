@@ -343,7 +343,15 @@ import Pagination from "@/components/ui/Pagination";
 import { IoChevronBack } from "react-icons/io5";
 import { AddManagerTable, type AddManagerRow } from "@/components/ui/add-manager-table";
 import { useDebounce } from "@/lib/hooks/useDebounce";
-import { formatDate } from "@/lib/utils/date";
+import employeeService from "@/services/employees";
+import {
+  apiEmployeeToEmployee,
+  isBoxesGroupedResponse,
+  isRestaurantsGroupedResponse,
+  type ApiEmployee,
+  type EmployeeListData,
+} from "@/types/domain/employees";
+import { getWrappedGroupArray } from "@/lib/utils/groupedResponse";
 
 export interface Manager {
   id: string;
@@ -406,88 +414,88 @@ export default function AssignManagerModal({
   const debouncedSearchTerm = useDebounce(state.searchTerm, 300);
 
   // ─── Fetch employees from API ────────────────────────────────────────────
-const roleConfig = ROLE_LABELS[role];
-const fetchManagers = useCallback(async (query: string, page: number) => {
-  setLoading(true);
-  try {
-    const params = new URLSearchParams({
-      status: "active",
-      limit: String(pageSize),
-      page: String(page),
-      group_by: "boxes",
-      role: role === "delivery" ? "delivery" : "manager",
-      ...(query ? { search: query } : {}),
-    });
+  const roleConfig = ROLE_LABELS[role];
 
-    // ── Read auth token from cookie ──────────────────────────────
-    const token = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("grubpac-auth-token="))
-      ?.split("=")[1];
-    // ─────────────────────────────────────────────────────────────
+  const flattenEmployees = useCallback(
+    (data: EmployeeListData): { managers: Manager[]; total: number } => {
+      let employees: ApiEmployee[] = [];
 
-    const res = await fetch(`/api/proxy/delivery/employee?${params}`, {
-      credentials: "include",
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
+      if (isRestaurantsGroupedResponse(data)) {
+        const unassignedGroup = Object.entries(data.groups).find(
+          ([key]) => key.toLowerCase() === "unassigned",
+        )?.[1];
+        employees = getWrappedGroupArray<ApiEmployee>(unassignedGroup);
+      } else if (isBoxesGroupedResponse(data)) {
+        if (role === "delivery") {
+          const connected = getWrappedGroupArray<ApiEmployee>(data.groups.connected);
+          const disconnected = getWrappedGroupArray<ApiEmployee>(data.groups.disconnected);
+          employees = [...connected, ...disconnected];
+        } else {
+          employees = getWrappedGroupArray<ApiEmployee>(data.groups.managers);
+        }
+      } else {
+        employees = data.employees ?? [];
+      }
 
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const targetRole = role === "delivery" ? "delivery" : "manager";
+      const unique = new Map<string, Manager>();
+      employees
+        .filter((employee) => employee.role === targetRole)
+        .forEach((employee) => {
+          const mapped = apiEmployeeToEmployee(employee);
+          unique.set(mapped.id, {
+            id: mapped.id,
+            name: mapped.name,
+            employeeId: mapped.employeeId,
+            joinedDate: mapped.joinedDate,
+            phone: mapped.phone,
+            email: mapped.email,
+            added: mapped.added,
+          });
+        });
 
-    const json = await res.json();
+      const list = Array.from(unique.values());
+      const count =
+        typeof (data as { count?: unknown }).count === "number"
+          ? (data as { count: number }).count
+          : list.length;
 
-    let employeeArray: any[] = [];
-    let total = 0;
+      return { managers: list, total: count };
+    },
+    [role],
+  );
 
-    if (role === "delivery") {
-      const connected = json?.data?.groups?.connected?.array ?? [];
-      const disconnected = json?.data?.groups?.disconnected?.array ?? [];
-      const allDrivers = [...connected, ...disconnected];
-      const seen = new Set<string>();
-      employeeArray = allDrivers.filter((emp: { id: string; role?: string }) => {
-        if (seen.has(emp.id)) return false;
-        seen.add(emp.id);
-        return emp.role === "delivery";
-      });
-      total = json?.data?.groups?.disconnected?.pagination?.total_count ?? employeeArray.length;
-    } else {
-      employeeArray = json?.data?.groups?.managers?.array ?? [];
-      total = json?.data?.groups?.managers?.pagination?.total_count ?? 0;
-    }
+  const fetchManagers = useCallback(
+    async (query: string, page: number) => {
+      setLoading(true);
+      try {
+        const response = await employeeService.getList({
+          role: role === "delivery" ? "delivery" : "manager",
+          status: "unassigned",
+          query: query.trim() || undefined,
+          limit: pageSize,
+          page,
+        });
 
-    const mapped: Manager[] = employeeArray.map((emp: {
-      id: string;
-      first_name: string;
-      last_name: string;
-      employee_display_id: string;
-      joining_date: string;
-      country_code: string;
-      mobile_number: string;
-      email: string;
-      created_at: string;
-      role?: string;
-    }) => ({
-      id: emp.id,
-      name: `${emp.first_name} ${emp.last_name}`,
-      employeeId: emp.employee_display_id,
-      joinedDate: emp.joining_date,
-      phone: `${emp.country_code} ${emp.mobile_number}`,
-      email: emp.email,
-      added: formatDate(emp.created_at) || "Today",
-    }));
-
-    setManagers(mapped);
-    setTotalManagers(total);
-  } catch (err) {
-    console.error("Failed to fetch employees:", err);
-    setManagers([]);
-    setTotalManagers(0);
-  } finally {
-    setLoading(false);
-  }
-}, [pageSize, role, roleConfig]);
-
+        if (response.success && response.data) {
+          const { managers: mapped, total } = flattenEmployees(response.data);
+          setManagers(mapped);
+          setTotalManagers(total);
+        } else {
+          setManagers([]);
+          setTotalManagers(0);
+          console.error("Failed to fetch employees:", response.error);
+        }
+      } catch (err) {
+        console.error("Failed to fetch employees:", err);
+        setManagers([]);
+        setTotalManagers(0);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [pageSize, role, flattenEmployees],
+  );
   // ─── Reset + initial fetch when modal opens ────────────────────────────────
   useEffect(() => {
     if (!open) {

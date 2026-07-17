@@ -16,6 +16,8 @@ export interface Restaurant {
   drivers: number;
   boxes: number;
   suspended_boxes?: number;
+  /** Display date for restaurant creation (Figma "Created on"). */
+  added?: string;
   updated: string;
   status: RestaurantStatus;
   city?: string;

@@ -61,6 +61,7 @@ export default function LoginScreen() {
 		otpLoading,
 	} = useAuthFlow({
 		setAlertMessage,
+		rememberMe,
 	});
 
 	const {

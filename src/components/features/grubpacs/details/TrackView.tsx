@@ -12,12 +12,7 @@ const CAMS: { id: CamId; label: string }[] = [
   { id: "cam4", label: "CAM 4" },
 ];
 
-const MOCK_OLD_FEED = Array.from({ length: 12 }, (_, i) => ({
-  id: i + 1,
-  date: "12 Jan '25",
-  time: "11:23 PM",
-  duration: "00:10:20 hrs",
-}));
+const MOCK_OLD_FEED: { id: number; date: string; time: string; duration: string }[] = [];
 
 export function TrackView({
   isOnline,
@@ -288,7 +283,12 @@ export function TrackView({
 
           {/* Feed rows */}
           <div className="flex-1 overflow-y-auto">
-            {MOCK_OLD_FEED.map((entry) => (
+            {MOCK_OLD_FEED.length === 0 ? (
+              <div className="flex items-center justify-center p-8 text-sm text-[#6b7971]">
+                No recordings available
+              </div>
+            ) : (
+            MOCK_OLD_FEED.map((entry) => (
               <div
                 key={entry.id}
                 className="flex items-center gap-4 px-4 py-3 border-b border-[#e0e3e1] hover:bg-[#f7f8f7] transition-colors"
@@ -311,7 +311,8 @@ export function TrackView({
                   <Image src="/GrubPac/Box-settings/circle-play.svg" alt="Play" width={28} height={28} className="opacity-40" />
                 </button>
               </div>
-            ))}
+            ))
+            )}
           </div>
         </div>
 

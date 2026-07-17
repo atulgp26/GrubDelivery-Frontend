@@ -23,12 +23,14 @@ export interface SendOtpRequest {
 export interface VerifyOtpRequest {
   email: string;
   otp: string;
+  remember_me?: boolean;
 }
 
 export interface VerifyOtpResponse {
   auth_token: string;
   otp_for_what: string;
   is_password_set?: boolean;
+  client_id?: string;
 }
 
 export interface ForgotPasswordRequest {

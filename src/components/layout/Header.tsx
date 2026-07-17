@@ -27,10 +27,10 @@ export default function Header({
   const [apiNotifications, setApiNotifications] = useState<HeaderNotificationItem[]>([]);
   const [hasFetched, setHasFetched] = useState(false);
 
-  const handleDismiss = (id: number | undefined) => {
-    if (id == null) return;
+  const handleDismiss = (id: string | number | undefined) => {
+    if (id == null || id === "") return;
     if (onDismissNotification) {
-      onDismissNotification(id);
+      onDismissNotification(id as string);
       return;
     }
     setApiNotifications((prev) => prev.filter((n) => n.id !== id));
@@ -43,18 +43,27 @@ export default function Header({
       notificationsService.getNotifications()
         .then(res => {
           if (res.success && res.data) {
-            const mapped = res.data.notifications.map((n: any) => ({
-              id: n.id,
-              type: n.type,
-              title: n.title,
-              message: n.message,
-              time: n.time,
-              date: n.date,
-              code: n.code,
-              deviceId: n.deviceId,
-              place: n.restaurantName || "Naya wala Restra",
-              active: n.active ?? !n.is_read,
-            }));
+            const mapped = res.data.notifications.map((n: any) => {
+              const createdAt = n.created_at ? new Date(n.created_at) : null;
+              const time = createdAt
+                ? createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                : "";
+              const date = createdAt
+                ? createdAt.toLocaleDateString([], { day: "2-digit", month: "short", year: "numeric" })
+                : "";
+              return {
+                id: n.id as string,
+                type: n.type,
+                title: n.title,
+                message: n.description ?? n.message ?? "",
+                time,
+                date,
+                code: n.code ?? n.type?.toUpperCase?.() ?? "",
+                deviceId: n.box_display_id ?? n.box_name ?? "",
+                place: n.restaurant_name ?? "",
+                active: n.active ?? !n.is_read,
+              };
+            });
             setApiNotifications(mapped);
             setHasFetched(true);
           }
@@ -182,7 +191,7 @@ export default function Header({
                   const titleColor = isActive ? "var(--gp-color-text-neutral-secondary)" : "var(--gp-color-text-neutral-tertiary)";
                   const messageColor = isActive ? "var(--gp-color-text-neutral-secondary)" : "var(--gp-color-text-neutral-tertiary)";
                   const metaColor = "var(--gp-color-text-neutral-tertiary)";
-                  const deviceId = n.deviceId ?? "DL2BD1234";
+                  const deviceId = n.deviceId ?? "";
                   const deviceIdDisplay = deviceId.length > 8 ? deviceId.slice(0, 8) + "..." : deviceId;
                   return (
                     <div
@@ -222,15 +231,15 @@ export default function Header({
                           className="flex-1 flex items-center gap-1 min-w-0 text-sm font-normal leading-5"
                           style={{ color: metaColor }}
                         >
-                          <span className="shrink-0">{n.code} |</span>
-                          <span className="shrink-0">{deviceIdDisplay}</span>
-                          <span className="min-w-0 truncate">| {n.place ?? "da Pizza Place"}</span>
+                          {n.code ? <span className="shrink-0">{n.code} |</span> : null}
+                          {deviceIdDisplay ? <span className="shrink-0">{deviceIdDisplay}</span> : null}
+                          {n.place ? <span className="min-w-0 truncate">| {n.place}</span> : null}
                         </div>
                         <div
                           className="text-right text-sm font-normal leading-5 shrink-0"
                           style={{ color: metaColor }}
                         >
-                          {n.time} | {n.date}
+                          {n.time}{n.time && n.date ? " | " : ""}{n.date}
                         </div>
                         <button
                           type="button"

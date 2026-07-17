@@ -119,6 +119,7 @@ export default function RestaurantListContent({
     drivers: r._count?.drivers || 0,
     boxes: r._count?.boxes || 0,
     suspended_boxes: r._count?.suspended_boxes || 0,
+    added: r.created_at ? formatDate(r.created_at) : "-",
     updated: r.updated_at ? formatDate(r.updated_at) : "-",
     status: r.status === "suspended" ? "suspended" : "active",
     city: r.city,

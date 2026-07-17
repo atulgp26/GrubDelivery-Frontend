@@ -15,7 +15,7 @@ import employeeService from "@/services/employees";
 import { getApiErrorMessage } from "@/lib/errors";
 import PermissionRadioIcon from "@/components/features/grubpacs/components/PermissionRadioIcon";
 import FigIcon from "@/components/ui/FigIcon";
-import { mockPermissionOptions } from "@/components/features/grubpacs/data/mockEditDetailsData";
+import { PERMISSION_OPTIONS } from "@/components/features/grubpacs/data/mockEditDetailsData";
 import type {
   ApiGrubPac,
   GrubPacListFlatResponse,
@@ -37,6 +37,7 @@ type ExcludedEmployee = {
   code: string;
   joinDate: string;
   added: string;
+  permission_status?: string;
 };
 
 type FormBaseline = {
@@ -516,8 +517,8 @@ export default function EditDetails({
         return;
       }
 
-      const mappedEmployees: ExcludedEmployee[] = (permissionEmployeesResponse.data.employees ?? [])
-        .map((employee) => {
+      const mappedEmployees = (permissionEmployeesResponse.data.employees ?? [])
+        .map((employee): ExcludedEmployee | null => {
           const firstName = (employee.first_name ?? "").trim();
           const lastName = (employee.last_name ?? "").trim();
           const fullName = `${firstName} ${lastName}`.trim();
@@ -531,13 +532,20 @@ export default function EditDetails({
             code,
             joinDate: formatJoinedDate(employee.joining_date),
             added: formatRelativeUpdatedDate(employee.updated_at ?? employee.created_at),
+            permission_status: (employee as { permission_status?: string }).permission_status,
           };
         })
         .filter((employee): employee is ExcludedEmployee => employee !== null);
 
       if (!cancelled) {
         setExcludedEmployees(mappedEmployees);
-        setSelectedEmployees(mappedEmployees.map((employee) => employee.id));
+        const blockedIds = mappedEmployees
+          .filter((employee) => employee.permission_status === "blocked")
+          .map((employee) => employee.id);
+        // Prefer API-flagged blocked ids; if none tagged, keep prior selection from edit-details.
+        if (blockedIds.length > 0) {
+          setSelectedEmployees(blockedIds);
+        }
       }
     }
 
@@ -711,7 +719,7 @@ export default function EditDetails({
     };
   }, [open]);
 
-  const permissionOptions = mockPermissionOptions.map((option) => ({
+  const permissionOptions = PERMISSION_OPTIONS.map((option) => ({
     ...option,
     excludedLabel: `${excludedCount} EXCLUDED`,
   }));

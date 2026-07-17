@@ -8,9 +8,11 @@ import { useAuthActions } from "./useAuthActions";
 export function useAuthFlow({
 	setAlertMessage,
 	onAlert,
+	rememberMe = false,
 }: {
 	setAlertMessage?: (message: string | null) => void;
 	onAlert?: (message: string) => void;
+	rememberMe?: boolean;
 } = {}) {
 	const formRef = useRef<HTMLFormElement | null>(null);
 	const modals = useAuthModals();
@@ -19,6 +21,7 @@ export function useAuthFlow({
 		modals,
 		otpState,
 		setAlertMessage,
+		rememberMe,
 	});
 
 	return {

@@ -1,12 +1,15 @@
 "use client";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Modal from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import SearchInput from "@/components/ui/SearchInput";
 import FilterButton from "@/components/ui/FilterButton";
 import Pagination from "@/components/ui/Pagination";
 import { ResourceReassignTable, type ResourceReassignRow } from "@/components/ui/resource-reassign-table";
-import { mockReassignRestaurantsData } from "@/components/features/grubpacs/data/mockReassignRestaurantsData";
+import foodService from "@/services/food";
+import type { RestaurantData } from "@/types/domain/restaurants";
+import { formatDate } from "@/lib/utils/date";
+import { useDebounce } from "@/lib/hooks/useDebounce";
 
 interface ModalLocalState {
   searchTerm: string;
@@ -22,6 +25,21 @@ const initialState: ModalLocalState = {
 
 const PAGE_SIZE = 50;
 
+function mapRestaurantToReassignRow(r: RestaurantData): ResourceReassignRow {
+  return {
+    id: r.id,
+    name: r.name,
+    address: r.full_address || r.line_one || "",
+    updated: r.updated_at ? formatDate(r.updated_at) : "-",
+    added: r.created_at ? formatDate(r.created_at) : "-",
+    resources: {
+      boxes: r._count?.boxes ?? 0,
+      drivers: r._count?.drivers ?? 0,
+      managers: r._count?.managers ?? (r.manager_id ? 1 : 0),
+    },
+  };
+}
+
 export default function ReassignGroupModal({
   open,
   onClose,
@@ -32,28 +50,54 @@ export default function ReassignGroupModal({
   onConfirm: (row: ResourceReassignRow) => void;
 }) {
   const [state, setState] = useState<ModalLocalState>(initialState);
+  const [rows, setRows] = useState<ResourceReassignRow[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const debouncedSearch = useDebounce(state.searchTerm, 300);
+
+  const fetchRestaurants = useCallback(async (query: string, page: number) => {
+    setLoading(true);
+    try {
+      const response = await foodService.getRestaurants({
+        status: "active",
+        query: query.trim() || undefined,
+        limit: PAGE_SIZE,
+        page,
+      });
+
+      if (response.success && response.data?.restaurants) {
+        const mapped = response.data.restaurants.map(mapRestaurantToReassignRow);
+        setRows(mapped);
+        setTotalItems(
+          (response.pagination as { total_count?: number } | undefined)?.total_count
+            ?? (response.data as { total_count?: number }).total_count
+            ?? response.data.count
+            ?? mapped.length,
+        );
+      } else {
+        setRows([]);
+        setTotalItems(0);
+      }
+    } catch (err) {
+      console.error("[ReassignGroupModal] Failed to fetch restaurants", err);
+      setRows([]);
+      setTotalItems(0);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!open) {
       setState(initialState);
+      setRows([]);
+      setTotalItems(0);
+      return;
     }
-  }, [open]);
-
-  const filteredData = useMemo(() => {
-    if (!state.searchTerm.trim()) return mockReassignRestaurantsData;
-    const lower = state.searchTerm.toLowerCase();
-    return mockReassignRestaurantsData.filter(
-      (r) =>
-        r.name.toLowerCase().includes(lower) ||
-        r.address.toLowerCase().includes(lower)
-    );
-  }, [state.searchTerm]);
-
-  const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
-  const paginatedData = filteredData.slice(
-    (state.currentPage - 1) * PAGE_SIZE,
-    state.currentPage * PAGE_SIZE
-  );
+    setState((prev) => ({ ...prev, currentPage: 1, selectedRow: null }));
+    void fetchRestaurants(debouncedSearch, 1);
+  }, [open, debouncedSearch, fetchRestaurants]);
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
 
   const handleSelectRow = (row: ResourceReassignRow) => {
     setState((prev) => ({
@@ -111,37 +155,47 @@ export default function ReassignGroupModal({
           </div>
           <div className="flex items-center gap-4">
             <span className="text-[14px] leading-[22px] text-[#6B7971] font-normal">
-              {filteredData.length} entries
+              {totalItems} entries
             </span>
             <FilterButton open={false} handleFilterClick={() => {}} />
           </div>
         </div>
 
-        {filteredData.length > 0 && (
+        {totalItems > 0 && (
           <div className="mb-4">
             <Pagination
               currentPage={state.currentPage}
               pageSize={PAGE_SIZE}
-              totalItems={filteredData.length}
-              onPrev={() =>
-                setState((prev) => ({ ...prev, currentPage: Math.max(1, prev.currentPage - 1) }))
-              }
-              onNext={() =>
-                setState((prev) => ({ ...prev, currentPage: Math.min(totalPages, prev.currentPage + 1) }))
-              }
+              totalItems={totalItems}
+              onPrev={() => {
+                const nextPage = Math.max(1, state.currentPage - 1);
+                if (nextPage === state.currentPage) return;
+                setState((prev) => ({ ...prev, currentPage: nextPage }));
+                void fetchRestaurants(debouncedSearch, nextPage);
+              }}
+              onNext={() => {
+                const nextPage = Math.min(totalPages, state.currentPage + 1);
+                if (nextPage === state.currentPage) return;
+                setState((prev) => ({ ...prev, currentPage: nextPage }));
+                void fetchRestaurants(debouncedSearch, nextPage);
+              }}
             />
           </div>
         )}
 
         <div className="flex-1 overflow-hidden mb-4">
           <div className="overflow-y-auto max-h-[286px]">
-            {paginatedData.length === 0 ? (
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-[var(--color-neutral-secondary)]">Loading restaurants...</div>
+              </div>
+            ) : rows.length === 0 ? (
               <div className="flex items-center justify-center py-12">
                 <div className="text-[var(--color-stroke-brand)]">No restaurants found.</div>
               </div>
             ) : (
               <ResourceReassignTable
-                data={paginatedData}
+                data={rows}
                 columns={["name", "address", "updated", "added", "actions"]}
                 selectedId={state.selectedRow?.id ?? null}
                 onSelectRestaurant={handleSelectRow}

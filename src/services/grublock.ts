@@ -13,6 +13,7 @@ import type {
   GrubLockUnlockVerifyBody,
   GrubLockUnlockVerifyResult,
 } from "@/types/domain/grublock";
+import type { ApiGrubPac } from "@/types/domain/grubpacs";
 
 function sanitizeIds(ids: string[]): string[] {
   return ids
@@ -35,6 +36,14 @@ const grublockService = {
       GRUBLOCK_URLS.LIST,
       params as Record<string, unknown>,
     );
+  },
+
+  async getDetails(id: string) {
+    const sanitizedId = typeof id === "string" ? id.trim() : "";
+    if (!sanitizedId) {
+      return failResponse<ApiGrubPac>("Please provide a valid box id");
+    }
+    return httpClient.get<ApiGrubPac>(GRUBLOCK_URLS.DETAILS, { id: sanitizedId });
   },
 
   async search(params: GrubLockSearchParams) {

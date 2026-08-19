@@ -11,7 +11,7 @@ interface UseGrubPacsSearchReturn<T> {
   filteredData: T[];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export const useGrubPacsSearch = <T extends Record<string, any>>(
   data: T[],
   searchFields: (keyof T)[] = ["name" as keyof T, "code" as keyof T]

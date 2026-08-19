@@ -105,7 +105,7 @@ export const useGrubPacsData = (apiParams?: GrubPacListParams): UseGrubPacsDataR
     } finally {
       setIsLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [paramsKey]);
 
   useEffect(() => {

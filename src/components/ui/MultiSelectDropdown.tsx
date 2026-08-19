@@ -55,7 +55,7 @@ export default function MultiSelectDropdown({
     if (closeSignal !== undefined) {
       setOpen(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [closeSignal]);
 
   // Improved search: case-insensitive, space-insensitive, ignores '#'

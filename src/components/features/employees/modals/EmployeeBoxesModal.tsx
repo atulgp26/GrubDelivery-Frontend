@@ -94,7 +94,6 @@ function flattenGroups(data: GrubPacListData | undefined): ApiGrubPac[] {
   return flattenWrappedGroupRecord<ApiGrubPac>(groups as Record<string, unknown>);
 }
 
-// eslint-disable-next-line @next/next/no-serialize-warnings
 export default function EmployeeBoxesModal({
   open,
   onClose,

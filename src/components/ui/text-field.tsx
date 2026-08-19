@@ -89,7 +89,8 @@ const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(
 		},
 		ref
 	) => {
-		const inputId = id || React.useId();
+		const generatedId = React.useId();
+		const inputId = id || generatedId;
 		const errorId = error ? `${inputId}-error` : undefined;
 		const [isFocused, setIsFocused] = React.useState(false);
 

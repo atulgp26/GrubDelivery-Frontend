@@ -514,7 +514,7 @@ export default function AssignManagerModal({
 
     previousDebouncedSearchRef.current = "";
     fetchManagers("", 1);
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open]);  
 
   // ─── Fetch on search term change ───────────────────────────────────────────
   useEffect(() => {

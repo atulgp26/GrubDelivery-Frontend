@@ -503,7 +503,7 @@ export default function AddEmployeeModal({
       setFormData((prev) => (isSameFormData(prev, EMPTY_FORM) ? prev : EMPTY_FORM));
       setSubmitAttempted(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [open, employee, resolveInitialRestaurantId, allRestaurants]);
 
   const normalizedContact = normalizeIndianContact(formData.contact);

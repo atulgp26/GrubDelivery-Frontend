@@ -381,7 +381,7 @@ export default function GrubLockModals({
       // Reset when modal closes so stale count doesn't show on next open
       setRealGrubPacCount(null);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [modalState.isGroupDetailsModalOpen, firstItem?.restaurantIds?.[0]]);
 
   const groupedRestaurant = selectedGroup

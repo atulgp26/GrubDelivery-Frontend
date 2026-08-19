@@ -3,8 +3,14 @@ import type { AxiosRequestConfig, AxiosResponse } from "axios";
 
 import { getAuthToken, clearAuthCookies } from "@/utils/cookies";
 
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+
+if (!apiBaseUrl) {
+	throw new Error("NEXT_PUBLIC_API_BASE_URL is required.");
+}
+
 const api = axios.create({
-	baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+	baseURL: apiBaseUrl,
 	headers: { "Content-Type": "application/json" },
 	timeout: 30000,
 });

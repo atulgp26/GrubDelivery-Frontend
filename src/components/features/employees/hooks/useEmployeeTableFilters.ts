@@ -3,7 +3,6 @@ import type { EmployeeGroup } from "@/types";
 import type { GroupCollapseTableGroup } from "@/types/ui";
 import type { SuspendedEmployee } from "../types";
 import {
-  filterEmployeesBySearch,
   filterEmployeesByRole,
   filterAvailableDrivers,
   groupEmployeesByRestaurant,
@@ -13,6 +12,8 @@ import {
 
 interface UseEmployeeFiltersProps {
   groups: EmployeeGroup[];
+  /** When true, role/search/availability filters are applied server-side — skip client filtering. */
+  serverFiltered?: boolean;
   searchTerm?: string;
   isGrouped?: boolean;
   selectedRoles?: Array<string | number>;
@@ -21,16 +22,20 @@ interface UseEmployeeFiltersProps {
 
 export function useEmployeeTableFilters({
   groups,
+  serverFiltered = true,
   searchTerm = "",
   selectedRoles = [],
   showAvailableDriversOnly = false,
 }: UseEmployeeFiltersProps): { filteredGroups: EmployeeGroup[]; totalEntries: number } {
   const filteredGroups = useMemo<EmployeeGroup[]>(() => {
+    if (serverFiltered) {
+      return groups;
+    }
+
     return groups.map((group) => ({
       ...group,
       items: (() => {
         let items = group.items ?? [];
-        items = filterEmployeesBySearch(items, searchTerm);
         if (selectedRoles.length > 0) {
           items = filterEmployeesByRole(items, selectedRoles);
         }
@@ -39,13 +44,19 @@ export function useEmployeeTableFilters({
         }
         return items;
       })(),
-      emptyMessage: "No employees match your search.",
+      emptyMessage: searchTerm
+        ? "No employees match your search."
+        : group.emptyMessage ?? "No employees found.",
     }));
-  }, [groups, searchTerm, selectedRoles, showAvailableDriversOnly]);
+  }, [groups, serverFiltered, searchTerm, selectedRoles, showAvailableDriversOnly]);
 
   const totalEntries = useMemo(
-    () => filteredGroups.reduce((acc, group) => acc + (group.items?.length ?? 0), 0),
-    [filteredGroups]
+    () =>
+      filteredGroups.reduce(
+        (acc, group) => acc + (group.pagination?.totalItems ?? group.items?.length ?? 0),
+        0,
+      ),
+    [filteredGroups],
   );
 
   return { filteredGroups, totalEntries };
@@ -61,6 +72,8 @@ interface UseSuspendedEmployeeFiltersProps {
   selectedRoles: Array<string | number>;
   showAvailableDriversOnly: boolean;
   totalItems?: number;
+  /** When true, role/search filters are applied server-side — skip client filtering. */
+  serverFiltered?: boolean;
 }
 
 export function useSuspendedEmployeeTableFilters({
@@ -71,16 +84,30 @@ export function useSuspendedEmployeeTableFilters({
   selectedRoles,
   showAvailableDriversOnly,
   totalItems,
+  serverFiltered = true,
 }: UseSuspendedEmployeeFiltersProps): {
   filteredGroups: GroupCollapseTableGroup<SuspendedEmployee>[];
   totalEntries: number;
 } {
   const filteredGroups = useMemo<GroupCollapseTableGroup<SuspendedEmployee>[]>(() => {
+    if (serverFiltered) {
+      if (isGrouped && Array.isArray(groupedEmployees) && groupedEmployees.length > 0) {
+        return groupedEmployees;
+      }
+
+      return [
+        {
+          name: "All Suspended Employees",
+          items: employees,
+          pagination: totalItems ? ({ totalItems } as GroupCollapseTableGroup<SuspendedEmployee>["pagination"]) : undefined,
+          emptyMessage: "No suspended employees found.",
+        },
+      ];
+    }
+
     if (isGrouped && Array.isArray(groupedEmployees) && groupedEmployees.length > 0) {
       return groupedEmployees.map((group) => {
         let filteredItems = group.items ?? [];
-
-        filteredItems = filterEmployeesBySearch(filteredItems, searchTerm);
 
         if (selectedRoles.length > 0) {
           filteredItems = filterEmployeesByRole(filteredItems, selectedRoles);
@@ -100,7 +127,7 @@ export function useSuspendedEmployeeTableFilters({
       });
     }
 
-    let filteredEmployees = filterEmployeesBySearch(employees, searchTerm);
+    let filteredEmployees = employees;
 
     if (selectedRoles.length > 0) {
       filteredEmployees = filterEmployeesByRole(filteredEmployees, selectedRoles);
@@ -111,7 +138,7 @@ export function useSuspendedEmployeeTableFilters({
         {
           name: "All Suspended Employees",
           items: filteredEmployees as SuspendedEmployee[],
-          pagination: totalItems ? { totalItems } as any : undefined,
+          pagination: totalItems ? ({ totalItems } as GroupCollapseTableGroup<SuspendedEmployee>["pagination"]) : undefined,
           emptyMessage: searchTerm
             ? "No employees match your search."
             : "No suspended employees found.",
@@ -124,14 +151,24 @@ export function useSuspendedEmployeeTableFilters({
     }
 
     return groupEmployeesByRestaurant(filteredEmployees) as GroupCollapseTableGroup<SuspendedEmployee>[];
-  }, [employees, groupedEmployees, searchTerm, isGrouped, selectedRoles, showAvailableDriversOnly]);
+  }, [
+    employees,
+    groupedEmployees,
+    searchTerm,
+    isGrouped,
+    selectedRoles,
+    showAvailableDriversOnly,
+    totalItems,
+    serverFiltered,
+  ]);
 
   const totalEntries = useMemo(
-    () => filteredGroups.reduce(
-      (acc, group) => acc + (group.pagination?.totalItems ?? group.items?.length ?? 0),
-      0,
-    ),
-    [filteredGroups]
+    () =>
+      filteredGroups.reduce(
+        (acc, group) => acc + (group.pagination?.totalItems ?? group.items?.length ?? 0),
+        0,
+      ),
+    [filteredGroups],
   );
 
   return { filteredGroups, totalEntries };

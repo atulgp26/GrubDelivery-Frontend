@@ -7,6 +7,9 @@ import type {
   SystemLogsListRequest,
 } from "@/types/domain/system-logs";
 
+/** Max rows per delivery log list/export request — matches backend D-BE-07 cap. */
+export const LOG_EXPORT_MAX_ROWS = 1000;
+
 function toNumber(value: unknown): number | undefined {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string" && value.trim() !== "") {

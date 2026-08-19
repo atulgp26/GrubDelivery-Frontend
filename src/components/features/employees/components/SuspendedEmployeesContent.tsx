@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Pagination from "@/components/ui/Pagination";
 import { Button } from "@/components/ui/Button";
 import type { GroupCollapseTableGroup } from "@/types/ui";
@@ -50,6 +50,7 @@ interface SuspendedEmployeesContentProps {
   ) => void;
   onGroupedModeChange?: (grouped: boolean) => void;
   onSelectedApiRolesChange?: (roles: Array<"manager" | "delivery">) => void;
+  onQueryChange?: (query: string) => void;
   onActivate?: (employeeId: string) => void;
   onActivateAll?: (employeeIds: string[]) => void;
   onDelete?: (employeeId: string) => void;
@@ -68,6 +69,7 @@ export default function SuspendedEmployeesContent({
   onGroupedPageChange,
   onGroupedModeChange,
   onSelectedApiRolesChange,
+  onQueryChange,
   onActivate,
   onActivateAll,
   onDelete,
@@ -93,6 +95,19 @@ export default function SuspendedEmployeesContent({
     roleOptions,
   } = useSuspendedEmployeeTableState(employees);
 
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchTerm.trim());
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    onQueryChange?.(debouncedQuery);
+  }, [debouncedQuery, onQueryChange]);
+
   const mapUiRolesToApiRoles = (roles: Array<string | number>) => {
     const mapped = roles
       .map((role) => (String(role) === "driver" ? "delivery" : String(role)))
@@ -117,6 +132,7 @@ export default function SuspendedEmployeesContent({
     selectedRoles,
     showAvailableDriversOnly,
     totalItems,
+    serverFiltered: true,
   });
 
   const { results: searchSuggestions, isSearching, searchError } = useEmployeeSearch({

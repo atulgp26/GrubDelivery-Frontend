@@ -51,6 +51,7 @@ export interface RestaurantListParams {
   group_by?: "boxes" | "";
   manager?: boolean;
   driver?: boolean;
+  box?: boolean;
   exclude_restaurant_ids?: string[];
   group_by_selected_table?: string;
   limit?: number;

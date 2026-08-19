@@ -168,19 +168,21 @@ export default function GrubLockListContent({
     showUnlockedBoxes,
   });
 
-  const { filteredGroups, totalEntries } = useGrubLockFilters({
-    groups: transformedGroups,
-    searchTerm,
-  });
-  const hasGroupedResults = isGrouped
-    ? filteredGroups.some((group) => (group.items?.length ?? 0) > 0)
-    : true;
-  const shouldShowGroupedEmpty = isGrouped && !showUnlockedBoxes && !hasGroupedResults;
   const { results: searchApiResults } = useGrubLockSearch({
     query: searchTerm,
     limit: 50,
     status: "active",
   });
+
+  const { filteredGroups, totalEntries } = useGrubLockFilters({
+    groups: transformedGroups,
+    searchTerm,
+    searchResults: searchApiResults,
+  });
+  const hasGroupedResults = isGrouped
+    ? filteredGroups.some((group) => (group.items?.length ?? 0) > 0)
+    : true;
+  const shouldShowGroupedEmpty = isGrouped && !showUnlockedBoxes && !hasGroupedResults;
 
   useEffect(() => {
     if (!selectedBoxIdFromQuery || transformedGroups.length === 0) {

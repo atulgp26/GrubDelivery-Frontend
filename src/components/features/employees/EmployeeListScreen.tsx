@@ -17,6 +17,8 @@ export default function EmployeeListScreen() {
   const router = useRouter();
   const [groupBy, setGroupBy] = useState<"boxes" | "restaurants">("boxes");
   const [selectedApiRoles, setSelectedApiRoles] = useState<Array<"manager" | "delivery">>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [availableDriversOnly, setAvailableDriversOnly] = useState(false);
 
   const areApiRolesEqual = (
     left: Array<"manager" | "delivery">,
@@ -53,6 +55,8 @@ export default function EmployeeListScreen() {
     includeSuspended: false, 
     groupBy, 
     roles: selectedApiRoles,
+    query: searchQuery,
+    withConnectedBoxes: availableDriversOnly ? false : undefined,
     includeDropdowns: false,
     includeManagerBoxCounts: false 
   });
@@ -227,6 +231,8 @@ export default function EmployeeListScreen() {
         restaurants={dropdowns?.restaurants}
         onGroupByChange={handleGroupByChange}
         onRolesChange={handleRolesChange}
+        onQueryChange={setSearchQuery}
+        onAvailableDriversOnlyChange={setAvailableDriversOnly}
         onPageChange={refetchGroup}
         totalEntries={totalEntries}
       />

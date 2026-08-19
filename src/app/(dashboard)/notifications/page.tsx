@@ -1,11 +1,15 @@
 "use client";
-import { useState, useEffect, useMemo, type ReactNode } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback, type ReactNode } from "react";
 import Image from "next/image";
 import NotificationFilterBar from "@/components/features/notifications/NotificationFilterBar";
 import NotificationList from "@/components/features/notifications/NotificationList";
 import NotificationFilterModal from "@/components/features/notifications/NotificationFilterModal";
 import { useNotificationFilters } from "@/components/features/notifications/hooks/useNotificationFilters";
-import { notificationsService } from "@/services/notifications";
+import {
+  notificationsService,
+  NOTIFICATION_PAGE_SIZE,
+  type NotificationPaginationMeta,
+} from "@/services/notifications";
 import type {
   NotificationTone,
   Notification,
@@ -14,54 +18,41 @@ import type {
 } from "@/types";
 import { Button } from "@/components/ui/Button";
 import LoadingDetails from "@/components/ui/LoadingDetails";
+import Pagination from "@/components/ui/Pagination";
+
+function parsePaginationMeta(
+  pagination: Record<string, unknown> | undefined,
+  fallbackCount: number,
+  page: number,
+): { totalCount: number; pageCount: number } {
+  const meta = (pagination ?? {}) as NotificationPaginationMeta;
+  const totalCount =
+    typeof meta.total_count === "number" && Number.isFinite(meta.total_count)
+      ? meta.total_count
+      : fallbackCount;
+  const limit =
+    typeof meta.limit === "number" && meta.limit > 0
+      ? meta.limit
+      : NOTIFICATION_PAGE_SIZE;
+  const pageCount =
+    typeof meta.last_page === "number" && meta.last_page > 0
+      ? meta.last_page
+      : Math.max(1, Math.ceil(totalCount / limit));
+
+  return { totalCount, pageCount: Math.max(pageCount, page) };
+}
 
 export default function NotificationsPage() {
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageCount, setPageCount] = useState(1);
 
   const [isLoading, setIsLoading] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [boxes, setBoxes] = useState<MultiSelectOption[]>([]);
   const [restaurants, setRestaurants] = useState<NotificationGroupOption[]>([]);
-  const [types, setTypes] = useState<any[]>([]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        // Force clear any stale state from fast refresh
-        setNotifications([]);
-        setBoxes([]);
-        setRestaurants([]);
-        setTypes([]);
-
-        const [notifRes, dropRes] = await Promise.all([
-          notificationsService.getNotifications(),
-          notificationsService.getNotificationDropdowns(),
-        ]);
-
-        if (notifRes.success && notifRes.data) {
-          setNotifications(notifRes.data.notifications);
-        }
-
-        if (dropRes.success && dropRes.data) {
-          // Map display_id to code so it shows correctly in the dropdown
-          const mappedBoxes = dropRes.data.boxes.map((b: any) => ({
-            ...b,
-            code: b.display_id ? `(#${b.display_id})` : b.code,
-          }));
-          setBoxes(mappedBoxes);
-          setRestaurants(dropRes.data.restaurants);
-          setTypes(dropRes.data.types || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch notifications data", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const hasLoadedOnceRef = useRef(false);
 
   const {
     search,
@@ -76,7 +67,7 @@ export default function NotificationsPage() {
     setSelectedTypes,
     selectedStatuses,
     setSelectedStatuses,
-    filteredNotifications,
+    listQueryParams,
     notificationSuggestions,
     boxOptions,
     restaurantOptions,
@@ -84,10 +75,104 @@ export default function NotificationsPage() {
     notifications,
     boxes,
     restaurants,
+    page,
   });
 
+  const listQueryKey = useMemo(
+    () => JSON.stringify(listQueryParams),
+    [listQueryParams],
+  );
+
+  const filterQueryKey = useMemo(() => {
+    const { page: _page, ...filters } = listQueryParams;
+    return JSON.stringify(filters);
+  }, [listQueryParams]);
+
+  const lastFilterKeyRef = useRef(filterQueryKey);
+
+  useEffect(() => {
+    const fetchDropdowns = async () => {
+      try {
+        const dropRes = await notificationsService.getNotificationDropdowns();
+        if (dropRes.success && dropRes.data) {
+          const mappedBoxes = dropRes.data.boxes.map((b: any) => ({
+            ...b,
+            code: b.display_id ? `(#${b.display_id})` : b.code,
+          }));
+          setBoxes(mappedBoxes);
+          setRestaurants(dropRes.data.restaurants);
+        }
+      } catch (error) {
+        console.error("Failed to fetch notification dropdowns", error);
+      }
+    };
+
+    fetchDropdowns();
+  }, []);
+
+  const refetchNotifications = useCallback(async () => {
+    const notifRes = await notificationsService.getNotifications(listQueryParams);
+    if (notifRes.success && notifRes.data) {
+      setNotifications(notifRes.data.notifications);
+      const fallbackCount =
+        typeof notifRes.data.count === "number"
+          ? notifRes.data.count
+          : notifRes.data.notifications.length;
+      const parsed = parsePaginationMeta(notifRes.pagination, fallbackCount, page);
+      setTotalCount(parsed.totalCount);
+      setPageCount(parsed.pageCount);
+    }
+  }, [listQueryParams, page]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const fetchNotifications = async () => {
+      if (lastFilterKeyRef.current !== filterQueryKey) {
+        lastFilterKeyRef.current = filterQueryKey;
+        if (page !== 1) {
+          setPage(1);
+          return;
+        }
+      }
+
+      try {
+        if (!hasLoadedOnceRef.current) {
+          setIsLoading(true);
+        }
+
+        const notifRes = await notificationsService.getNotifications(listQueryParams);
+        if (!isActive) return;
+
+        if (notifRes.success && notifRes.data) {
+          setNotifications(notifRes.data.notifications);
+          const fallbackCount =
+            typeof notifRes.data.count === "number"
+              ? notifRes.data.count
+              : notifRes.data.notifications.length;
+          const parsed = parsePaginationMeta(notifRes.pagination, fallbackCount, page);
+          setTotalCount(parsed.totalCount);
+          setPageCount(parsed.pageCount);
+          hasLoadedOnceRef.current = true;
+        }
+      } catch (error) {
+        if (!isActive) return;
+        console.error("Failed to fetch notifications data", error);
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchNotifications();
+
+    return () => {
+      isActive = false;
+    };
+  }, [filterQueryKey, listQueryKey, listQueryParams, page]);
+
   const handleMarkAsRead = async (ids: string[]) => {
-    // Optimistically update UI
     setNotifications((prev) =>
       prev.map((n) =>
         ids.includes(n.id) ? { ...n, is_read: true } : n,
@@ -98,7 +183,6 @@ export default function NotificationsPage() {
       await notificationsService.markAsRead(ids);
     } catch (error) {
       console.error("Failed to mark notifications as read", error);
-      // Rollback on failure
       setNotifications((prev) =>
         prev.map((n) =>
           ids.includes(n.id) ? { ...n, is_read: false } : n,
@@ -108,56 +192,49 @@ export default function NotificationsPage() {
   };
 
   const handleDismiss = async (notificationId: string) => {
-    // Optimistically remove from UI
     setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
     setSelectedNotificationIds((prev) =>
       prev.filter((id) => id !== notificationId),
     );
+    setTotalCount((prev) => Math.max(0, prev - 1));
 
     try {
       await notificationsService.markAsDismissed([notificationId]);
     } catch (error) {
       console.error("Failed to dismiss notification", error);
-      // Refetch on failure to restore state
-      const notifRes = await notificationsService.getNotifications();
-      if (notifRes.success && notifRes.data) {
-        setNotifications(notifRes.data.notifications);
-      }
+      await refetchNotifications();
     }
   };
 
   const handleDismissAll = async () => {
-    const ids = filteredNotifications.map((n) => n.id);
+    const ids = notifications.map((n) => n.id);
     if (ids.length === 0) return;
 
-    // Optimistically remove from UI
-    setNotifications((prev) => prev.filter((n) => !ids.includes(n.id)));
+    setNotifications([]);
     setSelectedNotificationIds([]);
+    setTotalCount((prev) => Math.max(0, prev - ids.length));
 
     try {
       await notificationsService.dismissAllNotifications(ids);
+      await refetchNotifications();
     } catch (error) {
       console.error("Failed to dismiss all notifications", error);
-      // Refetch on failure to restore state
-      const notifRes = await notificationsService.getNotifications();
-      if (notifRes.success && notifRes.data) {
-        setNotifications(notifRes.data.notifications);
-      }
+      await refetchNotifications();
     }
   };
 
   const allVisibleSelected =
-    filteredNotifications.length > 0 &&
-    filteredNotifications.every((notification) =>
+    notifications.length > 0 &&
+    notifications.every((notification) =>
       selectedNotificationIds.includes(notification.id),
     );
 
   const handleToggleAllVisible = () => {
     setSelectedNotificationIds((prev) => {
-      if (filteredNotifications.length === 0) {
+      if (notifications.length === 0) {
         return prev;
       }
-      const visibleIds = filteredNotifications.map(
+      const visibleIds = notifications.map(
         (notification) => notification.id,
       );
       const everySelected = visibleIds.every((id) => prev.includes(id));
@@ -273,7 +350,7 @@ export default function NotificationsPage() {
         onFilter={() => setShowFilterModal(false)}
       />
       <NotificationList
-        filtered={filteredNotifications}
+        filtered={notifications}
         selected={selectedNotificationIds}
         setSelected={setSelectedNotificationIds}
         getNotificationIcon={getNotificationIcon}
@@ -282,6 +359,16 @@ export default function NotificationsPage() {
         onDismiss={handleDismiss}
         onMarkAsRead={handleMarkAsRead}
       />
+      {totalCount > 0 ? (
+        <Pagination
+          currentPage={page}
+          pageSize={NOTIFICATION_PAGE_SIZE}
+          totalItems={totalCount}
+          onPrev={() => setPage((prev) => Math.max(1, prev - 1))}
+          onNext={() => setPage((prev) => Math.min(pageCount, prev + 1))}
+          className="w-full mt-2"
+        />
+      ) : null}
     </>
   );
 }

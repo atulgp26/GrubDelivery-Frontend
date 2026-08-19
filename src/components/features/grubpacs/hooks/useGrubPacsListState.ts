@@ -4,6 +4,16 @@ import { useGrubPacsFilters } from "./useGrubPacsFilters";
 import { useGrubPacSearch } from "./useGrubPacSearch";
 import { useModalState } from "@/lib/hooks";
 import type { GrubPacItem, GrubPacGroup, GrubPacListParams } from "@/types/domain/grubpacs";
+import type { FilterState } from "@/components/features/shared/filter/BoxFilterModal";
+
+function hasMultiValueListFilters(filters: FilterState): boolean {
+  return (
+    (filters.connection ?? []).length > 1 ||
+    (filters.health ?? []).length > 1 ||
+    (filters.grubLockStatus ?? []).length > 1 ||
+    (filters.power ?? []).length > 1
+  );
+}
 
 // Re-export for convenience
 export type { GrubPacItem, GrubPacGroup };
@@ -221,73 +231,49 @@ export function useGrubPacsListState() {
   }, [groups, hasData, isSearchMode, searchResultIds, searchResults]);
 
   const filteredGroups: GrubPacGroup[] = useMemo(
-    () =>
-      hasData
-        ? searchedGroups.map((group) => ({
-            ...group,
-            items: (group.items || []).filter((item) => {
-              // Connection status filter
-              if ((filters.connection ?? []).length > 0) {
-                const itemStatus = item.status?.toUpperCase() || '';
-                const matchesConnection = (filters.connection ?? []).some(f => {
-                  const filterUpper = f.toUpperCase();
-                  return itemStatus.includes(filterUpper) || 
-                         (filterUpper === 'ONLINE' && (itemStatus === 'ON' || itemStatus === 'CONNECTED')) ||
-                         (filterUpper === 'OFFLINE' && (itemStatus === 'OFF' || itemStatus === 'DISCONNECTED'));
-                });
-                if (!matchesConnection) return false;
-              }
+    () => {
+      if (!hasData) return [];
 
-              // Health status filter
-              if ((filters.health ?? []).length > 0) {
-                // Add your health status logic here based on item properties
-                // For now, passing through - implement based on actual health field
-              }
+      // Single-value and boolean filters are sent via apiParams — skip redundant client pass.
+      if (!hasMultiValueListFilters(filters)) {
+        return searchedGroups;
+      }
 
-              // GrubLock status filter
-              if ((filters.grubLockStatus ?? []).length > 0) {
-                const itemLocked = item.locked;
-                const matchesLockStatus = (filters.grubLockStatus ?? []).some(f => {
-                  return (f.toLowerCase() === 'locked' && itemLocked) ||
-                         (f.toLowerCase() === 'unlocked' && !itemLocked);
-                });
-                if (!matchesLockStatus) return false;
-              }
+      return searchedGroups.map((group) => ({
+        ...group,
+        items: (group.items || []).filter((item) => {
+          // Connection status filter (multi-select only reaches here)
+          if ((filters.connection ?? []).length > 0) {
+            const itemStatus = item.status?.toUpperCase() || '';
+            const matchesConnection = (filters.connection ?? []).some(f => {
+              const filterUpper = f.toUpperCase();
+              return itemStatus.includes(filterUpper) || 
+                     (filterUpper === 'ONLINE' && (itemStatus === 'ON' || itemStatus === 'CONNECTED')) ||
+                     (filterUpper === 'OFFLINE' && (itemStatus === 'OFF' || itemStatus === 'DISCONNECTED'));
+            });
+            if (!matchesConnection) return false;
+          }
 
-              // Restaurant assigned filter
-              if (filters.restaurantAssigned) {
-                if (!item.location) return false;
-              }
+          // Health status filter
+          if ((filters.health ?? []).length > 0) {
+            // Add your health status logic here based on item properties
+            // For now, passing through - implement based on actual health field
+          }
 
-              // Ioniser filter
-              if (filters.ioniserOn) {
-                if (item.ioniser !== 'ON') return false;
-              }
+          // GrubLock status filter
+          if ((filters.grubLockStatus ?? []).length > 0) {
+            const itemLocked = item.locked;
+            const matchesLockStatus = (filters.grubLockStatus ?? []).some(f => {
+              return (f.toLowerCase() === 'locked' && itemLocked) ||
+                     (f.toLowerCase() === 'unlocked' && !itemLocked);
+            });
+            if (!matchesLockStatus) return false;
+          }
 
-              // Dual zone filter
-              if (filters.dualZoneOn) {
-                if (!item.zone1Temp || !item.zone2Temp) return false;
-              }
-
-              // Zone temperature filters
-              if (item.zone1Temp) {
-                const temp1 = parseFloat(item.zone1Temp);
-                if (!isNaN(temp1) && (temp1 < filters.zone1Min || temp1 > filters.zone1Max)) {
-                  return false;
-                }
-              }
-
-              if (item.zone2Temp) {
-                const temp2 = parseFloat(item.zone2Temp);
-                if (!isNaN(temp2) && (temp2 < filters.zone2Min || temp2 > filters.zone2Max)) {
-                  return false;
-                }
-              }
-
-              return true;
-            }),
-          }))
-        : [],
+          return true;
+        }),
+      }));
+    },
     [hasData, searchedGroups, filters]
   );
 

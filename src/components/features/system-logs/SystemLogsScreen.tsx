@@ -18,7 +18,7 @@ import {
   DataTableRow,
 } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
-import logsService from "../../../services/logs";
+import logsService, { LOG_EXPORT_MAX_ROWS } from "../../../services/logs";
 import type {
   ApiSystemLog,
   SystemLogsListRequest,
@@ -213,7 +213,7 @@ const handleExport = async () => {
   setIsExporting(true);
   const response = await logsService.getList({
     ...queryParams,
-    limit: 10000,
+    limit: LOG_EXPORT_MAX_ROWS,
     page: 1,
   });
 

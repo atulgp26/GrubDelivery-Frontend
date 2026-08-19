@@ -1,0 +1,80 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check staging slot configured
+        id: slot
+        run: |
+          if [ -z "${{ secrets.STAGING_DEPLOY_PATH }}" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Staging slot not configured::STAGING_DEPLOY_PATH secret not set — CI gate passed; SSH deploy skipped until staging slot is ready on EC2."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Resolve SSH host
+        if: steps.slot.outputs.configured == 'true'
+        id: ssh
+        run: |
+          if [ -n "${{ secrets.SSH_HOST }}" ]; then
+            echo "host=${{ secrets.SSH_HOST }}" >> "$GITHUB_OUTPUT"
+          else
+            # Pilot: hardcoded host — move to SSH_HOST secret when EC2 slot is formalized
+            echo "host=13.127.79.155" >> "$GITHUB_OUTPUT"
+            echo "::notice title=SSH_HOST not set::Using hardcoded pilot host 13.127.79.155 — configure SSH_HOST secret when ready"
+          fi
+
+      - name: Setup SSH
+        if: steps.slot.outputs.configured == 'true'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -t rsa -H ${{ steps.ssh.outputs.host }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Deploy via Docker to staging slot
+        if: steps.slot.outputs.configured == 'true'
+        run: |
+          ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=20 -o ConnectTimeout=300 -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa ubuntu@${{ steps.ssh.outputs.host }} << 'DEPLOY_EOF'
+            set -e
+            cd ${{ secrets.STAGING_DEPLOY_PATH }}
+            git pull origin staging
+            docker compose -f docker-compose.prod.yml build
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker image prune -f
+          DEPLOY_EOF
+
+      - name: Done
+        if: steps.slot.outputs.configured == 'true'
+        run: echo "Delivery frontend deployed successfully to staging slot"

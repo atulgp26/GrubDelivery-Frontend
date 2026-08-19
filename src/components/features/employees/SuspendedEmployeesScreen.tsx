@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import SuspendedEmployeesContent from "./components/SuspendedEmployeesContent";
 import ReactivateEmployeeModal from "./modals/ReactivateEmployeeModal";
 import DeleteEmployeeModal from "./modals/DeleteEmployeeModal";
@@ -12,6 +12,7 @@ import type { SuspendedEmployee } from "./types";
 export default function SuspendedEmployeesScreen() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedApiRoles, setSelectedApiRoles] = useState<Array<"manager" | "delivery">>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isGrouped, setIsGrouped] = useState(false);
   const pageSize = 50;
 
@@ -34,6 +35,10 @@ export default function SuspendedEmployeesScreen() {
     setCurrentPage(1);
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
   const {
     suspendedEmployees: employees,
     suspendedGroups,
@@ -53,6 +58,7 @@ export default function SuspendedEmployeesScreen() {
     suspendedLimit: pageSize,
     suspendedRoles: selectedApiRoles,
     suspendedGroupBy: isGrouped ? "restaurants" : undefined,
+    query: searchQuery,
   });
   const [showReactivateModal, setShowReactivateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -253,6 +259,7 @@ export default function SuspendedEmployeesScreen() {
         onGroupedPageChange={refetchSuspendedGroup}
         onGroupedModeChange={setIsGrouped}
         onSelectedApiRolesChange={handleSuspendedRolesChange}
+        onQueryChange={setSearchQuery}
         onActivate={handleActivate}
         onActivateAll={handleActivateAll}
         onDelete={handleDelete}

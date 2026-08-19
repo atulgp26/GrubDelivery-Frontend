@@ -68,6 +68,8 @@ interface EmployeeListContentProps {
   className?: string;
   onGroupByChange?: (groupBy: "boxes" | "restaurants") => void;
   onRolesChange?: (roles: Array<"manager" | "delivery">) => void;
+  onQueryChange?: (query: string) => void;
+  onAvailableDriversOnlyChange?: (value: boolean) => void;
   onPageChange?: (group: EmployeeGroup, page: number) => void;
   totalEntries?: number;
     onRefetch?: () => void;
@@ -88,10 +90,13 @@ export default function EmployeeListContent({
   onGroupByChange,
   onRefetch,
   onRolesChange,
+  onQueryChange,
+  onAvailableDriversOnlyChange,
   onPageChange,
   totalEntries: totalCountProp = 0,
 }: EmployeeListContentProps) {
   const router = useRouter();
+  const [debouncedQuery, setDebouncedQuery] = useState("");
 
   const [selectedGroupedRestaurant, setSelectedGroupedRestaurant] = useState<Restaurant | null>(null);
   const [boxesModalSource, setBoxesModalSource] = useState<"employee" | "restaurant">("employee");
@@ -129,6 +134,17 @@ const [mainModalBoxes, setMainModalBoxes] = useState<EmployeeBox[] | undefined>(
     setSelectedRoles,
     setShowAvailableDriversOnly,
   } = useEmployeeTableState();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchTerm.trim());
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    onQueryChange?.(debouncedQuery);
+  }, [debouncedQuery, onQueryChange]);
 
   const {
     modalState,
@@ -228,6 +244,7 @@ const [mainModalBoxes, setMainModalBoxes] = useState<EmployeeBox[] | undefined>(
 
   const handleAvailableDriversOnlyChange = (checked: boolean) => {
     setShowAvailableDriversOnly(checked);
+    onAvailableDriversOnlyChange?.(checked);
     if (onRolesChange) {
       onRolesChange(mapUiRolesToApiRoles(selectedRoles, checked));
     }
@@ -235,10 +252,7 @@ const [mainModalBoxes, setMainModalBoxes] = useState<EmployeeBox[] | undefined>(
 
   const { filteredGroups, totalEntries } = useEmployeeTableFilters({
     groups,
-    searchTerm,
-    isGrouped,
-    selectedRoles,
-    showAvailableDriversOnly,
+    serverFiltered: true,
   });
 
   const { results: searchSuggestions, isSearching, searchError } = useEmployeeSearch({

@@ -124,6 +124,16 @@ export function useRestaurantGroups({
         params.group_by = "boxes";
       }
 
+      if (manager) {
+        params.manager = true;
+      }
+      if (driver) {
+        params.driver = true;
+      }
+      if (boxFilter) {
+        params.box = true;
+      }
+
       const response = await foodService.getRestaurants({
         ...(params as any),
       });
@@ -149,22 +159,14 @@ export function useRestaurantGroups({
           google_place_id: r.google_place_id,
         });
 
-        const applyFilters = (items: Restaurant[]) => {
-          let filtered = items;
-          if (manager) filtered = filtered.filter(r => !!r.manager);
-          if (driver) filtered = filtered.filter(r => (r.drivers || 0) > 0);
-          if (boxFilter) filtered = filtered.filter(r => (r.boxes || 0) > 0);
-          return filtered;
-        };
-
         if (response.data.groups && groupByBoxes) {
           const apiGroups = response.data.groups;
 
           let withBoxesGroup = apiGroups.with_boxes?.array ?? [];
           let withoutBoxesGroup = apiGroups.without_boxes?.array ?? [];
 
-          let withBoxesMapped = applyFilters(withBoxesGroup.map(mapRestaurantData));
-          let withoutBoxesMapped = applyFilters(withoutBoxesGroup.map(mapRestaurantData));
+          let withBoxesMapped = withBoxesGroup.map(mapRestaurantData);
+          let withoutBoxesMapped = withoutBoxesGroup.map(mapRestaurantData);
 
           setTotalEntries((response.data as any).total_count ?? response.data.count ?? (withBoxesMapped.length + withoutBoxesMapped.length));
 
@@ -194,7 +196,7 @@ export function useRestaurantGroups({
               ]);
         } else if (response.data.restaurants) {
           const rawRestaurants = response.data.restaurants;
-          const restaurants = applyFilters(rawRestaurants.map(mapRestaurantData));
+          const restaurants = rawRestaurants.map(mapRestaurantData);
 
           setTotalEntries(restaurants.length);
 
@@ -226,7 +228,7 @@ export function useRestaurantGroups({
         } else if (response.data.groups && !groupByBoxes) {
           // If backend returns groups but we asked for flat, flatten it gracefully
           const groupedRestaurants = flattenWrappedGroupRecord<RestaurantData>(response.data.groups as Record<string, unknown>);
-          const allRestaurants = applyFilters(groupedRestaurants.map(mapRestaurantData));
+          const allRestaurants = groupedRestaurants.map(mapRestaurantData);
           setTotalEntries(allRestaurants.length);
           setGroups([
             {
@@ -245,7 +247,7 @@ export function useRestaurantGroups({
       setIsLoading(false);
       setIsInitialized(true);
     }
-  }, [debouncedSearch, status, manager, driver, boxFilter, groupByBoxes]);
+  }, [debouncedSearch, status, manager, driver, boxFilter, groupByBoxes, limitProp]);
 
   useEffect(() => {
     if (autoLoad) {
@@ -270,6 +272,9 @@ export function useRestaurantGroups({
       };
 
       if (status) params.status = status;
+      if (manager) params.manager = true;
+      if (driver) params.driver = true;
+      if (boxFilter) params.box = true;
 
       const response = await foodService.getRestaurants(params as any);
 

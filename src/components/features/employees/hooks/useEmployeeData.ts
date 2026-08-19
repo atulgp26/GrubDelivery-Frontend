@@ -94,6 +94,8 @@ interface UseEmployeeDataOptions {
   suspendedLimit?: number;
   activeLimit?: number;
   activePage?: number;
+  query?: string;
+  withConnectedBoxes?: boolean;
 }
 
 function formatRestaurantDate(value?: string): string {
@@ -137,6 +139,8 @@ export function useEmployeeData({
   suspendedLimit = 50,
   activeLimit = 50,
   activePage = 1,
+  query,
+  withConnectedBoxes,
 }: UseEmployeeDataOptions = {}): UseEmployeeDataReturn {
   const [groups, setGroups] = useState<EmployeeGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -249,6 +253,13 @@ export function useEmployeeData({
       if (roles && roles.length > 0) {
         params.role = roles.length === 1 ? roles[0] : roles;
       }
+      const trimmedQuery = typeof query === "string" ? query.trim() : "";
+      if (trimmedQuery) {
+        params.query = trimmedQuery;
+      }
+      if (withConnectedBoxes === false) {
+        params.with_connected_boxes = false;
+      }
 
       const res = await employeeService.getList(params);
 
@@ -285,7 +296,7 @@ export function useEmployeeData({
     } finally {
       setIsLoading(false);
     }
-  }, [groupBy, includeManagerBoxCounts, roles, activeLimit, activePage]);
+  }, [groupBy, includeManagerBoxCounts, roles, activeLimit, activePage, query, withConnectedBoxes]);
 
   const fetchSuspended = useCallback(async () => {
     setIsSuspendedLoading(true);
@@ -302,6 +313,10 @@ export function useEmployeeData({
 
       if (Array.isArray(suspendedRoles) && suspendedRoles.length > 0) {
         params.role = suspendedRoles;
+      }
+      const trimmedQuery = typeof query === "string" ? query.trim() : "";
+      if (trimmedQuery) {
+        params.query = trimmedQuery;
       }
 
       const res = await employeeService.getList(params);
@@ -333,7 +348,7 @@ export function useEmployeeData({
     } finally {
       setIsSuspendedLoading(false);
     }
-  }, [mapApiEmployeeToSuspended, mapGroupedSuspendedResponse, suspendedGroupBy, suspendedLimit, suspendedPage, suspendedRoles]);
+  }, [mapApiEmployeeToSuspended, mapGroupedSuspendedResponse, suspendedGroupBy, suspendedLimit, suspendedPage, suspendedRoles, query]);
 
   const fetchSuspendedSummary = useCallback(async () => {
     setIsSummaryLoading(true);
@@ -372,6 +387,10 @@ export function useEmployeeData({
       if (Array.isArray(suspendedRoles) && suspendedRoles.length > 0) {
         params.role = suspendedRoles;
       }
+      const trimmedQuery = typeof query === "string" ? query.trim() : "";
+      if (trimmedQuery) {
+        params.query = trimmedQuery;
+      }
 
       const res = await employeeService.getList(params);
       if (res.success && res.data && isRestaurantsGroupedResponse(res.data)) {
@@ -395,7 +414,7 @@ export function useEmployeeData({
     } finally {
       setIsPageLoading(false);
     }
-  }, [mapGroupedSuspendedResponse, suspendedLimit, suspendedRoles]);
+  }, [mapGroupedSuspendedResponse, suspendedLimit, suspendedRoles, query]);
 
   const fetchDropdowns = useCallback(async () => {
     setIsLoadingDropdowns(true);
@@ -656,6 +675,13 @@ export function useEmployeeData({
       if (roles && roles.length > 0) {
         params.role = roles.length === 1 ? roles[0] : roles;
       }
+      const trimmedQuery = typeof query === "string" ? query.trim() : "";
+      if (trimmedQuery) {
+        params.query = trimmedQuery;
+      }
+      if (withConnectedBoxes === false) {
+        params.with_connected_boxes = false;
+      }
 
       const res = await employeeService.getList(params);
       if (res.success && res.data) {
@@ -679,7 +705,7 @@ export function useEmployeeData({
     } finally {
       setIsPageLoading(false);
     }
-  }, [groupBy, roles]);
+  }, [groupBy, roles, query, withConnectedBoxes]);
 
   return {
     groups,

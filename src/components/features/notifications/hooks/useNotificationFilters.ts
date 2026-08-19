@@ -8,27 +8,23 @@ import type {
   NotificationGroupOption,
   NotificationStatus,
   NotificationSuggestion,
-  NotificationTone,
 } from "@/types";
 import {
   DEFAULT_NOTIFICATION_STATUSES,
   DEFAULT_NOTIFICATION_TYPES,
-  TYPE_TO_TONES,
 } from "../constants";
+import {
+  buildNotificationListParams,
+  type NotificationListParams,
+} from "@/services/notifications";
 
 type MultiSelectId = MultiSelectOption["id"];
-
-const TYPE_TONE_ORDER: NotificationTone[] = ["error", "danger", "warning", "success", "info"];
-
-const deriveAllowedTones = (types: NotificationFilterType[]): Set<NotificationTone> => {
-  const tones = types.flatMap((type) => TYPE_TO_TONES[type] ?? []);
-  return new Set<NotificationTone>(tones.length ? tones : TYPE_TONE_ORDER);
-};
 
 interface UseNotificationFiltersOptions {
   notifications: Notification[];
   boxes?: MultiSelectOption[];
   restaurants?: NotificationGroupOption[];
+  page?: number;
   defaultTypes?: NotificationFilterType[];
   defaultStatuses?: NotificationStatus[];
 }
@@ -46,7 +42,7 @@ interface UseNotificationFiltersResult {
   setSelectedTypes: Dispatch<SetStateAction<NotificationFilterType[]>>;
   selectedStatuses: NotificationStatus[];
   setSelectedStatuses: Dispatch<SetStateAction<NotificationStatus[]>>;
-  filteredNotifications: Notification[];
+  listQueryParams: NotificationListParams;
   notificationSuggestions: NotificationSuggestion[];
   boxOptions: MultiSelectOption[];
   restaurantOptions: NotificationGroupOption[];
@@ -56,6 +52,7 @@ export function useNotificationFilters({
   notifications,
   boxes = [],
   restaurants = [],
+  page = 1,
   defaultTypes = DEFAULT_NOTIFICATION_TYPES,
   defaultStatuses = DEFAULT_NOTIFICATION_STATUSES,
 }: UseNotificationFiltersOptions): UseNotificationFiltersResult {
@@ -67,70 +64,44 @@ export function useNotificationFilters({
   const [selectedTypes, setSelectedTypes] = useState<NotificationFilterType[]>(defaultTypes);
   const [selectedStatuses, setSelectedStatuses] = useState<NotificationStatus[]>(defaultStatuses);
 
-  const allowedTones = useMemo(() => deriveAllowedTones(selectedTypes), [selectedTypes]);
-  const activeStatusSet = useMemo(() => new Set(selectedStatuses), [selectedStatuses]);
+  const listQueryParams = useMemo(
+    () =>
+      buildNotificationListParams({
+        page,
+        search: debouncedSearch,
+        selectedBoxes,
+        selectedRestaurants,
+        selectedTypes,
+        selectedStatuses,
+        boxes,
+        restaurants,
+      }),
+    [
+      page,
+      debouncedSearch,
+      selectedBoxes,
+      selectedRestaurants,
+      selectedTypes,
+      selectedStatuses,
+      boxes,
+      restaurants,
+    ],
+  );
 
-const filteredNotifications = useMemo(() => {
-  const searchTerm = debouncedSearch.trim().toLowerCase();
-  const hasBoxFilters = selectedBoxes.length > 0;
-  const hasRestaurantFilters = selectedRestaurants.length > 0;
-  const shouldFilterByStatus = activeStatusSet.size > 0 && activeStatusSet.size < 2;
+  const notificationSuggestions = useMemo<NotificationSuggestion[]>(() => {
+    if (!debouncedSearch.trim()) return [];
+    const lowered = debouncedSearch.trim().toLowerCase();
 
-  return notifications.filter((notification) => {
-    if (!allowedTones.has(notification.type)) return false;
-
-    if (searchTerm.length > 0) {
-      const titleMatch = notification.title.toLowerCase().includes(searchTerm);
-      const descMatch = notification.description.toLowerCase().includes(searchTerm); // was .message
-      if (!titleMatch && !descMatch) return false;
-    }
-
-    if (hasBoxFilters && !selectedBoxes.includes(notification.box_id ?? "")) { // was .boxId
-      return false;
-    }
-
-    // restaurant_name filter — API has no restaurantId, filter by name if needed
-    if (hasRestaurantFilters) {
-      if (
-        !notification.restaurant_name ||
-        !selectedRestaurants.includes(notification.restaurant_name)
-      ) {
-        return false;
-      }
-    }
-
-    if (shouldFilterByStatus) {
-      const status: NotificationStatus = notification.is_read ? "read" : "unread"; // was .status
-      if (!activeStatusSet.has(status)) return false;
-    }
-
-    return true;
-  });
-}, [notifications, allowedTones, debouncedSearch, selectedBoxes, selectedRestaurants, activeStatusSet]);
-
-const notificationSuggestions = useMemo<NotificationSuggestion[]>(() => {
-  if (!debouncedSearch.trim()) return [];
-  const lowered = debouncedSearch.trim().toLowerCase();
-
-  return notifications
-    .filter((n) => n.title.toLowerCase().includes(lowered))
-    .map(({ id, title }) => ({ id, title })); // removed "category" — doesn't exist
-}, [notifications, debouncedSearch]);
-
-  // const notificationSuggestions = useMemo<NotificationSuggestion[]>(() => {
-  //   if (!debouncedSearch.trim()) return [];
-  //   const lowered = debouncedSearch.trim().toLowerCase();
-
-  //   return notifications
-  //     .filter((notification) => notification.title.toLowerCase().includes(lowered))
-  //     .map(({ id, title, category }) => ({ id, title, category }));
-  // }, [notifications, debouncedSearch]);
+    return notifications
+      .filter((n) => n.title.toLowerCase().includes(lowered))
+      .map(({ id, title }) => ({ id, title }));
+  }, [notifications, debouncedSearch]);
 
   useEffect(() => {
     setSelectedNotificationIds((prev) =>
-      prev.filter((id) => filteredNotifications.some((notification) => notification.id === id))
+      prev.filter((id) => notifications.some((notification) => notification.id === id)),
     );
-  }, [filteredNotifications]);
+  }, [notifications]);
 
   return {
     search,
@@ -145,10 +116,9 @@ const notificationSuggestions = useMemo<NotificationSuggestion[]>(() => {
     setSelectedTypes,
     selectedStatuses,
     setSelectedStatuses,
-    filteredNotifications,
+    listQueryParams,
     notificationSuggestions,
     boxOptions: boxes,
     restaurantOptions: restaurants,
   };
 }
-

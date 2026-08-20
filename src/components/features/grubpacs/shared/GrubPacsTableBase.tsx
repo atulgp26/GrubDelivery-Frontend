@@ -20,6 +20,66 @@ import FilterButton from "@/components/ui/FilterButton";
 import { Button } from "@/components/ui/Button";
 import type { GrubPacItem } from "@/components/features/grubpacs/hooks/useGrubPacsListState";
 
+interface GroupedViewProps {
+  openGroup: string | null;
+  setOpenGroup: (value: string | null) => void;
+  onSelectItem: (id: string | number, checked: boolean) => void;
+  selectedItems: (string | number)[];
+  groupedData?: Record<string, GrubPacItem[]>;
+  renderRow: (item: GrubPacItem) => ReactNode;
+}
+
+function GroupedView({
+  openGroup,
+  setOpenGroup,
+  onSelectItem,
+  selectedItems,
+  groupedData,
+  renderRow,
+}: GroupedViewProps) {
+  return (
+    <div className="space-y-0">
+      {/* BLOOD BANK section */}
+      <Collapse
+        title="BLOOD BANK"
+        open={openGroup === "bloodBank"}
+        onClick={() =>
+          setOpenGroup(openGroup === "bloodBank" ? null : "bloodBank")
+        }
+        restaurantTable={true}
+      >
+        {openGroup === "bloodBank" && (
+          <SuspendedGroundfloor
+            onSelectItem={onSelectItem}
+            selectedItems={selectedItems}
+            data={groupedData?.["BLOOD BANK"] || []}
+            renderRow={renderRow}
+          />
+        )}
+      </Collapse>
+
+      {/* Unassigned section */}
+      <Collapse
+        title="Unassigned"
+        open={openGroup === "unassigned"}
+        onClick={() =>
+          setOpenGroup(openGroup === "unassigned" ? null : "unassigned")
+        }
+        restaurantTable={true}
+      >
+        {openGroup === "unassigned" && (
+          <SuspendedGroundfloor
+            onSelectItem={onSelectItem}
+            selectedItems={selectedItems}
+            data={groupedData?.["Unassigned"] || []}
+            renderRow={renderRow}
+          />
+        )}
+      </Collapse>
+    </div>
+  );
+}
+
 interface SearchSuggestion {
   code?: string;
   name?: string;
@@ -71,6 +131,7 @@ export default function GrubPacsTableBase({
 }: GrubPacsTableBaseProps) {
   const [internalSearchTerm, setInternalSearchTerm] = useState("");
   const [isGrouped, setIsGrouped] = useState(false);
+  const [openGroup, setOpenGroup] = useState<string | null>("unassigned");
   const { modalState, openModal, closeModal } = useModalState({
     filter: { open: false },
   });
@@ -82,53 +143,6 @@ export default function GrubPacsTableBase({
     setInternalSearchTerm(value);
     onSearch?.(value);
   };
-
-  const GroupedView = () => {
-    const [openGroup, setOpenGroup] = useState<string | null>("unassigned");
-
-    return (
-      <div className="space-y-0">
-        {/* BLOOD BANK section */}
-        <Collapse
-          title="BLOOD BANK"
-          open={openGroup === "bloodBank"}
-          onClick={() =>
-            setOpenGroup(openGroup === "bloodBank" ? null : "bloodBank")
-          }
-          restaurantTable={true}
-        >
-          {openGroup === "bloodBank" && (
-            <SuspendedGroundfloor
-              onSelectItem={onSelectItem}
-              selectedItems={selectedItems}
-              data={groupedData?.["BLOOD BANK"] || []}
-              renderRow={renderRow}
-            />
-          )}
-        </Collapse>
-
-        {/* Unassigned section */}
-        <Collapse
-          title="Unassigned"
-          open={openGroup === "unassigned"}
-          onClick={() =>
-            setOpenGroup(openGroup === "unassigned" ? null : "unassigned")
-          }
-          restaurantTable={true}
-        >
-          {openGroup === "unassigned" && (
-            <SuspendedGroundfloor
-              onSelectItem={onSelectItem}
-              selectedItems={selectedItems}
-              data={groupedData?.["Unassigned"] || []}
-              renderRow={renderRow}
-            />
-          )}
-        </Collapse>
-      </div>
-    );
-  };
-  
 
   return (
     <div className="space-y-6">
@@ -192,8 +206,17 @@ appearance="ghost"
         </div>
       </div>
 <div>
-  {isGrouped ? <GroupedView/>
-:     ( <div className="bg-white rounded-lg overflow-x-auto">
+  {isGrouped ? (
+    <GroupedView
+      openGroup={openGroup}
+      setOpenGroup={setOpenGroup}
+      onSelectItem={onSelectItem}
+      selectedItems={selectedItems}
+      groupedData={groupedData}
+      renderRow={renderRow}
+    />
+  ) : (
+    <div className="bg-white rounded-lg overflow-x-auto">
         <Table className="min-w-[720px] table-auto">
           <TableHead>
             <TableRow>

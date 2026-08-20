@@ -41,6 +41,10 @@ interface BoxSettingsPageProps {
 
 const SIDEBAR_SWITCH_SKELETON_MIN_MS = 200;
 
+function getCurrentTimeMs(): number {
+  return Date.now();
+}
+
 function toTempNumber(value: string | number | null | undefined): number {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value !== "string") return 0;
@@ -351,7 +355,7 @@ export default function BoxSettingsPage({ boxId, pinSelectedOnLoad = false, back
     }
 
     if (String(boxId ?? "") === pendingBoxId && !isLoading) {
-      const elapsed = Date.now() - sidebarSwitchStartedAtRef.current;
+      const elapsed = getCurrentTimeMs() - sidebarSwitchStartedAtRef.current;
       const remaining = Math.max(0, SIDEBAR_SWITCH_SKELETON_MIN_MS - elapsed);
 
       if (sidebarSwitchHideTimerRef.current !== null) {
@@ -594,7 +598,7 @@ setStatusAlert({
       window.clearTimeout(sidebarSwitchHideTimerRef.current);
       sidebarSwitchHideTimerRef.current = null;
     }
-    sidebarSwitchStartedAtRef.current = Date.now();
+    sidebarSwitchStartedAtRef.current = getCurrentTimeMs();
 
     setPendingBoxId(nextId);
     setIsSidebarSwitchLoading(true);

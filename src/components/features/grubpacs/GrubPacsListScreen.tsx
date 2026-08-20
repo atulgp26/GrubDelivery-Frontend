@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback, useRef, useEffect, useMemo, type ReactElement } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo, type Dispatch, type ReactElement, type SetStateAction } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { GrubPacDataTable, type GrubPacDataRow } from "@/components/features/grubpacs/table/grubpac-data-table";
@@ -36,7 +36,12 @@ import PermissionModal from "@/components/features/grubpacs/modals/PermissionMod
 import CheckBox from "@/components/ui/CheckBox";
 import FilterButton from "@/components/ui/FilterButton";
 import { Button } from "@/components/ui/Button";
-import { useGrubPacsListState, type GrubPacItem } from "@/components/features/grubpacs/hooks/useGrubPacsListState";
+import {
+  useGrubPacsListState,
+  type GrubPacGroup,
+  type GrubPacItem,
+  type SelectedState,
+} from "@/components/features/grubpacs/hooks/useGrubPacsListState";
 import { useGrubPacsListHandlers } from "@/components/features/grubpacs/hooks/useGrubPacsListHandlers";
 import type { TemperatureSettings } from "@/components/features/grubpacs/dropdowns/TemperatureDropdown";
 import type { ApiGrubPac, ApiGrubPacSearchResult, GrubPacListData } from "@/types/domain/grubpacs";
@@ -52,6 +57,270 @@ import { flattenWrappedGroupRecord, getWrappedGroupArray } from "@/lib/utils/gro
 import { showError, showSuccess } from "@/components/ui/toast";
 import { getContextualErrorMessage } from "@/lib/errors";
 import { formatDate } from "@/lib/utils/date";
+
+const PAGE_SIZE = 50;
+
+interface GrubPacsGroupedViewProps {
+  filteredGroups: GrubPacGroup[];
+  getGroupKey: (name: string, index: number) => string;
+  selected: SelectedState;
+  filterItems: (items: GrubPacItem[]) => GrubPacItem[];
+  groupPages: Record<string, number>;
+  openGroup: string | null;
+  isPageLoading: boolean;
+  refetchGroup: (group: { name: string; groupTableKey?: string }, page: number) => void;
+  setGroupPages: Dispatch<SetStateAction<Record<string, number>>>;
+  setOpenGroup: Dispatch<SetStateAction<string | null>>;
+  renderTableSkeleton: () => ReactElement;
+  handleRowClick: (row: GrubPacDataRow) => void;
+  handleVisitGrubLock: (row: GrubPacDataRow) => void;
+  handleOpenEditModal: (row: GrubPacDataRow) => void;
+  handleOpenPermissionModal: (row: GrubPacDataRow) => void;
+  handleViewSettings: (row: GrubPacDataRow) => void;
+  openModal: (type: string, data?: Record<string, unknown>) => void;
+  isGrouped: boolean;
+  inferInitialDualZone: (ids: Iterable<number | string>) => boolean;
+  handleFooterBulkReassign: (ids: Array<string | number>) => void;
+  handleRemoveRoom: () => void;
+  handleRemoveBoxes: (selectedItems: (number | string)[], count: number) => void;
+  setSelected: Dispatch<SetStateAction<SelectedState>>;
+  showOffline: boolean;
+  handleGroupClick: (group: GrubPacGroup) => void;
+}
+
+function GrubPacsGroupedView({
+  filteredGroups,
+  getGroupKey,
+  selected,
+  filterItems,
+  groupPages,
+  openGroup,
+  isPageLoading,
+  refetchGroup,
+  setGroupPages,
+  setOpenGroup,
+  renderTableSkeleton,
+  handleRowClick,
+  handleVisitGrubLock,
+  handleOpenEditModal,
+  handleOpenPermissionModal,
+  handleViewSettings,
+  openModal,
+  isGrouped,
+  inferInitialDualZone,
+  handleFooterBulkReassign,
+  handleRemoveRoom,
+  handleRemoveBoxes,
+  setSelected,
+  showOffline,
+  handleGroupClick,
+}: GrubPacsGroupedViewProps): ReactElement {
+  return (
+    <div className="space-y-4">
+      {filteredGroups.map((group, groupIndex) => {
+        const groupName = String(group.name ?? "");
+        const groupKey = getGroupKey(groupName, groupIndex);
+        const groupItems = group.items ?? [];
+        const groupItemIds = new Set(groupItems.map((item) => String(item.id)));
+        const groupSelectedIds = new Set(
+          (selected.poweredOn || []).map(String).filter((id) => groupItemIds.has(id)),
+        );
+        const visibleItems = groupName.toLowerCase() === "unassigned" ? groupItems : filterItems(groupItems);
+        const totalItems = group.pagination?.totalItems ?? visibleItems.length;
+        const totalPages = group.pagination?.totalPages ?? Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+        const currentPage = group.pagination?.currentPage ?? Math.min(groupPages[groupKey] ?? 1, totalPages);
+
+        const start = group.pagination ? 0 : (currentPage - 1) * PAGE_SIZE;
+        const pagedItems = group.pagination ? visibleItems : visibleItems.slice(start, start + PAGE_SIZE);
+        const endIndex = group.pagination ? (start + visibleItems.length) : Math.min(start + PAGE_SIZE, totalItems);
+
+        const pageItemIds = new Set(pagedItems.map((item) => String(item.id)));
+        const pageSelectedIds = new Set(
+          Array.from(groupSelectedIds).filter((id) => pageItemIds.has(id)),
+        );
+
+        const pagination =
+          openGroup === groupKey && totalItems > 0 && visibleItems.length > 0
+            ? {
+                rangeText: group.pagination
+                  ? `${(currentPage - 1) * group.pagination.pageSize + 1}-${(currentPage - 1) * group.pagination.pageSize + visibleItems.length}`
+                  : `${start + 1}-${endIndex}`,
+                onPrev: () => {
+                  if (isPageLoading) return;
+                  if (group.pagination) {
+                    refetchGroup(
+                      {
+                        name: String(group.name ?? ""),
+                        groupTableKey: String((group as { groupTableKey?: string }).groupTableKey ?? "") || undefined,
+                      },
+                      Math.max(1, currentPage - 1),
+                    );
+                  } else {
+                    setGroupPages((prev) => ({
+                      ...prev,
+                      [groupKey]: Math.max(1, currentPage - 1),
+                    }));
+                  }
+                },
+                onNext: () => {
+                  if (isPageLoading) return;
+                  if (group.pagination) {
+                    refetchGroup(
+                      {
+                        name: String(group.name ?? ""),
+                        groupTableKey: String((group as { groupTableKey?: string }).groupTableKey ?? "") || undefined,
+                      },
+                      Math.min(totalPages, currentPage + 1),
+                    );
+                  } else {
+                    setGroupPages((prev) => ({
+                      ...prev,
+                      [groupKey]: Math.min(totalPages, currentPage + 1),
+                    }));
+                  }
+                },
+                disablePrev: isPageLoading || currentPage <= 1,
+                disableNext: isPageLoading || currentPage >= totalPages,
+              }
+            : undefined;
+
+        return (
+          <Collapse
+            key={groupKey}
+            title={group.name}
+            open={openGroup === groupKey}
+            onClick={() => {
+              setOpenGroup(openGroup === groupKey ? null : groupKey);
+              setGroupPages((prev) => ({
+                ...prev,
+                [groupKey]: prev[groupKey] ?? 1,
+              }));
+            }}
+            onTitleClick={() => handleGroupClick(group)}
+            pagination={pagination}
+          >
+            {openGroup === groupKey && (
+              <>
+                {isPageLoading ? (
+                  renderTableSkeleton()
+                ) : visibleItems.length > 0 ? (
+                  <>
+                    <GrubPacDataTable
+                      data={mapGrubPacItemsToDataRows(pagedItems)}
+                      columns={["name", "status", "power", "battery", "settings", "handler", "actions"]}
+                      selectable={true}
+                      selectedIds={pageSelectedIds}
+                      onSelectionChange={(ids) =>
+                        setSelected((prev) => ({
+                          ...prev,
+                          poweredOn: [
+                            ...(prev.poweredOn || []).filter((id) => !pageItemIds.has(String(id))),
+                            ...Array.from(ids),
+                          ],
+                        }))
+                      }
+                      onRowClick={handleRowClick}
+                      onLockIconClick={handleVisitGrubLock}
+                      onEditBoxDetails={handleOpenEditModal}
+                      onCheckPermissions={handleOpenPermissionModal}
+                      onViewSettings={handleViewSettings}
+                      onSuspendBox={(row) =>
+                        openModal("suspend", {
+                          selectedCount: 1,
+                          box: { id: row.id, code: row.identifier || row.name, name: row.name } as GrubPacItem,
+                          fromRemoval: false,
+                          selectedIds: [row.id],
+                        })
+                      }
+                      onRemoveBox={(row) =>
+                        openModal("boxRemoval", {
+                          selected: [row.id],
+                          count: 1,
+                        })
+                      }
+                      showEmptySettings={groupName === "Unassigned"}
+                    />
+                    {groupSelectedIds.size > 0 && (
+                      <GrubPacActionBar
+                        selectedCount={groupSelectedIds.size}
+                        isGrouped={isGrouped}
+                        initialDualZone={inferInitialDualZone(groupSelectedIds)}
+                        onClearSelection={() =>
+                          setSelected((prev) => ({
+                            ...prev,
+                            poweredOn: (prev.poweredOn || []).filter((id) => !groupItemIds.has(String(id))),
+                          }))
+                        }
+                        onPower={(action) => {
+                          const settingType = action === "on" ? "TURN POWER ON" : "TURN POWER OFF";
+                          openModal("applySettings", {
+                            selectedCount: groupSelectedIds.size,
+                            settingType,
+                            selectedIds: Array.from(groupSelectedIds),
+                            actionType: "power",
+                            actionValue: action,
+                            temperature: null,
+                          });
+                        }}
+                        onIoniser={(action) => {
+                          const settingType = action === "on" ? "TURN IONISER ON" : "TURN IONISER OFF";
+                          openModal("applySettings", {
+                            selectedCount: groupSelectedIds.size,
+                            settingType,
+                            selectedIds: Array.from(groupSelectedIds),
+                            actionType: "ioniser",
+                            actionValue: action,
+                            temperature: null,
+                          });
+                        }}
+                        onTemperature={(settings: TemperatureSettings) => {
+                          const dualLabel = settings.dualZone ? "Dual mode on" : "Dual mode off";
+                          const tempLabel = settings.zone1 ? `Temperature set to ${settings.zone1}°C` : "Temperature set";
+                          openModal("applySettings", {
+                            selectedCount: groupSelectedIds.size,
+                            settingType: `${dualLabel}, ${tempLabel}`,
+                            selectedIds: Array.from(groupSelectedIds),
+                            actionType: "temperature",
+                            actionValue: null,
+                            temperature: settings,
+                            tokenVariant: "neutral",
+                          });
+                        }}
+                        onSuspendBoxes={() =>
+                          openModal("suspend", {
+                            selectedCount: groupSelectedIds.size,
+                            fromRemoval: false,
+                            selectedIds: Array.from(groupSelectedIds),
+                            box: null,
+                          })
+                        }
+                        onReassignRestaurant={() => handleFooterBulkReassign(Array.from(groupSelectedIds))}
+                        onRemoveVehicle={handleRemoveRoom}
+                        hasSelectedVehicle={groupItems.some(i => groupSelectedIds.has(String(i.id)) && i.vehicleNumber)}
+                        onDelete={() => handleRemoveBoxes(Array.from(groupSelectedIds), groupSelectedIds.size)}
+                      />
+                    )}
+                  </>
+                ) : (
+                  <GrubPacEmptyState
+                    type={
+                      groupName === "Unassigned"
+                        ? "grouped-unassigned"
+                        : showOffline && groupItems.length > 0
+                          ? "grouped-restaurant-offline"
+                          : "grouped-restaurant"
+                    }
+                  />
+                )}
+              </>
+            )}
+          </Collapse>
+        );
+      })}
+      {filteredGroups.length === 0 && <GrubPacEmptyState type="grouped-restaurant" />}
+    </div>
+  );
+}
 
 export default function GrubPacsListScreen() {
   const {
@@ -160,7 +429,6 @@ export default function GrubPacsListScreen() {
   const switchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const preselectAppliedRef = useRef<string | null>(null);
   const expandedGroupAppliedRef = useRef<string | null>(null);
-  const PAGE_SIZE = 50;
 
   const getGroupKey = useCallback((name: string, index: number) => `${name}__${index}`, []);
 
@@ -505,215 +773,6 @@ export default function GrubPacsListScreen() {
     },
     [fetchAllRestaurantBoxes],
   );
-
-  // Custom component for grouped view
-  const GroupedView = (): ReactElement => {
-    return (
-      <div className="space-y-4">
-        {filteredGroups.map((group, groupIndex) => {
-          const groupName = String(group.name ?? "");
-          const groupKey = getGroupKey(groupName, groupIndex);
-          const groupItems = group.items ?? [];
-          const groupItemIds = new Set(groupItems.map((item) => String(item.id)));
-          const groupSelectedIds = new Set(
-            (selected.poweredOn || []).map(String).filter((id) => groupItemIds.has(id)),
-          );
-          const visibleItems = groupName.toLowerCase() === "unassigned" ? groupItems : filterItems(groupItems);
-          const totalItems = group.pagination?.totalItems ?? visibleItems.length;
-          const totalPages = group.pagination?.totalPages ?? Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
-          const currentPage = group.pagination?.currentPage ?? Math.min(groupPages[groupKey] ?? 1, totalPages);
-          
-          const start = group.pagination ? 0 : (currentPage - 1) * PAGE_SIZE;
-          const pagedItems = group.pagination ? visibleItems : visibleItems.slice(start, start + PAGE_SIZE);
-          const endIndex = group.pagination ? (start + visibleItems.length) : Math.min(start + PAGE_SIZE, totalItems);
-
-          const pageItemIds = new Set(pagedItems.map((item) => String(item.id)));
-          const pageSelectedIds = new Set(
-            Array.from(groupSelectedIds).filter((id) => pageItemIds.has(id)),
-          );
-
-          const pagination =
-            openGroup === groupKey && totalItems > 0 && visibleItems.length > 0
-              ? {
-                  rangeText: group.pagination 
-                    ? `${(currentPage - 1) * group.pagination.pageSize + 1}-${(currentPage - 1) * group.pagination.pageSize + visibleItems.length}`
-                    : `${start + 1}-${endIndex}`,
-                  onPrev: () => {
-                    if (isPageLoading) return;
-                    if (group.pagination) {
-                      refetchGroup(
-                        {
-                          name: String(group.name ?? ""),
-                          groupTableKey: String((group as { groupTableKey?: string }).groupTableKey ?? "") || undefined,
-                        },
-                        Math.max(1, currentPage - 1),
-                      );
-                    } else {
-                      setGroupPages((prev) => ({
-                        ...prev,
-                        [groupKey]: Math.max(1, currentPage - 1),
-                      }));
-                    }
-                  },
-                  onNext: () => {
-                    if (isPageLoading) return;
-                    if (group.pagination) {
-                      refetchGroup(
-                        {
-                          name: String(group.name ?? ""),
-                          groupTableKey: String((group as { groupTableKey?: string }).groupTableKey ?? "") || undefined,
-                        },
-                        Math.min(totalPages, currentPage + 1),
-                      );
-                    } else {
-                      setGroupPages((prev) => ({
-                        ...prev,
-                        [groupKey]: Math.min(totalPages, currentPage + 1),
-                      }));
-                    }
-                  },
-                  disablePrev: isPageLoading || currentPage <= 1,
-                  disableNext: isPageLoading || currentPage >= totalPages,
-                }
-              : undefined;
-
-          return (
-            <Collapse
-              key={groupKey}
-              title={group.name}
-              open={openGroup === groupKey}
-              onClick={() => {
-                setOpenGroup(openGroup === groupKey ? null : groupKey);
-                setGroupPages((prev) => ({
-                  ...prev,
-                  [groupKey]: prev[groupKey] ?? 1,
-                }));
-              }}
-              onTitleClick={() => handleGroupClick(group)}
-              pagination={pagination}
-            >
-              {openGroup === groupKey && (
-                <>
-                  {isPageLoading ? (
-                    renderTableSkeleton()
-                  ) : visibleItems.length > 0 ? (
-                    <>
-                      <GrubPacDataTable
-                        data={mapGrubPacItemsToDataRows(pagedItems)}
-                        columns={["name", "status", "power", "battery", "settings", "handler", "actions"]}
-                        selectable={true}
-                        selectedIds={pageSelectedIds}
-                        onSelectionChange={(ids) =>
-                          setSelected((prev) => ({
-                            ...prev,
-                            poweredOn: [
-                              ...(prev.poweredOn || []).filter((id) => !pageItemIds.has(String(id))),
-                              ...Array.from(ids),
-                            ],
-                          }))
-                        }
-                        onRowClick={handleRowClick}
-                        onLockIconClick={handleVisitGrubLock}
-                        onEditBoxDetails={handleOpenEditModal}
-                        onCheckPermissions={handleOpenPermissionModal}
-                        onViewSettings={handleViewSettings}
-                        onSuspendBox={(row) =>
-                          openModal("suspend", {
-                            selectedCount: 1,
-                            box: { id: row.id, code: row.identifier || row.name, name: row.name } as GrubPacItem,
-                            fromRemoval: false,
-                            selectedIds: [row.id],
-                          })
-                        }
-                        onRemoveBox={(row) =>
-                          openModal("boxRemoval", {
-                            selected: [row.id],
-                            count: 1,
-                          })
-                        }
-                        showEmptySettings={groupName === "Unassigned"}
-                      />
-                      {groupSelectedIds.size > 0 && (
-                        <GrubPacActionBar
-                          selectedCount={groupSelectedIds.size}
-                          isGrouped={isGrouped}
-                          initialDualZone={inferInitialDualZone(groupSelectedIds)}
-                          onClearSelection={() =>
-                            setSelected((prev) => ({
-                              ...prev,
-                              poweredOn: (prev.poweredOn || []).filter((id) => !groupItemIds.has(String(id))),
-                            }))
-                          }
-                          onPower={(action) => {
-                            const settingType = action === "on" ? "TURN POWER ON" : "TURN POWER OFF";
-                            openModal("applySettings", {
-                              selectedCount: groupSelectedIds.size,
-                              settingType,
-                              selectedIds: Array.from(groupSelectedIds),
-                              actionType: "power",
-                              actionValue: action,
-                              temperature: null,
-                            });
-                          }}
-                          onIoniser={(action) => {
-                            const settingType = action === "on" ? "TURN IONISER ON" : "TURN IONISER OFF";
-                            openModal("applySettings", {
-                              selectedCount: groupSelectedIds.size,
-                              settingType,
-                              selectedIds: Array.from(groupSelectedIds),
-                              actionType: "ioniser",
-                              actionValue: action,
-                              temperature: null,
-                            });
-                          }}
-                          onTemperature={(settings: TemperatureSettings) => {
-                            const dualLabel = settings.dualZone ? "Dual mode on" : "Dual mode off";
-                            const tempLabel = settings.zone1 ? `Temperature set to ${settings.zone1}°C` : "Temperature set";
-                            openModal("applySettings", {
-                              selectedCount: groupSelectedIds.size,
-                              settingType: `${dualLabel}, ${tempLabel}`,
-                              selectedIds: Array.from(groupSelectedIds),
-                              actionType: "temperature",
-                              actionValue: null,
-                              temperature: settings,
-                              tokenVariant: "neutral",
-                            });
-                          }}
-                          onSuspendBoxes={() =>
-                            openModal("suspend", {
-                              selectedCount: groupSelectedIds.size,
-                              fromRemoval: false,
-                              selectedIds: Array.from(groupSelectedIds),
-                              box: null,
-                            })
-                          }
-                          onReassignRestaurant={() => handleFooterBulkReassign(Array.from(groupSelectedIds))}
-                          onRemoveVehicle={handleRemoveRoom}
-                          hasSelectedVehicle={groupItems.some(i => groupSelectedIds.has(String(i.id)) && i.vehicleNumber)}
-                          onDelete={() => handleRemoveBoxes(Array.from(groupSelectedIds), groupSelectedIds.size)}
-                        />
-                      )}
-                    </>
-                  ) : (
-                    <GrubPacEmptyState
-                      type={
-                        groupName === "Unassigned"
-                          ? "grouped-unassigned"
-                          : showOffline && groupItems.length > 0
-                            ? "grouped-restaurant-offline"
-                            : "grouped-restaurant"
-                      }
-                    />
-                  )}
-                </>
-              )}
-            </Collapse>
-          );
-        })}
-        {filteredGroups.length === 0 && <GrubPacEmptyState type="grouped-restaurant" />}
-      </div>
-    );
-  };
 
   const headerActions = (
     <div className="flex items-center space-x-4">
@@ -1331,7 +1390,33 @@ export default function GrubPacsListScreen() {
               ))}
             </div>
           ) : isGrouped ? (
-            <GroupedView />
+            <GrubPacsGroupedView
+              filteredGroups={filteredGroups}
+              getGroupKey={getGroupKey}
+              selected={selected}
+              filterItems={filterItems}
+              groupPages={groupPages}
+              openGroup={openGroup}
+              isPageLoading={isPageLoading}
+              refetchGroup={refetchGroup}
+              setGroupPages={setGroupPages}
+              setOpenGroup={setOpenGroup}
+              renderTableSkeleton={renderTableSkeleton}
+              handleRowClick={handleRowClick}
+              handleVisitGrubLock={handleVisitGrubLock}
+              handleOpenEditModal={handleOpenEditModal}
+              handleOpenPermissionModal={handleOpenPermissionModal}
+              handleViewSettings={handleViewSettings}
+              openModal={openModal}
+              isGrouped={isGrouped}
+              inferInitialDualZone={inferInitialDualZone}
+              handleFooterBulkReassign={handleFooterBulkReassign}
+              handleRemoveRoom={handleRemoveRoom}
+              handleRemoveBoxes={handleRemoveBoxes}
+              setSelected={setSelected}
+              showOffline={showOffline}
+              handleGroupClick={handleGroupClick}
+            />
           ) : !hasData ? (
           <div className="px-4 pb-4">
             <p className="text-[var(--color-neutral-light)] text-sm">

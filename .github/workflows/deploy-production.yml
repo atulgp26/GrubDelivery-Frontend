@@ -5,9 +5,15 @@ on:
     branches:
       - main
 
+concurrency:
+  group: delivery-fe-ec2-deploy
+  cancel-in-progress: false
+
 jobs:
   validate:
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_API_BASE_URL: https://ci.example.com/api/v1
     steps:
       - uses: actions/checkout@v4
 
@@ -29,43 +35,112 @@ jobs:
   deploy:
     needs: validate
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     environment: production
     steps:
       - uses: actions/checkout@v4
 
-      - name: Resolve SSH host
-        id: ssh
+      - name: Check required secrets
         run: |
-          if [ -n "${{ secrets.SSH_HOST }}" ]; then
-            echo "host=${{ secrets.SSH_HOST }}" >> "$GITHUB_OUTPUT"
-          else
-            # Pilot: hardcoded host — move to SSH_HOST secret when EC2 slot is formalized
-            echo "host=13.127.79.155" >> "$GITHUB_OUTPUT"
-            echo "::notice title=SSH_HOST not set::Using hardcoded pilot host 13.127.79.155 — configure SSH_HOST secret when ready"
+          if [ -z "${{ secrets.EC2_HOST }}" ] && [ -z "${{ secrets.SSH_HOST }}" ]; then
+            echo "Missing host secret: set EC2_HOST or SSH_HOST in the production environment"
+            exit 1
+          fi
+          if [ -z "${{ secrets.EC2_SSH_KEY }}" ] && [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+            echo "Missing SSH key secret: set EC2_SSH_KEY or SSH_PRIVATE_KEY in the production environment"
+            exit 1
           fi
 
-      - name: Setup SSH
+      - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -t rsa -H ${{ steps.ssh.outputs.host }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          if [ -n "${{ secrets.EC2_SSH_KEY }}" ]; then
+            echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_ed25519
+          else
+            echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          fi
+          chmod 600 ~/.ssh/id_ed25519
+          cat >> ~/.ssh/config << 'CFG'
+          Host *
+            ServerAliveInterval 15
+            ServerAliveCountMax 120
+            TCPKeepAlive yes
+          CFG
 
-      - name: Deploy via Docker
+      - name: Add EC2 host to known_hosts
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST || secrets.SSH_HOST }}
         run: |
-          ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=20 -o ConnectTimeout=300 -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa ubuntu@${{ steps.ssh.outputs.host }} << 'DEPLOY_EOF'
+          success=false
+          for attempt in 1 2 3 4 5; do
+            if ssh-keyscan -T 20 -t ed25519,ecdsa,rsa -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
+              success=true
+              break
+            fi
+            echo "ssh-keyscan attempt $attempt failed, retrying..."
+            sleep 5
+          done
+          if [ "$success" != "true" ]; then
+            echo "ssh-keyscan failed for host (check EC2 security group port 22)"
+            exit 1
+          fi
+
+      - name: Start build on EC2 (detached)
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST || secrets.SSH_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER || 'ubuntu' }}
+        run: |
+          ssh -o ConnectTimeout=30 -o ServerAliveInterval=15 -o ServerAliveCountMax=120 \
+            -i ~/.ssh/id_ed25519 ${EC2_USER}@${EC2_HOST} << 'EOF'
             set -e
-            cd ~/grubFood-frontend
+            cd /home/ubuntu/grubdelivery-frontend
+            git stash
             git pull origin main
-            docker compose -f docker-compose.prod.yml build
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
-            docker image prune -f
-          DEPLOY_EOF
+            LOG=/tmp/delivery-fe-deploy-prod.log
+            PIDFILE=/tmp/delivery-fe-deploy-prod.pid
+            rm -f "$LOG" "$PIDFILE"
+            nohup bash -c '
+              set -e
+              cd /home/ubuntu/grubdelivery-frontend
+              set -a
+              source .env.production
+              set +a
+              export FE_CONTAINER_NAME=grub-delivery-frontend
+              export FE_HOST_PORT=3010
+              export DOCKER_BUILDKIT=1
+              export COMPOSE_DOCKER_CLI_BUILD=1
+              docker compose -p grubdelivery-fe-prod -f docker-compose.frontend.yml build
+              docker compose -p grubdelivery-fe-prod -f docker-compose.frontend.yml up -d
+            ' > "$LOG" 2>&1 &
+            echo $! > "$PIDFILE"
+            echo "Deploy started (pid $(cat "$PIDFILE"))"
+          EOF
 
-      - name: Health check
+      - name: Wait for frontend ready
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST || secrets.SSH_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER || 'ubuntu' }}
         run: |
-          sleep 20
-          curl -sf http://${{ steps.ssh.outputs.host }} || (echo "Health check failed, check container logs" && exit 1)
+          SSH="ssh -o ConnectTimeout=30 -o ServerAliveInterval=15 -o ServerAliveCountMax=120 -i ~/.ssh/id_ed25519 ${EC2_USER}@${EC2_HOST}"
+          ready=false
+          for i in $(seq 1 40); do
+            if $SSH "curl -sf http://127.0.0.1:3010/ >/dev/null"; then
+              ready=true
+              break
+            fi
+            if $SSH "test -f /tmp/delivery-fe-deploy-prod.pid && kill -0 \$(cat /tmp/delivery-fe-deploy-prod.pid) 2>/dev/null"; then
+              echo "build still running (attempt $i)..."
+            else
+              echo "deploy script finished, waiting for frontend HTTP (attempt $i)..."
+            fi
+            sleep 15
+          done
+          if [ "$ready" != "true" ]; then
+            echo "frontend health check failed on port 3010"
+            $SSH "tail -100 /tmp/delivery-fe-deploy-prod.log" || true
+            $SSH "docker logs grub-delivery-frontend --tail 50" || true
+            exit 1
+          fi
 
       - name: Done
         run: echo "Delivery frontend deployed successfully to production"

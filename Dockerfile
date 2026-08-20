@@ -4,6 +4,8 @@ COPY package.json package-lock.json ./
 RUN npm ci
 RUN npm install lightningcss-linux-x64-gnu @tailwindcss/oxide-linux-x64-gnu
 COPY . .
+ARG NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 RUN npm run build
 
 FROM node:22-alpine AS runner

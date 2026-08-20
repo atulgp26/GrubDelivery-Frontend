@@ -1,0 +1,27 @@
+services:
+  frontend:
+    container_name: ${FE_CONTAINER_NAME:-grub-delivery-frontend}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${FE_HOST_PORT:-3010}:3000"
+    env_file:
+      - .env.production
+    environment:
+      - HOSTNAME=0.0.0.0
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000',(r)=>{process.exit(r.statusCode<400?0:1)}).on('error',()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - frontend-network
+
+networks:
+  frontend-network:
+    driver: bridge

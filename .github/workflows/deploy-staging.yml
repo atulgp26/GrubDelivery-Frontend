@@ -100,8 +100,9 @@ jobs:
             -i ~/.ssh/id_ed25519 ${EC2_USER}@${EC2_HOST} << EOF
             set -e
             cd ${{ secrets.STAGING_DEPLOY_PATH }}
-            git stash
-            git pull origin staging
+            git fetch origin staging
+            git clean -fd -e '.env*'
+            git reset --hard origin/staging
             LOG=/tmp/delivery-fe-deploy-staging.log
             PIDFILE=/tmp/delivery-fe-deploy-staging.pid
             rm -f "\$LOG" "\$PIDFILE"

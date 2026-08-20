@@ -100,8 +100,9 @@ jobs:
             -i ~/.ssh/id_ed25519 ${EC2_USER}@${EC2_HOST} << EOF
             set -e
             cd ${{ secrets.PREPROD_DEPLOY_PATH }}
-            git stash
-            git pull origin pre-prod
+            git fetch origin pre-prod
+            git clean -fd -e '.env*'
+            git reset --hard origin/pre-prod
             LOG=/tmp/delivery-fe-deploy-preprod.log
             PIDFILE=/tmp/delivery-fe-deploy-preprod.pid
             rm -f "\$LOG" "\$PIDFILE"

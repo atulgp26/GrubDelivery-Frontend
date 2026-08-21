@@ -87,63 +87,81 @@ jobs:
             exit 1
           fi
 
-      - name: Start build on EC2 (detached)
+      - name: Blue-green deploy Delivery FE on EC2
         env:
           EC2_HOST: ${{ secrets.EC2_HOST || secrets.SSH_HOST }}
           EC2_USER: ${{ secrets.EC2_USER || 'ubuntu' }}
         run: |
           ssh -o ConnectTimeout=30 -o ServerAliveInterval=15 -o ServerAliveCountMax=120 \
             -i ~/.ssh/id_ed25519 ${EC2_USER}@${EC2_HOST} << 'EOF'
-            set -e
+            set -euo pipefail
+            BG_SCRIPT="/home/ubuntu/scripts/bluegreen-prod-delivery-fe.sh"
+            if [ ! -x "$BG_SCRIPT" ]; then
+              echo "Missing $BG_SCRIPT — sync from GrubAdmin-Backend scripts/ec2/ first"
+              exit 1
+            fi
+
+            INACTIVE_COLOR="$("$BG_SCRIPT" inactive-color)"
+            INACTIVE_PORT="$("$BG_SCRIPT" inactive-port)"
+            INACTIVE_PROJECT="$("$BG_SCRIPT" inactive-project)"
+            INACTIVE_CONTAINER="$("$BG_SCRIPT" inactive-container)"
+            ACTIVE_COLOR="$("$BG_SCRIPT" active-color)"
+
+            echo "=== Delivery FE blue-green: candidate=${INACTIVE_COLOR} port=${INACTIVE_PORT} project=${INACTIVE_PROJECT} ==="
+            echo "=== Active until cutover: ${ACTIVE_COLOR} ==="
+
             cd /home/ubuntu/grubdelivery-frontend
             git fetch origin main
             git clean -fd -e '.env*'
             git reset --hard origin/main
-            LOG=/tmp/delivery-fe-deploy-prod.log
-            PIDFILE=/tmp/delivery-fe-deploy-prod.pid
+
+            LOG=/tmp/delivery-fe-deploy-prod-bg.log
+            PIDFILE=/tmp/delivery-fe-deploy-prod-bg.pid
             rm -f "$LOG" "$PIDFILE"
-            nohup bash -c '
-              set -e
+
+            nohup bash -c "
+              set -euo pipefail
               cd /home/ubuntu/grubdelivery-frontend
               set -a
+              # shellcheck disable=SC1091
               source .env.production
               set +a
-              export FE_CONTAINER_NAME=grub-delivery-frontend
-              export FE_HOST_PORT=3010
+              export FE_CONTAINER_NAME=${INACTIVE_CONTAINER}
+              export FE_HOST_PORT=${INACTIVE_PORT}
               export DOCKER_BUILDKIT=1
               export COMPOSE_DOCKER_CLI_BUILD=1
-              docker compose -p grubdelivery-fe-prod -f docker-compose.frontend.yml build
-              docker compose -p grubdelivery-fe-prod -f docker-compose.frontend.yml up -d
-            ' > "$LOG" 2>&1 &
+              docker compose -p ${INACTIVE_PROJECT} -f docker-compose.frontend.yml build
+              docker compose -p ${INACTIVE_PROJECT} -f docker-compose.frontend.yml up -d
+            " > "$LOG" 2>&1 &
             echo $! > "$PIDFILE"
-            echo "Deploy started (pid $(cat "$PIDFILE"))"
+            echo "Candidate build started (pid $(cat "$PIDFILE"))"
+
+            ready=false
+            for i in $(seq 1 40); do
+              code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:${INACTIVE_PORT}/" || true)
+              if echo "$code" | grep -Eq '^(2|3)[0-9][0-9]$'; then
+                ready=true
+                break
+              fi
+              if test -f "$PIDFILE" && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
+                echo "build still running (attempt $i, last=${code})..."
+              else
+                echo "deploy script finished, waiting for candidate HTTP (attempt $i, last=${code})..."
+              fi
+              sleep 15
+            done
+            if [ "$ready" != "true" ]; then
+              echo "Candidate Delivery FE health failed on :${INACTIVE_PORT}"
+              tail -100 "$LOG" || true
+              docker logs "$INACTIVE_CONTAINER" --tail 50 || true
+              exit 1
+            fi
+
+            "$BG_SCRIPT" cutover "$INACTIVE_COLOR"
+            echo "=== Keep previous slot as warm standby (no stop) ==="
+            "$BG_SCRIPT" status
+            echo "=== Delivery FE blue-green deploy complete ==="
           EOF
 
-      - name: Wait for frontend ready
-        env:
-          EC2_HOST: ${{ secrets.EC2_HOST || secrets.SSH_HOST }}
-          EC2_USER: ${{ secrets.EC2_USER || 'ubuntu' }}
-        run: |
-          SSH="ssh -o ConnectTimeout=30 -o ServerAliveInterval=15 -o ServerAliveCountMax=120 -i ~/.ssh/id_ed25519 ${EC2_USER}@${EC2_HOST}"
-          ready=false
-          for i in $(seq 1 40); do
-            if $SSH "curl -sf http://127.0.0.1:3010/ >/dev/null"; then
-              ready=true
-              break
-            fi
-            if $SSH "test -f /tmp/delivery-fe-deploy-prod.pid && kill -0 \$(cat /tmp/delivery-fe-deploy-prod.pid) 2>/dev/null"; then
-              echo "build still running (attempt $i)..."
-            else
-              echo "deploy script finished, waiting for frontend HTTP (attempt $i)..."
-            fi
-            sleep 15
-          done
-          if [ "$ready" != "true" ]; then
-            echo "frontend health check failed on port 3010"
-            $SSH "tail -100 /tmp/delivery-fe-deploy-prod.log" || true
-            $SSH "docker logs grub-delivery-frontend --tail 50" || true
-            exit 1
-          fi
-
       - name: Done
-        run: echo "Delivery frontend deployed successfully to production"
+        run: echo "Delivery frontend blue-green deployed successfully to production"
